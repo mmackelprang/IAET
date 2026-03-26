@@ -56,6 +56,81 @@ public sealed class SqliteCatalogTests : IDisposable
             .Which.ObservationCount.Should().Be(2);
     }
 
+    [Fact]
+    public async Task GetResponseBodiesAsync_ReturnsNonNullBodies()
+    {
+        var sessionId = Guid.NewGuid();
+        var session = new CaptureSessionInfo
+        {
+            Id = sessionId, Name = "s-bodies", TargetApplication = "App",
+            Profile = "p1", StartedAt = DateTimeOffset.UtcNow
+        };
+        await _catalog.SaveSessionAsync(session);
+
+        var req1 = MakeRequest(sessionId, "GET", "https://api.test/items/1") with { ResponseBody = "body-one" };
+        var req2 = MakeRequest(sessionId, "GET", "https://api.test/items/2") with { ResponseBody = "body-two" };
+        await _catalog.SaveRequestAsync(req1);
+        await _catalog.SaveRequestAsync(req2);
+
+        // Both requests normalize to the same signature: GET https://api.test/items/{id}
+        var groups = await _catalog.GetEndpointGroupsAsync(sessionId);
+        var sig = groups.Should().ContainSingle().Subject.Signature.Normalized;
+
+        var bodies = await _catalog.GetResponseBodiesAsync(sessionId, sig);
+        bodies.Should().HaveCount(2).And.Contain("body-one").And.Contain("body-two");
+    }
+
+    [Fact]
+    public async Task GetResponseBodiesAsync_ExcludesNullBodies()
+    {
+        var sessionId = Guid.NewGuid();
+        var session = new CaptureSessionInfo
+        {
+            Id = sessionId, Name = "s-null-body", TargetApplication = "App",
+            Profile = "p1", StartedAt = DateTimeOffset.UtcNow
+        };
+        await _catalog.SaveSessionAsync(session);
+
+        var req1 = MakeRequest(sessionId, "GET", "https://api.test/items/1") with { ResponseBody = "has-body" };
+        var req2 = MakeRequest(sessionId, "GET", "https://api.test/items/2") with { ResponseBody = null };
+        await _catalog.SaveRequestAsync(req1);
+        await _catalog.SaveRequestAsync(req2);
+
+        var groups = await _catalog.GetEndpointGroupsAsync(sessionId);
+        var sig = groups.Should().ContainSingle().Subject.Signature.Normalized;
+
+        var bodies = await _catalog.GetResponseBodiesAsync(sessionId, sig);
+        bodies.Should().ContainSingle().Which.Should().Be("has-body");
+    }
+
+    [Fact]
+    public async Task GetRequestByIdAsync_ReturnsMatchingRequest()
+    {
+        var sessionId = Guid.NewGuid();
+        var session = new CaptureSessionInfo
+        {
+            Id = sessionId, Name = "s-byid", TargetApplication = "App",
+            Profile = "p1", StartedAt = DateTimeOffset.UtcNow
+        };
+        await _catalog.SaveSessionAsync(session);
+
+        var req = MakeRequest(sessionId, "POST", "https://api.test/orders");
+        await _catalog.SaveRequestAsync(req);
+
+        var result = await _catalog.GetRequestByIdAsync(req.Id);
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(req.Id);
+        result.HttpMethod.Should().Be("POST");
+        result.Url.Should().Be("https://api.test/orders");
+    }
+
+    [Fact]
+    public async Task GetRequestByIdAsync_UnknownId_ReturnsNull()
+    {
+        var result = await _catalog.GetRequestByIdAsync(Guid.NewGuid());
+        result.Should().BeNull();
+    }
+
     private static CapturedRequest MakeRequest(Guid sessionId, string method, string url) => new()
     {
         Id = Guid.NewGuid(),
