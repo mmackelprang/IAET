@@ -38,6 +38,7 @@ var rootCommand = new RootCommand("IAET - Internal API Extraction Toolkit")
     SchemaCommand.Create(host.Services),
     ReplayCommand.Create(host.Services),
     ExportCommand.Create(host.Services),
+    ImportCommand.Create(host.Services),
     CrawlCommand.Create(host.Services),
     ExploreCommand.Create()
 };
