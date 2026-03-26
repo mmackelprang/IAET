@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Iaet.Core\Iaet.Core.csproj" />
+    <ProjectReference Include="..\Iaet.Catalog\Iaet.Catalog.csproj" />
+    <ProjectReference Include="..\Iaet.Schema\Iaet.Schema.csproj" />
+  </ItemGroup>
+
+</Project>

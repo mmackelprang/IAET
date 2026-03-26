@@ -4,6 +4,11 @@
     <Project Path="src/Iaet.Catalog/Iaet.Catalog.csproj" />
     <Project Path="src/Iaet.Cli/Iaet.Cli.csproj" />
     <Project Path="src/Iaet.Core/Iaet.Core.csproj" />
+    <Project Path="src/Iaet.Crawler/Iaet.Crawler.csproj" />
+    <Project Path="src/Iaet.Export/Iaet.Export.csproj" />
+    <Project Path="src/Iaet.Explorer/Iaet.Explorer.csproj" />
+    <Project Path="src/Iaet.Replay/Iaet.Replay.csproj" />
+    <Project Path="src/Iaet.Schema/Iaet.Schema.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Iaet.Capture.Tests/Iaet.Capture.Tests.csproj" />
