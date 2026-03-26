@@ -6,8 +6,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddIaetCrawler(this IServiceCollection services)
     {
-        services.AddTransient<ElementDiscoverer>();
-        services.AddTransient<RecipeRunner>();
+        // ElementDiscoverer and RecipeRunner are constructed manually — not registered via DI.
+        // ElementDiscoverer requires CrawlOptions passed per-call to DiscoverAsync.
+        // RecipeRunner is entirely static and has no instance state.
         return services;
     }
 }

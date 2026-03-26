@@ -34,14 +34,14 @@ public sealed class CrawlOptions
 
     public bool IsSelectorExcluded(string selector) =>
         ExcludedSelectors.Any(excluded =>
-            selector.Contains(excluded, StringComparison.Ordinal) ||
-            excluded.Contains(selector, StringComparison.Ordinal));
+            selector.Contains(excluded, StringComparison.Ordinal));
 
     private static bool MatchesPattern(string path, string pattern)
     {
         var regex = "^" + System.Text.RegularExpressions.Regex.Escape(pattern)
             .Replace("\\*", ".*", StringComparison.Ordinal) + "$";
-        return System.Text.RegularExpressions.Regex.IsMatch(path, regex);
+        return System.Text.RegularExpressions.Regex.IsMatch(
+            path, regex, System.Text.RegularExpressions.RegexOptions.NonBacktracking);
     }
 }
 

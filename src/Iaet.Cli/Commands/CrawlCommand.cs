@@ -77,11 +77,13 @@ internal static class CrawlCommand
                 Console.WriteLine($"  Exclude CSS:  {string.Join(", ", excludeSelectors)}");
 
             Console.WriteLine();
-            Console.WriteLine("NOTE: The crawl engine requires a live Playwright browser instance.");
-            Console.WriteLine("      Use PlaywrightPageNavigator (Iaet.Capture) and pass it to CrawlEngine.");
-            Console.WriteLine("      Example integration:");
-            Console.WriteLine("        var engine = new CrawlEngine(options, navigator);");
-            Console.WriteLine("        var report = await engine.RunAsync(ct);");
+            Console.WriteLine("DRY RUN: The crawl engine requires a live Playwright browser instance.");
+            Console.WriteLine("         No crawl was performed. To run a real crawl, wire up");
+            Console.WriteLine("         PlaywrightPageNavigator (Iaet.Capture) and pass it to CrawlEngine:");
+            Console.WriteLine("           var engine = new CrawlEngine(options, navigator);");
+            Console.WriteLine("           var report = await engine.RunAsync(ct);");
+            Console.WriteLine();
+            Console.WriteLine("Exit code 2 signals dry-run / no browser integration available.");
 
             if (!string.IsNullOrEmpty(outputPath))
             {
@@ -89,8 +91,10 @@ internal static class CrawlCommand
                 var placeholder = new { Session = session, Options = options, Status = "pending-browser-integration" };
                 var json = JsonSerializer.Serialize(placeholder, JsonOptions);
                 await File.WriteAllTextAsync(outputPath, json).ConfigureAwait(false);
-                Console.WriteLine($"\nReport placeholder written to: {outputPath}");
+                Console.WriteLine($"Report placeholder written to: {outputPath}");
             }
+
+            Environment.Exit(2);
         });
 
         return crawlCmd;

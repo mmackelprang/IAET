@@ -61,8 +61,8 @@ public class CrawlOptionsTests
 
         // selector contains the excluded substring
         options.IsSelectorExcluded("#main-nav-menu").Should().BeTrue();
-        // excluded contains the selector
-        options.IsSelectorExcluded("nav").Should().BeTrue();
+        // selector does NOT contain the excluded pattern (reversed direction is not checked)
+        options.IsSelectorExcluded("nav").Should().BeFalse();
         // no match
         options.IsSelectorExcluded("#submit-btn").Should().BeFalse();
     }

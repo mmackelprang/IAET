@@ -13,15 +13,13 @@ public sealed class ElementDiscoverer
         "[onclick]"
     ];
 
-    private readonly CrawlOptions _options;
-
-    public ElementDiscoverer(CrawlOptions options) => _options = options;
-
-    public async Task<IReadOnlyList<DiscoveredElement>> DiscoverAsync(
+    public static async Task<IReadOnlyList<DiscoveredElement>> DiscoverAsync(
         IElementQueryable queryable,
+        CrawlOptions options,
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(queryable);
+        ArgumentNullException.ThrowIfNull(options);
         var seen = new HashSet<string>(StringComparer.Ordinal);
         var results = new List<DiscoveredElement>();
 
@@ -33,7 +31,7 @@ public sealed class ElementDiscoverer
                 if (!seen.Add(el.Selector))
                     continue;
 
-                if (_options.IsSelectorExcluded(el.Selector))
+                if (options.IsSelectorExcluded(el.Selector))
                     continue;
 
                 results.Add(new DiscoveredElement

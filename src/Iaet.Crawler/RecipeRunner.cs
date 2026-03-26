@@ -37,8 +37,8 @@ public sealed class RecipeRunner
             FileName = command,
             Arguments = args,
             UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardOutput = false,
+            RedirectStandardError = false
         };
         foreach (var (key, value) in env)
             process.StartInfo.EnvironmentVariables[key] = value;

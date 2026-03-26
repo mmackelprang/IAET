@@ -22,9 +22,7 @@ public class ElementDiscovererTests
         var options = new CrawlOptions { StartUrl = "http://localhost/" };
         var element = new ElementInfo("a", "a[href]", "Home", "http://localhost/home");
         var queryable = MakeQueryable(element);
-        var discoverer = new ElementDiscoverer(options);
-
-        var results = await discoverer.DiscoverAsync(queryable);
+        var results = await ElementDiscoverer.DiscoverAsync(queryable, options);
 
         results.Should().ContainSingle()
             .Which.Should().BeEquivalentTo(new DiscoveredElement
@@ -42,9 +40,7 @@ public class ElementDiscovererTests
         var options = new CrawlOptions { StartUrl = "http://localhost/" };
         var element = new ElementInfo("button", "button:not([disabled])", "Submit", null);
         var queryable = MakeQueryable(element);
-        var discoverer = new ElementDiscoverer(options);
-
-        var results = await discoverer.DiscoverAsync(queryable);
+        var results = await ElementDiscoverer.DiscoverAsync(queryable, options);
 
         results.Should().ContainSingle()
             .Which.Should().BeEquivalentTo(new DiscoveredElement
@@ -67,9 +63,7 @@ public class ElementDiscovererTests
         var included = new ElementInfo("a", "a[href]", "Home", "/home");
         var excluded = new ElementInfo("button", "#main-nav-menu", "Nav", null);
         var queryable = MakeQueryable(included, excluded);
-        var discoverer = new ElementDiscoverer(options);
-
-        var results = await discoverer.DiscoverAsync(queryable);
+        var results = await ElementDiscoverer.DiscoverAsync(queryable, options);
 
         results.Should().ContainSingle()
             .Which.Selector.Should().Be("a[href]");

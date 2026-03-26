@@ -32,7 +32,6 @@ public sealed class CrawlEngine
         var queue = new Queue<(string Url, int Depth)>();
         queue.Enqueue((_options.StartUrl, 0));
 
-        var discoverer = new ElementDiscoverer(_options);
         var interactor = new PageInteractor(_navigator);
         var sw = Stopwatch.StartNew();
 
@@ -62,7 +61,7 @@ public sealed class CrawlEngine
                 break;
             }
 
-            var elements = await discoverer.DiscoverAsync(queryable, linkedCt).ConfigureAwait(false);
+            var elements = await ElementDiscoverer.DiscoverAsync(queryable, _options, linkedCt).ConfigureAwait(false);
             var navigatedTo = new List<string>();
 
             foreach (var element in elements)
@@ -82,6 +81,12 @@ public sealed class CrawlEngine
                 {
                     navigatedTo.Add(result.NavigatedTo);
                     queue.Enqueue((result.NavigatedTo, depth + 1));
+                }
+
+                if (result.UrlChanged)
+                {
+                    // SPA navigation occurred — break and let BFS handle the new page
+                    break;
                 }
             }
 
@@ -115,7 +120,7 @@ public sealed class CrawlEngine
             StartedAt = startedAt,
             CompletedAt = DateTimeOffset.UtcNow,
             Pages = pages,
-            TotalRequestsCaptured = 0,
+            TotalRequestsCaptured = pages.Sum(p => p.ApiCallsTriggered.Count),
             TotalStreamsCaptured = 0
         };
     }
