@@ -22,6 +22,32 @@ iaet catalog sessions
 iaet catalog endpoints --session-id <id>
 ```
 
+**Capture with stream monitoring:**
+```bash
+# Stream capture is enabled by default
+iaet capture start --target "App Name" --url https://example.com --session my-session
+
+# Also capture payload samples (up to 1000 frames per connection)
+iaet capture start --target "App Name" --url https://example.com --session my-session \
+  --capture-samples --capture-frames 500
+
+# Disable stream capture
+iaet capture start --target "App Name" --url https://example.com --session my-session \
+  --capture-streams false
+```
+
+**Inspect captured streams:**
+```bash
+# List all streams for a session
+iaet streams list --session-id <guid>
+
+# Show full details for a specific stream
+iaet streams show --stream-id <guid>
+
+# Show frame history (requires --capture-samples during capture)
+iaet streams frames --stream-id <guid>
+```
+
 ---
 
 ## Features
@@ -37,7 +63,7 @@ iaet catalog endpoints --session-id <id>
 - Local Swagger-like API explorer *(coming)*
 - Chrome DevTools extension *(coming)*
 - Background capture extension *(coming)*
-- Data stream capture for WebSocket / WebRTC / HLS / gRPC-Web *(coming)*
+- Data stream capture — WebSocket, SSE, WebRTC, HLS/DASH, gRPC-Web with frame history
 
 ---
 
@@ -81,12 +107,17 @@ iaet
 ├── capture
 │   └── start  --target <name>  --url <url>  --session <name>
 │              [--profile <name>]  [--headless]
+│              [--capture-streams]  [--capture-samples]
+│              [--capture-duration <seconds>]  [--capture-frames <n>]
 ├── catalog
 │   ├── sessions
 │   └── endpoints  --session-id <guid>
+├── streams
+│   ├── list    --session-id <guid>
+│   ├── show    --stream-id <guid>
+│   └── frames  --stream-id <guid>
 │
 │  (planned)
-├── streams    — list / inspect captured data streams
 ├── schema     — infer schemas from response bodies
 ├── replay     — replay captured requests
 ├── export     -- format (openapi|postman|har)  --session-id <guid>
