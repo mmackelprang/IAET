@@ -61,22 +61,6 @@ public sealed class EndpointModel : PageModel
         var method = parts[0];
         var path = parts[1];
         return string.Equals(request.HttpMethod, method, StringComparison.OrdinalIgnoreCase)
-            && NormalizePath(request.Url).Equals(path, StringComparison.OrdinalIgnoreCase);
+            && PathNormalizer.NormalizePath(request.Url).Equals(path, StringComparison.OrdinalIgnoreCase);
     }
-
-    private static string NormalizePath(string url)
-    {
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-            return url;
-        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        var normalized = string.Join("/",
-            segments.Select(s => IsId(s) ? "{id}" : s));
-        return "/" + normalized;
-    }
-
-    private static bool IsId(string segment) =>
-        System.Text.RegularExpressions.Regex.IsMatch(
-            segment,
-            @"^(\d+|[0-9a-f]{8,}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 }

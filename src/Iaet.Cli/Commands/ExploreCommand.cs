@@ -20,6 +20,12 @@ internal static class ExploreCommand
             var db   = parseResult.GetRequiredValue(dbOption);
             var port = parseResult.GetValue(portOption);
 
+            if (!File.Exists(db))
+            {
+                await Console.Error.WriteLineAsync($"Error: database file not found: {db}").ConfigureAwait(false);
+                return;
+            }
+
             var app = ExplorerApp.Build(db, port);
 
             Console.WriteLine($"IAET Explorer running at http://localhost:{port}");

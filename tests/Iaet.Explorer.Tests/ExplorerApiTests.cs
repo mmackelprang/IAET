@@ -44,6 +44,10 @@ public sealed class ExplorerApiTests : IAsyncLifetime
             .Returns(new List<EndpointGroup>());
         catalog.GetRequestsBySessionAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(new List<CapturedRequest>());
+        catalog.GetResponseBodiesAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new List<string>());
+        catalog.GetRequestByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns((CapturedRequest?)null);
         streamCatalog.GetStreamsBySessionAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(new List<CapturedStream>());
 
@@ -74,6 +78,7 @@ public sealed class ExplorerApiTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
+        _client?.Dispose();
         if (_app is not null)
             await _app.DisposeAsync();
     }
@@ -121,5 +126,23 @@ public sealed class ExplorerApiTests : IAsyncLifetime
     {
         var response = await _client!.GetAsync(new Uri($"/api/sessions/{SessionId}/streams", UriKind.Relative));
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ExportSession_HappyPath_Returns200WithFileDownload()
+    {
+        var response = await _client!.GetAsync(
+            new Uri($"/api/sessions/{SessionId}/export/report", UriKind.Relative));
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("text/markdown");
+    }
+
+    [Fact]
+    public async Task ReplayRequest_WithUnknownId_Returns404()
+    {
+        var unknownId = Guid.NewGuid();
+        var response = await _client!.PostAsync(
+            new Uri($"/api/replay/{unknownId}", UriKind.Relative), content: null);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }

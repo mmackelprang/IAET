@@ -20,6 +20,8 @@ internal static class SessionsApi
 
         app.MapGet("/api/sessions/{id:guid}", async (Guid id, IEndpointCatalog catalog, CancellationToken ct) =>
         {
+            // TODO: IEndpointCatalog does not yet expose GetSessionByIdAsync; fetching all sessions
+            // to find one is a catalog API gap. Replace with a dedicated method in a separate PR.
             var sessions = await catalog.ListSessionsAsync(ct).ConfigureAwait(false);
             var session = sessions.FirstOrDefault(s => s.Id == id);
             return session is null ? Results.NotFound() : Results.Ok(session);
