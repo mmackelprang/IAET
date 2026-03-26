@@ -19,5 +19,6 @@
     <Project Path="tests/Iaet.Crawler.Tests/Iaet.Crawler.Tests.csproj" />
     <Project Path="tests/Iaet.Replay.Tests/Iaet.Replay.Tests.csproj" />
     <Project Path="tests/Iaet.Schema.Tests/Iaet.Schema.Tests.csproj" />
+    <Project Path="tests/Iaet.Cli.Tests/Iaet.Cli.Tests.csproj" />
   </Folder>
 </Solution>

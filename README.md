@@ -94,6 +94,14 @@ iaet capture run --recipe docs/recipes/spotify-playlist-capture.ts --session spo
 CDP_ENDPOINT=ws://127.0.0.1:9222 npx tsx docs/recipes/spotify-playlist-capture.ts
 ```
 
+**Run the guided investigation wizard:**
+```bash
+# Launch the interactive wizard — walks you through capture → analyze → document
+iaet investigate
+```
+
+The wizard prompts for a target name and starting URL, lets you choose a capture method, and then loops through a "What next?" menu to view endpoints, infer schemas, and export results.
+
 **Browse the Explorer web UI:**
 ```bash
 # Launch the local web UI (default port 9200)
@@ -140,6 +148,7 @@ iaet export har --session-id <guid> --output session.har
 - **Export** — Markdown report, self-contained HTML, OpenAPI 3.1 YAML, Postman Collection v2.1.0, typed C# client, HAR 1.2 — all with credential redaction
 - **Semi-autonomous crawler** — BFS page traversal with configurable depth, page count, duration, URL whitelist/blacklist, excluded selectors, and TypeScript recipe execution via `npx tsx`
 - **Explorer** — local Swagger-like web UI for browsing sessions, endpoints, schemas, streams, replay, and export — served by `iaet explore --db catalog.db --port 9200`
+- **Investigation Wizard** — guided interactive CLI (`iaet investigate`) that walks beginners through capture → analyze → document with numbered menus and auto-generated session names
 - Chrome DevTools extension *(coming)*
 - Background capture extension *(coming)*
 
@@ -177,7 +186,8 @@ PageInteractor · RecipeRunner"]
 ExplorerApp · Razor Pages · Minimal API
 SessionsApi · EndpointsApi · ReplayApi · ExportApi"]
     Cli["Iaet.Cli  (dotnet global tool)
-System.CommandLine · DI host builder · Serilog"]
+System.CommandLine · DI host builder · Serilog
+InvestigateCommand · WizardPrompt"]
 
     Core --> Capture
     Core --> Catalog
@@ -238,9 +248,8 @@ iaet
 │              [--exclude-selector <css>]...  [--output <path>]
 │
 ├── explore    --db <path>  [--port <n>]    (default port: 9200)
-│  (planned)
 ├── import     — import .iaet.json capture files
-└── investigate — assisted API discovery workflow
+└── investigate — guided interactive wizard: capture → analyze → document
 ```
 
 ---
