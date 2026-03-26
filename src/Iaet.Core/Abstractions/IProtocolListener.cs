@@ -9,4 +9,5 @@ public interface IProtocolListener
     bool CanAttach(ICdpSession cdpSession);
     Task AttachAsync(ICdpSession cdpSession, IStreamCatalog catalog, CancellationToken ct = default);
     Task DetachAsync(CancellationToken ct = default);
+    IReadOnlyList<CapturedStream> GetPendingStreams();
 }
