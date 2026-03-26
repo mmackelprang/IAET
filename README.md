@@ -72,6 +72,28 @@ iaet streams show --stream-id <guid>
 iaet streams frames --stream-id <guid>
 ```
 
+**Run the semi-autonomous crawler:**
+```bash
+# Crawl a target app (requires a running Playwright browser)
+iaet crawl --url https://example.com --target "My App" --session crawl-01
+
+# Limit scope and write a report
+iaet crawl --url https://example.com --target "My App" --session crawl-01 \
+  --max-depth 2 --max-pages 20 \
+  --blacklist "/logout" --blacklist "/admin/*" \
+  --exclude-selector ".cookie-banner" \
+  --output crawl-report.json
+```
+
+**Run a TypeScript Playwright recipe:**
+```bash
+# Validate and preview the recipe command
+iaet capture run --recipe docs/recipes/spotify-playlist-capture.ts --session spotify-01
+
+# Run the recipe directly (npx tsx required)
+CDP_ENDPOINT=ws://127.0.0.1:9222 npx tsx docs/recipes/spotify-playlist-capture.ts
+```
+
 **Export session data:**
 ```bash
 # Markdown investigation report (to stdout)
@@ -105,7 +127,7 @@ iaet export har --session-id <guid> --output session.har
 - **Schema inference** — JSON Schema (draft-07), C# records, and OpenAPI 3.1 fragments from captured bodies, with nullable support and type-conflict warnings
 - **HTTP replay** — field-level JSON diff, pluggable auth provider, rate limiting (10 req/min / 100 req/day), Polly retry + circuit breaker, dry-run mode
 - **Export** — Markdown report, self-contained HTML, OpenAPI 3.1 YAML, Postman Collection v2.1.0, typed C# client, HAR 1.2 — all with credential redaction
-- Semi-autonomous crawler *(coming)*
+- **Semi-autonomous crawler** — BFS page traversal with configurable depth, page count, duration, URL whitelist/blacklist, excluded selectors, and TypeScript recipe execution via `npx tsx`
 - Local Swagger-like API explorer *(coming)*
 - Chrome DevTools extension *(coming)*
 - Background capture extension *(coming)*
@@ -137,6 +159,9 @@ IReplayAuthProvider · ReplayOptions"]
 ExportContext · MarkdownReportGenerator
 HtmlReportGenerator · OpenApiGenerator
 PostmanGenerator · CSharpClientGenerator · HarGenerator"]
+    Crawler["Iaet.Crawler
+CrawlEngine · CrawlOptions · ElementDiscoverer
+PageInteractor · RecipeRunner"]
     Cli["Iaet.Cli  (dotnet global tool)
 System.CommandLine · DI host builder · Serilog"]
 
@@ -145,6 +170,7 @@ System.CommandLine · DI host builder · Serilog"]
     Core --> Schema
     Core --> Replay
     Core --> Export
+    Core --> Crawler
     Catalog --> Export
     Schema --> Export
     Capture --> Cli
@@ -152,11 +178,11 @@ System.CommandLine · DI host builder · Serilog"]
     Schema --> Cli
     Replay --> Cli
     Export --> Cli
+    Crawler --> Cli
 ```
 
 **Planned assemblies** (all depend on `Iaet.Core`):
 
-- `Iaet.Crawler` — Semi-autonomous browser crawler
 - `Iaet.Explorer` — Local Swagger-like web explorer
 
 ---
@@ -166,10 +192,11 @@ System.CommandLine · DI host builder · Serilog"]
 ```
 iaet
 ├── capture
-│   └── start  --target <name>  --url <url>  --session <name>
-│              [--profile <name>]  [--headless]
-│              [--capture-streams]  [--capture-samples]
-│              [--capture-duration <seconds>]  [--capture-frames <n>]
+│   ├── start  --target <name>  --url <url>  --session <name>
+│   │          [--profile <name>]  [--headless]
+│   │          [--capture-streams]  [--capture-samples]
+│   │          [--capture-duration <seconds>]  [--capture-frames <n>]
+│   └── run    --recipe <path>  --session <name>
 ├── catalog
 │   ├── sessions
 │   └── endpoints  --session-id <guid>
@@ -190,10 +217,13 @@ iaet
 │   ├── postman  --session-id <guid>  [--output <path>]
 │   ├── csharp   --session-id <guid>  [--output <path>]
 │   └── har      --session-id <guid>  [--output <path>]
+├── crawl      --url <url>  [--target <name>]  [--session <name>]
+│              [--max-depth <n>]  [--max-pages <n>]  [--max-duration <seconds>]
+│              [--headless]  [--blacklist <pattern>]...
+│              [--exclude-selector <css>]...  [--output <path>]
 │
 │  (planned)
 ├── explore    — launch local API explorer
-├── crawl      — semi-autonomous capture crawler
 ├── import     — import .iaet.json capture files
 └── investigate — assisted API discovery workflow
 ```

@@ -15,6 +15,7 @@
     <Project Path="tests/Iaet.Catalog.Tests/Iaet.Catalog.Tests.csproj" />
     <Project Path="tests/Iaet.Core.Tests/Iaet.Core.Tests.csproj" />
     <Project Path="tests/Iaet.Export.Tests/Iaet.Export.Tests.csproj" />
+    <Project Path="tests/Iaet.Crawler.Tests/Iaet.Crawler.Tests.csproj" />
     <Project Path="tests/Iaet.Replay.Tests/Iaet.Replay.Tests.csproj" />
     <Project Path="tests/Iaet.Schema.Tests/Iaet.Schema.Tests.csproj" />
   </Folder>
