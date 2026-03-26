@@ -1,5 +1,6 @@
 using System.CommandLine;
 using Iaet.Capture;
+using Iaet.Capture.Listeners;
 using Iaet.Catalog;
 using Iaet.Core.Abstractions;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +21,20 @@ internal static class CaptureCommand
         var urlOption = new Option<string>("--url") { Description = "Starting URL", Required = true };
         var sessionOption = new Option<string>("--session") { Description = "Session name", Required = true };
         var headlessOption = new Option<bool>("--headless") { Description = "Run browser in headless mode" };
+        var captureStreamsOption = new Option<bool>("--capture-streams") { Description = "Enable stream capture (WebSocket, SSE, WebRTC, HLS/DASH, gRPC-Web)", DefaultValueFactory = _ => true };
+        var captureSamplesOption = new Option<bool>("--capture-samples") { Description = "Capture sample payload frames", DefaultValueFactory = _ => false };
+        var captureDurationOption = new Option<int>("--capture-duration") { Description = "Sample capture duration in seconds", DefaultValueFactory = _ => 10 };
+        var captureFramesOption = new Option<int>("--capture-frames") { Description = "Maximum frames to capture per connection", DefaultValueFactory = _ => 1000 };
 
         startCmd.Add(targetOption);
         startCmd.Add(profileOption);
         startCmd.Add(urlOption);
         startCmd.Add(sessionOption);
         startCmd.Add(headlessOption);
+        startCmd.Add(captureStreamsOption);
+        startCmd.Add(captureSamplesOption);
+        startCmd.Add(captureDurationOption);
+        startCmd.Add(captureFramesOption);
 
         startCmd.SetAction(async (parseResult) =>
         {
@@ -34,6 +43,10 @@ internal static class CaptureCommand
             var url = parseResult.GetRequiredValue(urlOption);
             var sessionName = parseResult.GetRequiredValue(sessionOption);
             var headless = parseResult.GetValue(headlessOption);
+            var captureStreams = parseResult.GetValue(captureStreamsOption);
+            var captureSamples = parseResult.GetValue(captureSamplesOption);
+            var captureDuration = parseResult.GetValue(captureDurationOption);
+            var captureFrames = parseResult.GetValue(captureFramesOption);
 
             Console.WriteLine($"Starting capture session '{sessionName}' for {target}...");
             Console.WriteLine("Browser will open. Perform actions, then press Enter to stop.");
@@ -44,12 +57,39 @@ internal static class CaptureCommand
             var catalog = scope.ServiceProvider.GetRequiredService<IEndpointCatalog>();
             var factory = scope.ServiceProvider.GetRequiredService<ICaptureSessionFactory>();
 
+            var streamOptions = new StreamCaptureOptions
+            {
+                Enabled = captureStreams,
+                CaptureSamples = captureSamples,
+                SampleDurationSeconds = captureDuration,
+                MaxFramesPerConnection = captureFrames
+            };
+
+            IStreamCatalog? streamCatalog = null;
+            IReadOnlyList<IProtocolListener>? listeners = null;
+
+            if (captureStreams)
+            {
+                streamCatalog = scope.ServiceProvider.GetRequiredService<IStreamCatalog>();
+                listeners =
+                [
+                    new WebSocketListener(streamOptions),
+                    new SseListener(streamOptions),
+                    new MediaStreamListener(streamOptions),
+                    new GrpcWebListener(streamOptions),
+                    new WebRtcListener(streamOptions)
+                ];
+                Console.WriteLine("Stream capture enabled (WebSocket, SSE, WebRTC, HLS/DASH, gRPC-Web).");
+            }
+
             var session = factory.Create(new CaptureOptions
             {
                 TargetApplication = target,
                 Profile = profile,
-                Headless = headless
-            });
+                Headless = headless,
+                Streams = streamOptions
+            }, streamCatalog, listeners);
+
             await using (session.ConfigureAwait(false))
             {
                 var sessionInfo = new Iaet.Core.Models.CaptureSessionInfo
