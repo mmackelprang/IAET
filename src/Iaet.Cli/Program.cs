@@ -40,7 +40,8 @@ var rootCommand = new RootCommand("IAET - Internal API Extraction Toolkit")
     ExportCommand.Create(host.Services),
     ImportCommand.Create(host.Services),
     CrawlCommand.Create(host.Services),
-    ExploreCommand.Create()
+    ExploreCommand.Create(),
+    InvestigateCommand.Create(host.Services)
 };
 
 return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(false);
