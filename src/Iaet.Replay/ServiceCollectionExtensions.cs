@@ -1,5 +1,6 @@
 using Iaet.Core.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Iaet.Replay;
 
@@ -22,8 +23,17 @@ public static class ServiceCollectionExtensions
         var options = new ReplayOptions();
         configure?.Invoke(options);
         services.AddSingleton(options);
-        services.AddHttpClient<IReplayEngine, HttpReplayEngine>()
+
+        services.AddHttpClient<IReplayEngine, HttpReplayEngine>(CreateEngine)
                 .AddStandardResilienceHandler();
+
         return services;
     }
+
+    private static HttpReplayEngine CreateEngine(HttpClient httpClient, IServiceProvider sp)
+        => new(
+            httpClient,
+            sp.GetRequiredService<ReplayOptions>(),
+            sp.GetService<IReplayAuthProvider>(),
+            sp.GetService<ILogger<HttpReplayEngine>>());
 }

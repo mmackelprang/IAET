@@ -64,6 +64,8 @@ public sealed class HttpReplayEngine : IReplayEngine, IDisposable
         _authProvider = authProvider;
         _logger       = logger;
 
+        _httpClient.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+
         _minuteLimiter = new FixedWindowRateLimiter(new FixedWindowRateLimiterOptions
         {
             PermitLimit          = options.RequestsPerMinute,
@@ -168,6 +170,15 @@ public sealed class HttpReplayEngine : IReplayEngine, IDisposable
         var method  = new HttpMethod(original.HttpMethod);
         var request = new HttpRequestMessage(method, original.Url);
 
+        // Set up body content first so content headers can be applied to the correct object.
+        if (original.RequestBody is { Length: > 0 })
+        {
+            request.Content = new StringContent(
+                original.RequestBody,
+                System.Text.Encoding.UTF8,
+                "application/json");
+        }
+
         foreach (var (key, value) in original.RequestHeaders)
         {
             if (RedactedMarkers.Contains(value))
@@ -175,20 +186,12 @@ public sealed class HttpReplayEngine : IReplayEngine, IDisposable
                 continue;
             }
 
-            // Content headers must be set on Content; try request headers first
+            // Content headers must be set on Content; try request headers first.
             if (!request.Headers.TryAddWithoutValidation(key, value))
             {
                 request.Content ??= new StringContent(string.Empty);
                 request.Content.Headers.TryAddWithoutValidation(key, value);
             }
-        }
-
-        if (original.RequestBody is { Length: > 0 })
-        {
-            request.Content = new StringContent(
-                original.RequestBody,
-                System.Text.Encoding.UTF8,
-                "application/json");
         }
 
         return request;
