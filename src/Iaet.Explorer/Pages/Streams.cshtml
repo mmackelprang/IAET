@@ -1,0 +1,79 @@
+@page "/streams/{id:guid}"
+@model Iaet.Explorer.Pages.StreamsModel
+@{
+    ViewData["Title"] = "Streams";
+}
+
+@if (Model.Session is null)
+{
+    <p>Session not found.</p>
+}
+else
+{
+    <div class="breadcrumb">
+        <a href="/">Sessions</a> /
+        <a href="/session/@Model.Session.Id">@Model.Session.Name</a> /
+        Streams
+    </div>
+
+    <h1>Streams — @Model.Session.Name</h1>
+
+    @if (Model.Streams.Count == 0)
+    {
+        <div class="alert">No streams captured for this session.</div>
+    }
+    else
+    {
+        @foreach (var stream in Model.Streams)
+        {
+            <div class="card stream-card">
+                <div class="stream-header">
+                    <span class="stream-protocol">@stream.Protocol</span>
+                    <span class="mono truncate">@stream.Url</span>
+                </div>
+                <dl class="meta-list">
+                    <dt>ID</dt><dd class="mono">@stream.Id</dd>
+                    <dt>Started</dt><dd>@stream.StartedAt.ToString("u")</dd>
+                    <dt>Ended</dt><dd>@(stream.EndedAt?.ToString("u") ?? "—")</dd>
+                    @if (stream.Tag is not null)
+                    {
+                        <dt>Tag</dt><dd>@stream.Tag</dd>
+                    }
+                </dl>
+                @if (stream.Metadata.Properties.Count > 0)
+                {
+                    <h4>Metadata</h4>
+                    <table class="data-table">
+                        <thead><tr><th>Key</th><th>Value</th></tr></thead>
+                        <tbody>
+                            @foreach (var kv in stream.Metadata.Properties)
+                            {
+                                <tr><td>@kv.Key</td><td>@kv.Value</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                @if (stream.Frames is { Count: > 0 })
+                {
+                    <h4>Frames (first 10)</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Timestamp</th><th>Direction</th><th>Size</th><th>Payload</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var frame in stream.Frames.Take(10))
+                            {
+                                <tr>
+                                    <td>@frame.Timestamp.ToString("HH:mm:ss.fff")</td>
+                                    <td>@frame.Direction</td>
+                                    <td>@frame.SizeBytes B</td>
+                                    <td class="mono truncate">@(frame.TextPayload ?? "(binary)")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        }
+    }
+}
