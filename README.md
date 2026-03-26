@@ -69,34 +69,35 @@ iaet streams frames --stream-id <guid>
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Iaet.Core  (contracts + models — zero dependencies)            │
-│    IApiAdapter, ICaptureSession, IEndpointCatalog,              │
-│    IProtocolListener, IReplayEngine, ISchemaInferrer            │
-│    CapturedRequest, CapturedStream, EndpointSignature, ...      │
-└─────────────┬───────────────────────────┬───────────────────────┘
-              │                           │
-   ┌──────────▼──────────┐   ┌────────────▼────────────┐
-   │  Iaet.Capture        │   │  Iaet.Catalog            │
-   │  Playwright + CDP    │   │  EF Core + SQLite        │
-   │  PlaywrightSession   │   │  SqliteCatalog           │
-   │  RequestSanitizer    │   │  EndpointNormalizer      │
-   └──────────┬──────────┘   └────────────┬────────────┘
-              │                           │
-   ┌──────────▼───────────────────────────▼────────────┐
-   │  Iaet.Cli  (dotnet global tool)                    │
-   │  System.CommandLine · DI host builder · Serilog    │
-   └───────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    Core["Iaet.Core
+(contracts + models — zero dependencies)
+IApiAdapter · ICaptureSession · IEndpointCatalog
+IProtocolListener · IReplayEngine · ISchemaInferrer
+CapturedRequest · CapturedStream · EndpointSignature"]
+    Capture["Iaet.Capture
+Playwright + CDP
+PlaywrightSession · RequestSanitizer"]
+    Catalog["Iaet.Catalog
+EF Core + SQLite
+SqliteCatalog · EndpointNormalizer"]
+    Cli["Iaet.Cli  (dotnet global tool)
+System.CommandLine · DI host builder · Serilog"]
 
-Planned assemblies
-──────────────────
-  Iaet.Schema    — JSON/Protobuf schema inference from captured bodies
-  Iaet.Replay    — HTTP request replay with variable substitution
-  Iaet.Crawler   — Semi-autonomous browser crawler
-  Iaet.Export    — OpenAPI / Postman / HAR export
-  Iaet.Explorer  — Local Swagger-like web explorer
+    Core --> Capture
+    Core --> Catalog
+    Capture --> Cli
+    Catalog --> Cli
 ```
+
+**Planned assemblies** (all depend on `Iaet.Core`):
+
+- `Iaet.Schema` — JSON/Protobuf schema inference from captured bodies
+- `Iaet.Replay` — HTTP request replay with variable substitution
+- `Iaet.Crawler` — Semi-autonomous browser crawler
+- `Iaet.Export` — OpenAPI / Postman / HAR export
+- `Iaet.Explorer` — Local Swagger-like web explorer
 
 ---
 
