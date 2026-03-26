@@ -4,7 +4,8 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <!-- Test method names use underscore_convention; suppress naming rules for test projects -->
-    <NoWarn>$(NoWarn);CA1707</NoWarn>
+    <!-- CA2000: HttpClient lifetime is intentionally managed via the engine factory helper -->
+    <NoWarn>$(NoWarn);CA1707;CA2000</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
