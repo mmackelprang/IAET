@@ -72,6 +72,27 @@ iaet streams show --stream-id <guid>
 iaet streams frames --stream-id <guid>
 ```
 
+**Export session data:**
+```bash
+# Markdown investigation report (to stdout)
+iaet export report --session-id <guid>
+
+# Self-contained HTML report
+iaet export html --session-id <guid> --output report.html
+
+# OpenAPI 3.1 YAML specification
+iaet export openapi --session-id <guid> --output api.yaml
+
+# Postman Collection v2.1.0
+iaet export postman --session-id <guid> --output collection.json
+
+# Typed C# HTTP client
+iaet export csharp --session-id <guid> --output ApiClient.cs
+
+# HAR 1.2 HTTP archive
+iaet export har --session-id <guid> --output session.har
+```
+
 ---
 
 ## Features
@@ -83,8 +104,8 @@ iaet streams frames --stream-id <guid>
 - Data stream capture — WebSocket, SSE, WebRTC, HLS/DASH, gRPC-Web with frame history
 - **Schema inference** — JSON Schema (draft-07), C# records, and OpenAPI 3.1 fragments from captured bodies, with nullable support and type-conflict warnings
 - **HTTP replay** — field-level JSON diff, pluggable auth provider, rate limiting (10 req/min / 100 req/day), Polly retry + circuit breaker, dry-run mode
+- **Export** — Markdown report, self-contained HTML, OpenAPI 3.1 YAML, Postman Collection v2.1.0, typed C# client, HAR 1.2 — all with credential redaction
 - Semi-autonomous crawler *(coming)*
-- Export to OpenAPI / Postman / HAR *(coming)*
 - Local Swagger-like API explorer *(coming)*
 - Chrome DevTools extension *(coming)*
 - Background capture extension *(coming)*
@@ -112,6 +133,10 @@ JsonTypeMap · Generators (JSON/C#/OpenAPI)"]
     Replay["Iaet.Replay
 HttpReplayEngine · JsonDiffer
 IReplayAuthProvider · ReplayOptions"]
+    Export["Iaet.Export
+ExportContext · MarkdownReportGenerator
+HtmlReportGenerator · OpenApiGenerator
+PostmanGenerator · CSharpClientGenerator · HarGenerator"]
     Cli["Iaet.Cli  (dotnet global tool)
 System.CommandLine · DI host builder · Serilog"]
 
@@ -119,16 +144,19 @@ System.CommandLine · DI host builder · Serilog"]
     Core --> Catalog
     Core --> Schema
     Core --> Replay
+    Core --> Export
+    Catalog --> Export
+    Schema --> Export
     Capture --> Cli
     Catalog --> Cli
     Schema --> Cli
     Replay --> Cli
+    Export --> Cli
 ```
 
 **Planned assemblies** (all depend on `Iaet.Core`):
 
 - `Iaet.Crawler` — Semi-autonomous browser crawler
-- `Iaet.Export` — OpenAPI / Postman / HAR export
 - `Iaet.Explorer` — Local Swagger-like web explorer
 
 ---
@@ -155,9 +183,15 @@ iaet
 ├── replay
 │   ├── run    --request-id <guid>  [--dry-run]
 │   └── batch  --session-id <guid>  [--dry-run]
+├── export
+│   ├── report   --session-id <guid>  [--output <path>]
+│   ├── html     --session-id <guid>  [--output <path>]
+│   ├── openapi  --session-id <guid>  [--output <path>]
+│   ├── postman  --session-id <guid>  [--output <path>]
+│   ├── csharp   --session-id <guid>  [--output <path>]
+│   └── har      --session-id <guid>  [--output <path>]
 │
 │  (planned)
-├── export     -- format (openapi|postman|har)  --session-id <guid>
 ├── explore    — launch local API explorer
 ├── crawl      — semi-autonomous capture crawler
 ├── import     — import .iaet.json capture files
