@@ -14,5 +14,6 @@
     <Project Path="tests/Iaet.Capture.Tests/Iaet.Capture.Tests.csproj" />
     <Project Path="tests/Iaet.Catalog.Tests/Iaet.Catalog.Tests.csproj" />
     <Project Path="tests/Iaet.Core.Tests/Iaet.Core.Tests.csproj" />
+    <Project Path="tests/Iaet.Schema.Tests/Iaet.Schema.Tests.csproj" />
   </Folder>
 </Solution>

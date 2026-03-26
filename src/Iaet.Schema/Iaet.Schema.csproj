@@ -4,4 +4,8 @@
     <ProjectReference Include="..\Iaet.Core\Iaet.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NJsonSchema" Version="11.5.2" />
+  </ItemGroup>
+
 </Project>
