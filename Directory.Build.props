@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisMode>All</AnalysisMode>
+    <LangVersion>13</LangVersion>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <!-- NuGet packaging defaults -->
+  <PropertyGroup>
+    <Authors>IAET Contributors</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mmackelprang/IAET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mmackelprang/IAET</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+</Project>

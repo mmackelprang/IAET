@@ -1,0 +1,36 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.vs/
+.idea/
+
+## Build output
+publish/
+artifacts/
+
+## Secrets and captures
+captures/
+*.enc
+
+## Coverage
+TestResults/
+coverage/
+*.cobertura.xml
+
+## SQLite databases
+*.db
+*.db-journal
+*.db-wal
+
+## Node.js (browser extensions)
+node_modules/
+dist/
+
+## NuGet
+*.nupkg
+
+## OS
+Thumbs.db
+.DS_Store
