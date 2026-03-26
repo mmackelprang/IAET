@@ -22,6 +22,30 @@ iaet catalog sessions
 iaet catalog endpoints --session-id <id>
 ```
 
+**Infer schemas from response bodies:**
+```bash
+# Print JSON Schema, C# record, and OpenAPI fragment for an endpoint
+iaet schema infer --session-id <guid> --endpoint "GET /api/users"
+
+# Print only one format
+iaet schema show --session-id <guid> --endpoint "GET /api/users" --format json
+iaet schema show --session-id <guid> --endpoint "GET /api/users" --format csharp
+iaet schema show --session-id <guid> --endpoint "GET /api/users" --format openapi
+```
+
+**Replay captured requests:**
+```bash
+# Replay a single request and show diffs vs original response
+iaet replay run --request-id <guid>
+
+# Dry-run: show what would be replayed without sending HTTP
+iaet replay run --request-id <guid> --dry-run
+
+# Replay one representative request per unique endpoint in a session
+iaet replay batch --session-id <guid>
+iaet replay batch --session-id <guid> --dry-run
+```
+
 **Capture with stream monitoring:**
 ```bash
 # Stream capture is enabled by default
@@ -56,14 +80,14 @@ iaet streams frames --stream-id <guid>
 - SQLite endpoint catalog with persistent storage
 - Automatic endpoint deduplication and observation counting
 - Header sanitization (Authorization, Cookie, CSRF tokens redacted)
-- Schema inference *(coming)*
-- HTTP replay *(coming)*
+- Data stream capture — WebSocket, SSE, WebRTC, HLS/DASH, gRPC-Web with frame history
+- **Schema inference** — JSON Schema (draft-07), C# records, and OpenAPI 3.1 fragments from captured bodies, with nullable support and type-conflict warnings
+- **HTTP replay** — field-level JSON diff, pluggable auth provider, rate limiting (10 req/min / 100 req/day), Polly retry + circuit breaker, dry-run mode
 - Semi-autonomous crawler *(coming)*
 - Export to OpenAPI / Postman / HAR *(coming)*
 - Local Swagger-like API explorer *(coming)*
 - Chrome DevTools extension *(coming)*
 - Background capture extension *(coming)*
-- Data stream capture — WebSocket, SSE, WebRTC, HLS/DASH, gRPC-Web with frame history
 
 ---
 
@@ -82,19 +106,27 @@ PlaywrightSession · RequestSanitizer"]
     Catalog["Iaet.Catalog
 EF Core + SQLite
 SqliteCatalog · EndpointNormalizer"]
+    Schema["Iaet.Schema
+JsonSchemaInferrer · TypeMerger
+JsonTypeMap · Generators (JSON/C#/OpenAPI)"]
+    Replay["Iaet.Replay
+HttpReplayEngine · JsonDiffer
+IReplayAuthProvider · ReplayOptions"]
     Cli["Iaet.Cli  (dotnet global tool)
 System.CommandLine · DI host builder · Serilog"]
 
     Core --> Capture
     Core --> Catalog
+    Core --> Schema
+    Core --> Replay
     Capture --> Cli
     Catalog --> Cli
+    Schema --> Cli
+    Replay --> Cli
 ```
 
 **Planned assemblies** (all depend on `Iaet.Core`):
 
-- `Iaet.Schema` — JSON/Protobuf schema inference from captured bodies
-- `Iaet.Replay` — HTTP request replay with variable substitution
 - `Iaet.Crawler` — Semi-autonomous browser crawler
 - `Iaet.Export` — OpenAPI / Postman / HAR export
 - `Iaet.Explorer` — Local Swagger-like web explorer
@@ -117,10 +149,14 @@ iaet
 │   ├── list    --session-id <guid>
 │   ├── show    --stream-id <guid>
 │   └── frames  --stream-id <guid>
+├── schema
+│   ├── infer  --session-id <guid>  --endpoint <signature>
+│   └── show   --session-id <guid>  --endpoint <signature>  --format <json|csharp|openapi>
+├── replay
+│   ├── run    --request-id <guid>  [--dry-run]
+│   └── batch  --session-id <guid>  [--dry-run]
 │
 │  (planned)
-├── schema     — infer schemas from response bodies
-├── replay     — replay captured requests
 ├── export     -- format (openapi|postman|har)  --session-id <guid>
 ├── explore    — launch local API explorer
 ├── crawl      — semi-autonomous capture crawler

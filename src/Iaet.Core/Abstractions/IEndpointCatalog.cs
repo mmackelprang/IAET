@@ -9,4 +9,9 @@ public interface IEndpointCatalog
     Task<IReadOnlyList<CaptureSessionInfo>> ListSessionsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<CapturedRequest>> GetRequestsBySessionAsync(Guid sessionId, CancellationToken ct = default);
     Task<IReadOnlyList<EndpointGroup>> GetEndpointGroupsAsync(Guid sessionId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<string>> GetResponseBodiesAsync(
+        Guid sessionId, string normalizedSignature, CancellationToken ct = default);
+
+    Task<CapturedRequest?> GetRequestByIdAsync(Guid requestId, CancellationToken ct = default);
 }
