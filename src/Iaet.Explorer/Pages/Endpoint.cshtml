@@ -1,0 +1,142 @@
+@page "/endpoint/{id:guid}/{sig}"
+@model Iaet.Explorer.Pages.EndpointModel
+@{
+    ViewData["Title"] = Model.Sig;
+}
+
+@if (Model.Session is null)
+{
+    <p>Session not found.</p>
+}
+else
+{
+    var encodedSig = Uri.EscapeDataString(Model.Sig);
+    <div class="breadcrumb">
+        <a href="/">Sessions</a> /
+        <a href="/session/@Model.Session.Id">@Model.Session.Name</a> /
+        @Model.Sig
+    </div>
+
+    <div class="card">
+        <h2 class="mono">@Model.Sig</h2>
+        <p>@Model.Requests.Count request(s) captured</p>
+        <div class="action-bar">
+            <a href="/api/sessions/@Model.Session.Id/endpoints/@encodedSig/schema" class="btn">View Schema JSON</a>
+        </div>
+    </div>
+
+    @if (Model.Schema is not null)
+    {
+        <div class="card">
+            <h3>Inferred Schema</h3>
+            @if (Model.Schema.Warnings.Count > 0)
+            {
+                <ul class="warnings">
+                    @foreach (var w in Model.Schema.Warnings)
+                    {
+                        <li>@w</li>
+                    }
+                </ul>
+            }
+            <div class="schema-tabs">
+                <button class="tab-btn active" onclick="showTab(event,'tab-jsonschema')">JSON Schema</button>
+                <button class="tab-btn" onclick="showTab(event,'tab-csharp')">C# Record</button>
+                <button class="tab-btn" onclick="showTab(event,'tab-openapi')">OpenAPI Fragment</button>
+            </div>
+            <div id="tab-jsonschema" class="tab-panel active">
+                <pre class="code-block"><code>@Model.Schema.JsonSchema</code></pre>
+            </div>
+            <div id="tab-csharp" class="tab-panel">
+                <pre class="code-block"><code>@Model.Schema.CSharpRecord</code></pre>
+            </div>
+            <div id="tab-openapi" class="tab-panel">
+                <pre class="code-block"><code>@Model.Schema.OpenApiFragment</code></pre>
+            </div>
+        </div>
+    }
+
+    <h3>Requests</h3>
+    @if (Model.Requests.Count == 0)
+    {
+        <p>No requests found.</p>
+    }
+    else
+    {
+        @foreach (var req in Model.Requests)
+        {
+            <div class="request-card" id="req-@req.Id">
+                <div class="request-header" onclick="toggleRequest('@req.Id')">
+                    <span class="method method-@req.HttpMethod.ToLower()">@req.HttpMethod</span>
+                    <span class="mono">@req.Url</span>
+                    <span class="status status-@(req.ResponseStatus / 100)xx">@req.ResponseStatus</span>
+                    <span class="duration">@req.DurationMs ms</span>
+                    <span class="timestamp">@req.Timestamp.ToString("g")</span>
+                    <button class="replay-btn" onclick="event.stopPropagation(); replayRequest('@req.Id')">Replay</button>
+                </div>
+                <div id="body-@req.Id" class="request-body" style="display:none">
+                    <div class="req-res-grid">
+                        <div>
+                            <h4>Request Headers</h4>
+                            <pre class="code-block"><code>@string.Join("\n", req.RequestHeaders.Select(h => $"{h.Key}: {h.Value}"))</code></pre>
+                            @if (!string.IsNullOrEmpty(req.RequestBody))
+                            {
+                                <h4>Request Body</h4>
+                                <pre class="code-block"><code>@req.RequestBody</code></pre>
+                            }
+                        </div>
+                        <div>
+                            <h4>Response Headers</h4>
+                            <pre class="code-block"><code>@string.Join("\n", req.ResponseHeaders.Select(h => $"{h.Key}: {h.Value}"))</code></pre>
+                            @if (!string.IsNullOrEmpty(req.ResponseBody))
+                            {
+                                <h4>Response Body</h4>
+                                <pre class="code-block"><code>@req.ResponseBody</code></pre>
+                            }
+                        </div>
+                    </div>
+                    <div id="replay-result-@req.Id" class="replay-result" style="display:none"></div>
+                </div>
+            </div>
+        }
+    }
+}
+
+@section Scripts {
+<script>
+function toggleRequest(id) {
+    var el = document.getElementById('body-' + id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function showTab(evt, tabId) {
+    var container = evt.target.closest('.card');
+    container.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    container.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById(tabId).classList.add('active');
+    evt.target.classList.add('active');
+}
+
+function replayRequest(id) {
+    var resultEl = document.getElementById('replay-result-' + id);
+    var bodyEl = document.getElementById('body-' + id);
+    bodyEl.style.display = 'block';
+    resultEl.style.display = 'block';
+    resultEl.textContent = 'Replaying...';
+    resultEl.className = 'replay-result loading';
+
+    fetch('/api/replay/' + id, { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var diffs = data.diffs && data.diffs.length > 0
+                ? '\n\nDiffs:\n' + data.diffs.map(function(d) { return '  ' + d.path + ': expected=' + d.expected + ' actual=' + d.actual; }).join('\n')
+                : '\n\nNo diffs.';
+            resultEl.textContent = 'Status: ' + data.responseStatus + '  Duration: ' + data.durationMs + 'ms' + diffs;
+            resultEl.className = 'replay-result ' + (data.responseStatus >= 200 && data.responseStatus < 300 ? 'success' : 'error');
+        })
+        .catch(function(err) {
+            resultEl.textContent = 'Error: ' + err.message;
+            resultEl.className = 'replay-result error';
+        });
+}
+</script>
+}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - IAET Explorer</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">IAET Explorer</a>
+        <ul class="nav-links">
+            <li><a href="/">Sessions</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        @RenderBody()
+    </main>
+    <footer class="footer">
+        <p>IAET — Internal API Extraction Toolkit</p>
+    </footer>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

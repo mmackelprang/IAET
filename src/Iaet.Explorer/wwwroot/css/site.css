@@ -1,0 +1,111 @@
+/* ── Reset / Base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; color: #1a1a2e; background: #f8f9fa; line-height: 1.5; }
+a { color: #0066cc; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Nav ──────────────────────────────────────────────────────────────── */
+.navbar { background: #0a3d62; color: #fff; padding: 0 1.5rem; display: flex; align-items: center; gap: 2rem; height: 52px; }
+.navbar-brand { font-size: 1.1rem; font-weight: 700; color: #fff; }
+.navbar-brand:hover { color: #a0d2eb; text-decoration: none; }
+.nav-links { list-style: none; display: flex; gap: 1rem; }
+.nav-links a { color: #cce5ff; font-size: 0.9rem; }
+.nav-links a:hover { color: #fff; }
+
+/* ── Container ────────────────────────────────────────────────────────── */
+.container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+.footer { text-align: center; padding: 1.5rem; color: #6c757d; font-size: 0.8rem; margin-top: 3rem; border-top: 1px solid #dee2e6; }
+
+/* ── Typography ───────────────────────────────────────────────────────── */
+h1 { font-size: 1.6rem; margin-bottom: 1.2rem; color: #0a3d62; }
+h2 { font-size: 1.3rem; margin-bottom: 0.8rem; }
+h3 { font-size: 1.1rem; margin: 1.5rem 0 0.8rem; color: #0a3d62; }
+h4 { font-size: 0.95rem; margin: 1rem 0 0.4rem; color: #444; }
+.mono { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.85rem; }
+.truncate { max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Card ─────────────────────────────────────────────────────────────── */
+.card { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; }
+
+/* ── Alert ────────────────────────────────────────────────────────────── */
+.alert { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 0.8rem 1rem; color: #856404; }
+
+/* ── Tables ───────────────────────────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; background: #fff; }
+.data-table th { background: #0a3d62; color: #fff; text-align: left; padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.85rem; }
+.data-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
+.data-table tr:hover td { background: #f0f7ff; }
+
+/* ── Code blocks ──────────────────────────────────────────────────────── */
+.code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 4px; padding: 1rem; overflow: auto; font-size: 0.8rem; max-height: 350px; }
+.code-block code { font-family: "SFMono-Regular", Consolas, monospace; }
+
+/* ── Method badges ────────────────────────────────────────────────────── */
+.method { display: inline-block; padding: 0.15rem 0.45rem; border-radius: 3px; font-weight: 700; font-size: 0.75rem; font-family: monospace; min-width: 52px; text-align: center; }
+.method-get    { background: #d1ecf1; color: #0c5460; }
+.method-post   { background: #d4edda; color: #155724; }
+.method-put    { background: #fff3cd; color: #856404; }
+.method-patch  { background: #fde3cf; color: #7d3c0b; }
+.method-delete { background: #f8d7da; color: #721c24; }
+
+/* ── Status badges ────────────────────────────────────────────────────── */
+.status { font-weight: 700; font-size: 0.85rem; }
+.status-2xx { color: #28a745; }
+.status-3xx { color: #17a2b8; }
+.status-4xx { color: #ffc107; }
+.status-5xx { color: #dc3545; }
+
+/* ── Breadcrumb ───────────────────────────────────────────────────────── */
+.breadcrumb { font-size: 0.85rem; color: #6c757d; margin-bottom: 1rem; }
+.breadcrumb a { color: #0066cc; }
+
+/* ── Meta list (key-value) ────────────────────────────────────────────── */
+.meta-list { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem; font-size: 0.9rem; }
+.meta-list dt { font-weight: 600; color: #555; }
+
+/* ── Export bar ───────────────────────────────────────────────────────── */
+.export-bar { margin: 1rem 0; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.export-link { background: #e9ecef; border: 1px solid #ced4da; padding: 0.25rem 0.6rem; border-radius: 3px; font-size: 0.8rem; }
+.export-link:hover { background: #dee2e6; }
+
+/* ── Action bar ───────────────────────────────────────────────────────── */
+.action-bar { margin-top: 0.8rem; display: flex; gap: 0.5rem; }
+.btn { background: #0a3d62; color: #fff; border: none; padding: 0.35rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; text-decoration: none; }
+.btn:hover { background: #0d5594; color: #fff; text-decoration: none; }
+
+/* ── Request cards ────────────────────────────────────────────────────── */
+.request-card { border: 1px solid #dee2e6; border-radius: 4px; margin-bottom: 0.5rem; overflow: hidden; background: #fff; }
+.request-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.55rem 0.75rem; cursor: pointer; background: #f8f9fa; flex-wrap: wrap; }
+.request-header:hover { background: #e9ecef; }
+.request-body { padding: 1rem; border-top: 1px solid #dee2e6; }
+.req-res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 768px) { .req-res-grid { grid-template-columns: 1fr; } }
+.duration { color: #6c757d; font-size: 0.8rem; }
+.timestamp { color: #6c757d; font-size: 0.8rem; margin-left: auto; }
+.replay-btn { background: #28a745; color: #fff; border: none; padding: 0.2rem 0.5rem; border-radius: 3px; cursor: pointer; font-size: 0.75rem; }
+.replay-btn:hover { background: #218838; }
+.sep { color: #ccc; }
+
+/* ── Replay result ────────────────────────────────────────────────────── */
+.replay-result { margin-top: 0.75rem; padding: 0.75rem; border-radius: 4px; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; }
+.replay-result.loading { background: #f0f7ff; color: #555; }
+.replay-result.success { background: #d4edda; color: #155724; }
+.replay-result.error   { background: #f8d7da; color: #721c24; }
+
+/* ── Schema tabs ──────────────────────────────────────────────────────── */
+.schema-tabs { display: flex; gap: 0; margin: 0.75rem 0 0; }
+.tab-btn { background: #e9ecef; border: 1px solid #ced4da; border-bottom: none; padding: 0.3rem 0.7rem; cursor: pointer; font-size: 0.8rem; }
+.tab-btn.active { background: #1e1e2e; color: #cdd6f4; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Warnings ─────────────────────────────────────────────────────────── */
+.warnings { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 0.5rem 1rem; margin-bottom: 0.5rem; color: #856404; font-size: 0.85rem; }
+.warnings li { margin-bottom: 0.2rem; }
+
+/* ── Streams ──────────────────────────────────────────────────────────── */
+.stream-card { margin-bottom: 1rem; }
+.stream-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+.stream-protocol { background: #0a3d62; color: #fff; padding: 0.15rem 0.45rem; border-radius: 3px; font-size: 0.75rem; font-weight: 700; }

@@ -94,6 +94,17 @@ iaet capture run --recipe docs/recipes/spotify-playlist-capture.ts --session spo
 CDP_ENDPOINT=ws://127.0.0.1:9222 npx tsx docs/recipes/spotify-playlist-capture.ts
 ```
 
+**Browse the Explorer web UI:**
+```bash
+# Launch the local web UI (default port 9200)
+iaet explore --db catalog.db
+
+# Use a custom port
+iaet explore --db catalog.db --port 8080
+```
+
+The Explorer serves a Swagger-like interface at `http://localhost:9200` for browsing sessions, endpoints, schemas, streams, replay, and one-click export downloads.
+
 **Export session data:**
 ```bash
 # Markdown investigation report (to stdout)
@@ -128,7 +139,7 @@ iaet export har --session-id <guid> --output session.har
 - **HTTP replay** — field-level JSON diff, pluggable auth provider, rate limiting (10 req/min / 100 req/day), Polly retry + circuit breaker, dry-run mode
 - **Export** — Markdown report, self-contained HTML, OpenAPI 3.1 YAML, Postman Collection v2.1.0, typed C# client, HAR 1.2 — all with credential redaction
 - **Semi-autonomous crawler** — BFS page traversal with configurable depth, page count, duration, URL whitelist/blacklist, excluded selectors, and TypeScript recipe execution via `npx tsx`
-- Local Swagger-like API explorer *(coming)*
+- **Explorer** — local Swagger-like web UI for browsing sessions, endpoints, schemas, streams, replay, and export — served by `iaet explore --db catalog.db --port 9200`
 - Chrome DevTools extension *(coming)*
 - Background capture extension *(coming)*
 
@@ -162,6 +173,9 @@ PostmanGenerator · CSharpClientGenerator · HarGenerator"]
     Crawler["Iaet.Crawler
 CrawlEngine · CrawlOptions · ElementDiscoverer
 PageInteractor · RecipeRunner"]
+    Explorer["Iaet.Explorer
+ExplorerApp · Razor Pages · Minimal API
+SessionsApi · EndpointsApi · ReplayApi · ExportApi"]
     Cli["Iaet.Cli  (dotnet global tool)
 System.CommandLine · DI host builder · Serilog"]
 
@@ -173,17 +187,18 @@ System.CommandLine · DI host builder · Serilog"]
     Core --> Crawler
     Catalog --> Export
     Schema --> Export
+    Catalog --> Explorer
+    Schema --> Explorer
+    Replay --> Explorer
+    Export --> Explorer
     Capture --> Cli
     Catalog --> Cli
     Schema --> Cli
     Replay --> Cli
     Export --> Cli
     Crawler --> Cli
+    Explorer --> Cli
 ```
-
-**Planned assemblies** (all depend on `Iaet.Core`):
-
-- `Iaet.Explorer` — Local Swagger-like web explorer
 
 ---
 
@@ -222,8 +237,8 @@ iaet
 │              [--headless]  [--blacklist <pattern>]...
 │              [--exclude-selector <css>]...  [--output <path>]
 │
+├── explore    --db <path>  [--port <n>]    (default port: 9200)
 │  (planned)
-├── explore    — launch local API explorer
 ├── import     — import .iaet.json capture files
 └── investigate — assisted API discovery workflow
 ```
