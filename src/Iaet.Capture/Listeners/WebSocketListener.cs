@@ -11,6 +11,8 @@ public sealed class WebSocketListener : IProtocolListener
 {
     private readonly StreamCaptureOptions _options;
     private readonly ConcurrentDictionary<string, WebSocketState> _connections = new();
+    private readonly List<IDisposable> _subscriptions = [];
+    private Guid _sessionId;
 
     public WebSocketListener(StreamCaptureOptions options)
     {
@@ -28,10 +30,80 @@ public sealed class WebSocketListener : IProtocolListener
     {
         ArgumentNullException.ThrowIfNull(cdpSession);
         ArgumentNullException.ThrowIfNull(catalog);
+        _sessionId = Guid.NewGuid();
         await cdpSession.SubscribeToDomainAsync("Network", ct).ConfigureAwait(false);
+
+        _subscriptions.Add(cdpSession.OnEvent("Network.webSocketCreated", data =>
+        {
+            if (!data.TryGetProperty("requestId", out var reqIdEl)) return;
+            var requestId = reqIdEl.GetString();
+            if (requestId is null) return;
+            var url = data.TryGetProperty("url", out var urlEl) ? urlEl.GetString() ?? string.Empty : string.Empty;
+            HandleWebSocketCreated(_sessionId, requestId, url);
+        }));
+
+        _subscriptions.Add(cdpSession.OnEvent("Network.webSocketFrameReceived", data =>
+        {
+            string? requestId = null;
+            string? payloadData = null;
+            var opcode = 1;
+
+            if (data.TryGetProperty("response", out var resp))
+            {
+                if (resp.TryGetProperty("requestId", out var rId)) requestId = rId.GetString();
+                if (resp.TryGetProperty("payloadData", out var pd)) payloadData = pd.GetString();
+                if (resp.TryGetProperty("opcode", out var op)) opcode = op.GetInt32();
+            }
+
+            if (requestId is null && data.TryGetProperty("requestId", out var rIdFallback))
+                requestId = rIdFallback.GetString();
+            if (payloadData is null && data.TryGetProperty("payloadData", out var pdFallback))
+                payloadData = pdFallback.GetString();
+
+            if (requestId is null || payloadData is null) return;
+            HandleWebSocketFrameReceived(requestId, payloadData, opcode == 2);
+        }));
+
+        _subscriptions.Add(cdpSession.OnEvent("Network.webSocketFrameSent", data =>
+        {
+            string? requestId = null;
+            string? payloadData = null;
+            var opcode = 1;
+
+            if (data.TryGetProperty("response", out var resp))
+            {
+                if (resp.TryGetProperty("requestId", out var rId)) requestId = rId.GetString();
+                if (resp.TryGetProperty("payloadData", out var pd)) payloadData = pd.GetString();
+                if (resp.TryGetProperty("opcode", out var op)) opcode = op.GetInt32();
+            }
+
+            if (requestId is null && data.TryGetProperty("requestId", out var rIdFallback))
+                requestId = rIdFallback.GetString();
+            if (payloadData is null && data.TryGetProperty("payloadData", out var pdFallback))
+                payloadData = pdFallback.GetString();
+
+            if (requestId is null || payloadData is null) return;
+            HandleWebSocketFrameSent(requestId, payloadData, opcode == 2);
+        }));
+
+        _subscriptions.Add(cdpSession.OnEvent("Network.webSocketClosed", data =>
+        {
+            if (!data.TryGetProperty("requestId", out var reqIdEl)) return;
+            var requestId = reqIdEl.GetString();
+            if (requestId is null) return;
+            HandleWebSocketClosed(requestId);
+        }));
     }
 
-    public Task DetachAsync(CancellationToken ct = default) => Task.CompletedTask;
+    public Task DetachAsync(CancellationToken ct = default)
+    {
+        foreach (var sub in _subscriptions)
+        {
+            sub.Dispose();
+        }
+        _subscriptions.Clear();
+        return Task.CompletedTask;
+    }
 
     [SuppressMessage("Design", "CA1054:URI-like parameters should not be strings", Justification = "CDP delivers URLs as strings; callers should not need to construct Uri objects")]
     public void HandleWebSocketCreated(Guid sessionId, string requestId, string url)

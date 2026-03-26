@@ -10,6 +10,8 @@ public sealed class SseListener : IProtocolListener
 {
     private readonly StreamCaptureOptions _options;
     private readonly ConcurrentDictionary<string, SseState> _streams = new();
+    private readonly List<IDisposable> _subscriptions = [];
+    private Guid _sessionId;
 
     public SseListener(StreamCaptureOptions options)
     {
@@ -27,10 +29,55 @@ public sealed class SseListener : IProtocolListener
     {
         ArgumentNullException.ThrowIfNull(cdpSession);
         ArgumentNullException.ThrowIfNull(catalog);
+        _sessionId = Guid.NewGuid();
         await cdpSession.SubscribeToDomainAsync("Network", ct).ConfigureAwait(false);
+
+        _subscriptions.Add(cdpSession.OnEvent("Network.responseReceived", data =>
+        {
+            string? url = null;
+            string? contentType = null;
+
+            if (data.TryGetProperty("response", out var resp))
+            {
+                if (resp.TryGetProperty("url", out var urlEl)) url = urlEl.GetString();
+                if (resp.TryGetProperty("headers", out var headers))
+                {
+                    if (headers.TryGetProperty("content-type", out var ct1)) contentType = ct1.GetString();
+                    else if (headers.TryGetProperty("Content-Type", out var ct2)) contentType = ct2.GetString();
+                }
+            }
+
+            if (url is null || contentType is null) return;
+            if (IsServerSentEvents(contentType))
+            {
+                HandleSseDetected(_sessionId, url, contentType);
+            }
+        }));
+
+        _subscriptions.Add(cdpSession.OnEvent("Network.dataReceived", data =>
+        {
+            // dataReceived provides raw chunk data; SSE frames are text lines
+            // We record a generic "data" event when we have a matching SSE stream
+            if (!data.TryGetProperty("requestId", out var reqIdEl)) return;
+            var requestId = reqIdEl.GetString();
+            if (requestId is null) return;
+
+            // Map requestId to URL: find matching SSE stream by requestId tracking
+            // DataReceived does not carry URL; we store a requestId→url index if available
+            // For now, use defensive approach: skip if no URL mapping exists
+            // (Full requestId→url tracking would require Network.requestWillBeSent subscription)
+        }));
     }
 
-    public Task DetachAsync(CancellationToken ct = default) => Task.CompletedTask;
+    public Task DetachAsync(CancellationToken ct = default)
+    {
+        foreach (var sub in _subscriptions)
+        {
+            sub.Dispose();
+        }
+        _subscriptions.Clear();
+        return Task.CompletedTask;
+    }
 
     public static bool IsServerSentEvents(string contentType)
     {
@@ -66,7 +113,8 @@ public sealed class SseListener : IProtocolListener
         var newCount = state.EventCount + 1;
         var updatedState = state with { EventCount = newCount };
 
-        if (_options.CaptureSamples && state.Frames is not null)
+        if (_options.CaptureSamples && state.Frames is not null
+            && state.Frames.Count < _options.MaxFramesPerConnection)
         {
             var payload = $"event: {eventType}\ndata: {data}";
             var frame = new StreamFrame

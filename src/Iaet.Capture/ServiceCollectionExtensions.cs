@@ -1,4 +1,3 @@
-using Iaet.Capture.Listeners;
 using Iaet.Core.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,16 +8,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddIaetCapture(this IServiceCollection services)
     {
         services.AddSingleton<ICaptureSessionFactory, PlaywrightCaptureSessionFactory>();
-        services.AddTransient<WebSocketListener>(sp =>
-            new WebSocketListener(sp.GetRequiredService<StreamCaptureOptions>()));
-        services.AddTransient<SseListener>(sp =>
-            new SseListener(sp.GetRequiredService<StreamCaptureOptions>()));
-        services.AddTransient<MediaStreamListener>(sp =>
-            new MediaStreamListener(sp.GetRequiredService<StreamCaptureOptions>()));
-        services.AddTransient<GrpcWebListener>(sp =>
-            new GrpcWebListener(sp.GetRequiredService<StreamCaptureOptions>()));
-        services.AddTransient<WebRtcListener>(sp =>
-            new WebRtcListener(sp.GetRequiredService<StreamCaptureOptions>()));
+        // Protocol listeners are constructed per-session in CaptureCommand
+        // because their StreamCaptureOptions come from CLI arguments, not DI
         return services;
     }
 }

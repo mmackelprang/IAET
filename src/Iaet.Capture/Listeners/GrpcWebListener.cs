@@ -10,6 +10,8 @@ public sealed class GrpcWebListener : IProtocolListener
 {
     private readonly StreamCaptureOptions _options;
     private readonly ConcurrentDictionary<string, GrpcState> _streams = new();
+    private readonly List<IDisposable> _subscriptions = [];
+    private Guid _sessionId;
 
     public GrpcWebListener(StreamCaptureOptions options)
     {
@@ -27,10 +29,42 @@ public sealed class GrpcWebListener : IProtocolListener
     {
         ArgumentNullException.ThrowIfNull(cdpSession);
         ArgumentNullException.ThrowIfNull(catalog);
+        _sessionId = Guid.NewGuid();
         await cdpSession.SubscribeToDomainAsync("Network", ct).ConfigureAwait(false);
+
+        _subscriptions.Add(cdpSession.OnEvent("Network.responseReceived", data =>
+        {
+            string? url = null;
+            string? contentType = null;
+            long bodySize = 0;
+
+            if (data.TryGetProperty("response", out var resp))
+            {
+                if (resp.TryGetProperty("url", out var urlEl)) url = urlEl.GetString();
+                if (resp.TryGetProperty("headers", out var headers))
+                {
+                    if (headers.TryGetProperty("content-type", out var ct1)) contentType = ct1.GetString();
+                    else if (headers.TryGetProperty("Content-Type", out var ct2)) contentType = ct2.GetString();
+                }
+                if (resp.TryGetProperty("encodedDataLength", out var bdEl)) bodySize = bdEl.GetInt64();
+            }
+
+            if (url is null || contentType is null) return;
+            if (!IsGrpcOrProtobuf(contentType)) return;
+
+            HandleGrpcDetected(_sessionId, url, contentType, bodySize);
+        }));
     }
 
-    public Task DetachAsync(CancellationToken ct = default) => Task.CompletedTask;
+    public Task DetachAsync(CancellationToken ct = default)
+    {
+        foreach (var sub in _subscriptions)
+        {
+            sub.Dispose();
+        }
+        _subscriptions.Clear();
+        return Task.CompletedTask;
+    }
 
     public static bool IsGrpcOrProtobuf(string contentType)
     {

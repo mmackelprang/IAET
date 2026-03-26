@@ -43,14 +43,14 @@ public sealed class PlaywrightCaptureSession : ICaptureSession
         _listener = new CdpNetworkListener(SessionId);
         _listener.Attach(_page);
 
-        if (_options.Streams.Enabled && _listeners.Count > 0)
+        if (_options.Streams.Enabled && _listeners.Count > 0 && _streamCatalog is not null)
         {
             _cdpSession = await PlaywrightCdpSession.CreateAsync(_page, ct).ConfigureAwait(false);
             foreach (var listener in _listeners)
             {
                 if (listener.CanAttach(_cdpSession))
                 {
-                    await listener.AttachAsync(_cdpSession, _streamCatalog!, ct).ConfigureAwait(false);
+                    await listener.AttachAsync(_cdpSession, _streamCatalog, ct).ConfigureAwait(false);
                 }
             }
         }
@@ -76,17 +76,17 @@ public sealed class PlaywrightCaptureSession : ICaptureSession
             }
         }
 
+        if (_cdpSession is not null)
+        {
+            await _cdpSession.DisposeAsync().ConfigureAwait(false);
+        }
+
         if (_browser is not null)
         {
             try { await _browser.CloseAsync().ConfigureAwait(false); }
             catch (PlaywrightException) { /* browser may already be closed */ }
         }
         _playwright?.Dispose();
-
-        if (_cdpSession is not null)
-        {
-            await _cdpSession.DisposeAsync().ConfigureAwait(false);
-        }
     }
 
     public async IAsyncEnumerable<CapturedRequest> GetCapturedRequestsAsync(

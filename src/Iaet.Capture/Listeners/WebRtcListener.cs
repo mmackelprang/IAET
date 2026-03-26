@@ -9,6 +9,8 @@ public sealed class WebRtcListener : IProtocolListener
 {
     private readonly StreamCaptureOptions _options;
     private readonly ConcurrentDictionary<string, WebRtcState> _connections = new();
+    private readonly List<IDisposable> _subscriptions = [];
+    private Guid _sessionId;
 
     public WebRtcListener(StreamCaptureOptions options)
     {
@@ -26,10 +28,47 @@ public sealed class WebRtcListener : IProtocolListener
     {
         ArgumentNullException.ThrowIfNull(cdpSession);
         ArgumentNullException.ThrowIfNull(catalog);
+        _sessionId = Guid.NewGuid();
+
+        // TODO (Phase 3): WebRTC CDP domain events vary significantly between Chrome versions.
+        // The WebRTC domain may expose peerConnectionCreated / addedICECandidate in some versions.
+        // In others, hooking RTCPeerConnection requires Runtime domain JS injection.
+        // For now we enable the domain to receive whatever events Chrome exposes, and
+        // subscribe defensively — unknown events are silently ignored.
         await cdpSession.SubscribeToDomainAsync("WebRTC", ct).ConfigureAwait(false);
+
+        _subscriptions.Add(cdpSession.OnEvent("WebRTC.peerConnectionCreated", data =>
+        {
+            string? connectionId = null;
+            if (data.TryGetProperty("peerConnectionId", out var pcId)) connectionId = pcId.GetString();
+            if (connectionId is null) return;
+            HandlePeerConnectionCreated(_sessionId, connectionId);
+        }));
+
+        _subscriptions.Add(cdpSession.OnEvent("WebRTC.addedICECandidate", data =>
+        {
+            string? connectionId = null;
+            string? candidate = null;
+            if (data.TryGetProperty("peerConnectionId", out var pcId)) connectionId = pcId.GetString();
+            if (data.TryGetProperty("candidate", out var candEl))
+            {
+                if (candEl.TryGetProperty("candidate", out var c)) candidate = c.GetString();
+                else candidate = candEl.GetString();
+            }
+            if (connectionId is null || candidate is null) return;
+            HandleIceCandidate(connectionId, candidate);
+        }));
     }
 
-    public Task DetachAsync(CancellationToken ct = default) => Task.CompletedTask;
+    public Task DetachAsync(CancellationToken ct = default)
+    {
+        foreach (var sub in _subscriptions)
+        {
+            sub.Dispose();
+        }
+        _subscriptions.Clear();
+        return Task.CompletedTask;
+    }
 
     public void HandlePeerConnectionCreated(Guid sessionId, string connectionId)
     {
