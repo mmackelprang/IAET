@@ -25,7 +25,8 @@ var host = Host.CreateDefaultBuilder(args)
 var rootCommand = new RootCommand("IAET - Internal API Extraction Toolkit")
 {
     CaptureCommand.Create(host.Services),
-    CatalogCommand.Create(host.Services)
+    CatalogCommand.Create(host.Services),
+    StreamsCommand.Create(host.Services)
 };
 
 return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(false);

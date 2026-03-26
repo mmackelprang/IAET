@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<CatalogDbContext>(options =>
             options.UseSqlite(connectionString));
         services.AddScoped<Iaet.Core.Abstractions.IEndpointCatalog, SqliteCatalog>();
+        services.AddScoped<Iaet.Core.Abstractions.IStreamCatalog, SqliteStreamCatalog>();
         return services;
     }
 }

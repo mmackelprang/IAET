@@ -2,68 +2,78 @@
 
 ## Assembly Dependency Diagram
 
-```
-                        ┌──────────────────────────────┐
-                        │         Iaet.Core             │
-                        │  (contracts + domain models)  │
-                        │  No external dependencies     │
-                        └──┬──────────────┬────────────┘
-                           │              │
-              ┌────────────▼───┐    ┌─────▼──────────────┐
-              │  Iaet.Capture  │    │   Iaet.Catalog      │
-              │  Playwright    │    │   EF Core + SQLite  │
-              └────────────┬───┘    └─────┬──────────────┘
-                           │              │
-                        ┌──▼──────────────▼──┐
-                        │     Iaet.Cli        │
-                        │  System.CommandLine │
-                        │  DI host + Serilog  │
-                        └────────────────────┘
+```mermaid
+graph TD
+    Core["Iaet.Core
+(contracts + domain models)
+No external dependencies"]
+    Capture["Iaet.Capture
+Playwright + CDP"]
+    Catalog["Iaet.Catalog
+EF Core + SQLite"]
+    Cli["Iaet.Cli
+System.CommandLine
+DI host + Serilog"]
 
-Planned assemblies (all depend on Iaet.Core):
-  Iaet.Schema   ──── schema inference from CapturedRequest bodies
-  Iaet.Replay   ──── HTTP replay; depends on Iaet.Catalog
-  Iaet.Crawler  ──── semi-autonomous browser crawler; depends on Iaet.Capture
-  Iaet.Export   ──── OpenAPI/Postman/HAR generation; depends on Iaet.Catalog
-  Iaet.Explorer ──── local web UI; depends on Iaet.Catalog + Iaet.Schema
+    Core --> Capture
+    Core --> Catalog
+    Capture --> Cli
+    Catalog --> Cli
 ```
+
+**Planned assemblies** (all depend on `Iaet.Core`):
+
+- `Iaet.Schema` — schema inference from CapturedRequest bodies
+- `Iaet.Replay` — HTTP replay; depends on `Iaet.Catalog`
+- `Iaet.Crawler` — semi-autonomous browser crawler; depends on `Iaet.Capture`
+- `Iaet.Export` — OpenAPI/Postman/HAR generation; depends on `Iaet.Catalog`
+- `Iaet.Explorer` — local web UI; depends on `Iaet.Catalog` + `Iaet.Schema`
 
 ## Data Flow
 
-```
-Browser interaction
-        │
-        ▼
-CdpNetworkListener (Playwright CDP events)
-        │  raw IRequest / IResponse pairs
-        ▼
-RequestSanitizer.SanitizeHeaders
-        │  credential headers → <REDACTED>
-        ▼
-CapturedRequest (immutable record)
-        │
-        ▼
-IEndpointCatalog.SaveRequestAsync
-        │
-        ├── EndpointNormalizer.Normalize
-        │       path segment ID detection → {id} placeholder
-        │       produces EndpointSignature
-        │
-        ├── INSERT CapturedRequestEntity
-        └── UPSERT EndpointGroupEntity (dedup + count)
-                │
-                ▼
-           SQLite (catalog.db)
-                │
-        ┌───────┴───────────┐
-        ▼                   ▼
-  catalog sessions    catalog endpoints
-  (CLI read path)     (CLI read path)
-                │
-          (planned downstream)
-                ├── Iaet.Schema   → SchemaResult
-                ├── Iaet.Replay   → ReplayResult
-                └── Iaet.Export   → OpenAPI / Postman / HAR
+```mermaid
+graph TD
+    Browser["Browser interaction"]
+    Cdp["CdpNetworkListener
+(Playwright CDP events)
+raw IRequest / IResponse pairs"]
+    Sanitizer["RequestSanitizer.SanitizeHeaders
+credential headers → REDACTED"]
+    CapturedReq["CapturedRequest
+(immutable record)"]
+    Catalog["IEndpointCatalog.SaveRequestAsync"]
+    Normalizer["EndpointNormalizer.Normalize
+path segment ID detection → id placeholder
+produces EndpointSignature"]
+    InsertReq["INSERT CapturedRequestEntity"]
+    UpsertGroup["UPSERT EndpointGroupEntity
+(dedup + count)"]
+    SQLite["SQLite
+catalog.db"]
+    CliSessions["catalog sessions
+(CLI read path)"]
+    CliEndpoints["catalog endpoints
+(CLI read path)"]
+    Schema["Iaet.Schema → SchemaResult
+(planned)"]
+    Replay["Iaet.Replay → ReplayResult
+(planned)"]
+    Export["Iaet.Export → OpenAPI / Postman / HAR
+(planned)"]
+
+    Browser --> Cdp
+    Cdp --> Sanitizer
+    Sanitizer --> CapturedReq
+    CapturedReq --> Catalog
+    Catalog --> Normalizer
+    Catalog --> InsertReq
+    Catalog --> UpsertGroup
+    UpsertGroup --> SQLite
+    SQLite --> CliSessions
+    SQLite --> CliEndpoints
+    SQLite --> Schema
+    SQLite --> Replay
+    SQLite --> Export
 ```
 
 ## Design Decisions
