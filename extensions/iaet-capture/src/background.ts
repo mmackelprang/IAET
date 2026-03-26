@@ -12,6 +12,8 @@ import { normalizeEndpoint, generateUuid } from "./types";
 
 // ---- Capture state ----
 
+const MAX_REQUESTS = 10000;
+
 interface CaptureState {
   recording: boolean;
   sessionId: string;
@@ -58,6 +60,15 @@ chrome.runtime.onMessage.addListener(
           durationMs: payload.durationMs,
           tag: null,
         };
+        // Enforce request cap: if at limit, drop the oldest request
+        if (state.requests.length >= MAX_REQUESTS) {
+          const dropped = state.requests.shift();
+          if (dropped) {
+            const droppedSig = normalizeEndpoint(dropped.httpMethod, dropped.url);
+            // Rebuild endpointSet as we may have removed the only request for this endpoint
+            state.endpointSet.delete(droppedSig);
+          }
+        }
         state.requests.push(req);
         const sig = normalizeEndpoint(req.httpMethod, req.url);
         state.endpointSet.add(sig);
