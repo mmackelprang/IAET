@@ -1,5 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Iaet.Capture/Iaet.Capture.csproj" />
+    <Project Path="src/Iaet.Catalog/Iaet.Catalog.csproj" />
     <Project Path="src/Iaet.Core/Iaet.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Iaet.Capture.Tests/Iaet.Capture.Tests.csproj" />
+    <Project Path="tests/Iaet.Core.Tests/Iaet.Core.Tests.csproj" />
   </Folder>
 </Solution>
