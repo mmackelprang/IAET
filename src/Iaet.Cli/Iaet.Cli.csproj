@@ -5,6 +5,10 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>iaet</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <!-- Playwright bundles .ps1 helper scripts into the publish output; NuGet NU5111
+         flags these as unrecognized tool scripts. Suppress the warning because the
+         scripts are Playwright internals, not NuGet install hooks. -->
+    <NoWarn>$(NoWarn);NU5111</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
