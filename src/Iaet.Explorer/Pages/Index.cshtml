@@ -1,0 +1,44 @@
+@page
+@model Iaet.Explorer.Pages.IndexModel
+@{
+    ViewData["Title"] = "Sessions";
+}
+
+<h1>Capture Sessions</h1>
+
+@if (Model.Sessions.Count == 0)
+{
+    <div class="alert">No sessions found. Run <code>iaet capture</code> to create one.</div>
+}
+else
+{
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Target</th>
+                <th>Requests</th>
+                <th>Started</th>
+                <th>Stopped</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var session in Model.Sessions)
+            {
+                <tr>
+                    <td><a href="/session/@session.Id">@session.Name</a></td>
+                    <td>@session.TargetApplication</td>
+                    <td>@session.CapturedRequestCount</td>
+                    <td>@session.StartedAt.ToString("g")</td>
+                    <td>@(session.StoppedAt?.ToString("g") ?? "—")</td>
+                    <td>
+                        <a href="/session/@session.Id">Browse</a>
+                        <span class="sep">|</span>
+                        <a href="/streams/@session.Id">Streams</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

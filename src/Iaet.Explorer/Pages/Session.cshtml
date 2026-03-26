@@ -1,0 +1,97 @@
+@page "/session/{id:guid}"
+@model Iaet.Explorer.Pages.SessionModel
+@{
+    ViewData["Title"] = Model.Session?.Name ?? "Session";
+}
+
+@if (Model.Session is null)
+{
+    <p>Session not found.</p>
+}
+else
+{
+    <div class="breadcrumb"><a href="/">Sessions</a> / @Model.Session.Name</div>
+
+    <div class="card">
+        <h2>@Model.Session.Name</h2>
+        <dl class="meta-list">
+            <dt>Target</dt><dd>@Model.Session.TargetApplication</dd>
+            <dt>Profile</dt><dd>@Model.Session.Profile</dd>
+            <dt>Started</dt><dd>@Model.Session.StartedAt.ToString("u")</dd>
+            <dt>Stopped</dt><dd>@(Model.Session.StoppedAt?.ToString("u") ?? "—")</dd>
+            <dt>Captured Requests</dt><dd>@Model.Session.CapturedRequestCount</dd>
+        </dl>
+    </div>
+
+    <div class="export-bar">
+        <strong>Export:</strong>
+        @foreach (var fmt in new[] { ("report","md"), ("html","HTML"), ("openapi","OpenAPI"), ("postman","Postman"), ("csharp","C#"), ("har","HAR") })
+        {
+            <a href="/api/sessions/@Model.Session.Id/export/@fmt.Item1" class="export-link">@fmt.Item2</a>
+        }
+    </div>
+
+    <h3>Endpoints (@Model.EndpointGroups.Count)</h3>
+    @if (Model.EndpointGroups.Count == 0)
+    {
+        <p>No endpoints captured.</p>
+    }
+    else
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Path</th>
+                    <th>Observations</th>
+                    <th>First Seen</th>
+                    <th>Last Seen</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var grp in Model.EndpointGroups)
+                {
+                    var sig = Uri.EscapeDataString(grp.Signature.Normalized);
+                    <tr>
+                        <td><span class="method method-@grp.Signature.Method.ToLower()">@grp.Signature.Method</span></td>
+                        <td class="mono">@grp.Signature.NormalizedPath</td>
+                        <td>@grp.ObservationCount</td>
+                        <td>@grp.FirstSeen.ToString("g")</td>
+                        <td>@grp.LastSeen.ToString("g")</td>
+                        <td><a href="/endpoint/@Model.Session.Id/@sig">View</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h3>Streams (@Model.Streams.Count)</h3>
+    @if (Model.Streams.Count == 0)
+    {
+        <p>No streams captured.</p>
+    }
+    else
+    {
+        <p><a href="/streams/@Model.Session.Id">View all streams</a></p>
+        <table class="data-table">
+            <thead>
+                <tr><th>Protocol</th><th>URL</th><th>Started</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var stream in Model.Streams.Take(5))
+                {
+                    <tr>
+                        <td>@stream.Protocol</td>
+                        <td class="mono truncate">@stream.Url</td>
+                        <td>@stream.StartedAt.ToString("g")</td>
+                    </tr>
+                }
+                @if (Model.Streams.Count > 5)
+                {
+                    <tr><td colspan="3"><a href="/streams/@Model.Session.Id">+ @(Model.Streams.Count - 5) more…</a></td></tr>
+                }
+            </tbody>
+        </table>
+    }
+}
