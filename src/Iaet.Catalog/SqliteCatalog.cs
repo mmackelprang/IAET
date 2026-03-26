@@ -153,4 +153,45 @@ public sealed class SqliteCatalog : IEndpointCatalog
                 g.LastSeen);
         }).ToList();
     }
+
+    public async Task<IReadOnlyList<string>> GetResponseBodiesAsync(
+        Guid sessionId, string normalizedSignature, CancellationToken ct = default)
+    {
+        var bodies = await _db.Requests
+            .Where(r => r.SessionId == sessionId
+                && r.NormalizedSignature == normalizedSignature
+                && r.ResponseBody != null)
+            .Select(r => r.ResponseBody!)
+            .ToListAsync(ct).ConfigureAwait(false);
+        return bodies;
+    }
+
+    public async Task<CapturedRequest?> GetRequestByIdAsync(Guid requestId, CancellationToken ct = default)
+    {
+        // Materialize from DB first, then map in memory — EF cannot translate
+        // JsonSerializer.Deserialize to SQL.
+        var raw = await _db.Requests
+            .Where(r => r.Id == requestId)
+            .ToListAsync(ct).ConfigureAwait(false);
+
+        return raw.Select(r => new CapturedRequest
+        {
+            Id = r.Id,
+            SessionId = r.SessionId,
+            Timestamp = r.Timestamp,
+            HttpMethod = r.HttpMethod,
+            Url = r.Url,
+            RequestHeaders = r.RequestHeaders != null
+                ? JsonSerializer.Deserialize<Dictionary<string, string>>(r.RequestHeaders)!
+                : new Dictionary<string, string>(),
+            RequestBody = r.RequestBody,
+            ResponseStatus = r.ResponseStatus,
+            ResponseHeaders = r.ResponseHeaders != null
+                ? JsonSerializer.Deserialize<Dictionary<string, string>>(r.ResponseHeaders)!
+                : new Dictionary<string, string>(),
+            ResponseBody = r.ResponseBody,
+            DurationMs = r.DurationMs,
+            Tag = r.Tag
+        }).FirstOrDefault();
+    }
 }
