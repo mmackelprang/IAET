@@ -1,0 +1,16 @@
+{
+  "name": "iaet-devtools",
+  "version": "0.1.0",
+  "description": "IAET DevTools Panel — captures XHR/Fetch grouped by endpoint signature",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "chrome-types": "^0.1.327",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  }
+}

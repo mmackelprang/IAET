@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IAET Capture</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 13px;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        width: 280px;
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #9cdcfe;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      h1 .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #555;
+        flex-shrink: 0;
+      }
+
+      h1 .dot.recording {
+        background: #f44747;
+        animation: pulse 1s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+
+      .stats {
+        background: #252526;
+        border: 1px solid #3e3e42;
+        border-radius: 4px;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+      }
+
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .stat-label {
+        font-size: 10px;
+        color: #858585;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #d4d4d4;
+      }
+
+      label {
+        display: block;
+        font-size: 11px;
+        color: #858585;
+        margin-bottom: 3px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        background: #2d2d30;
+        border: 1px solid #3e3e42;
+        border-radius: 3px;
+        color: #d4d4d4;
+        padding: 5px 8px;
+        font-size: 12px;
+        margin-bottom: 10px;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #0e639c;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      button {
+        flex: 1;
+        padding: 6px 10px;
+        border: 1px solid #3e3e42;
+        border-radius: 3px;
+        background: #2d2d30;
+        color: #ccc;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background 0.1s;
+      }
+
+      button:hover:not(:disabled) {
+        background: #3e3e42;
+      }
+
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      #btn-start {
+        background: #0e639c;
+        border-color: #1177bb;
+        color: #fff;
+      }
+
+      #btn-start:hover:not(:disabled) {
+        background: #1177bb;
+      }
+
+      #btn-stop {
+        background: #a31515;
+        border-color: #c01414;
+        color: #fff;
+      }
+
+      #btn-stop:hover:not(:disabled) {
+        background: #c01414;
+      }
+
+      #btn-export {
+        background: #267f3e;
+        border-color: #2d9452;
+        color: #fff;
+      }
+
+      #btn-export:hover:not(:disabled) {
+        background: #2d9452;
+      }
+
+      .post-section {
+        border-top: 1px solid #3e3e42;
+        padding-top: 8px;
+        margin-top: 4px;
+      }
+
+      .post-section label {
+        margin-bottom: 3px;
+      }
+
+      .post-row {
+        display: flex;
+        gap: 6px;
+      }
+
+      .post-row input {
+        flex: 1;
+        margin-bottom: 0;
+      }
+
+      .post-row button {
+        flex: 0 0 auto;
+        padding: 5px 10px;
+        font-size: 11px;
+      }
+
+      #status-msg {
+        margin-top: 6px;
+        font-size: 11px;
+        color: #858585;
+        min-height: 16px;
+        text-align: center;
+      }
+
+      #status-msg.ok { color: #4ec9b0; }
+      #status-msg.err { color: #f44747; }
+    </style>
+  </head>
+  <body>
+    <h1>
+      <span class="dot" id="recording-dot"></span>
+      IAET Capture
+    </h1>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-label">Requests</span>
+        <span class="stat-value" id="stat-requests">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Endpoints</span>
+        <span class="stat-value" id="stat-endpoints">0</span>
+      </div>
+    </div>
+
+    <label for="session-name">Session name</label>
+    <input id="session-name" type="text" value="capture" placeholder="Session name…" />
+
+    <div class="btn-group">
+      <button id="btn-start">Start</button>
+      <button id="btn-stop" disabled>Stop</button>
+    </div>
+
+    <div class="btn-group">
+      <button id="btn-export" disabled>Export .iaet.json</button>
+      <button id="btn-clear">Clear</button>
+    </div>
+
+    <div class="post-section">
+      <label for="server-url">POST to iaet import listener</label>
+      <div class="post-row">
+        <input id="server-url" type="text" value="http://localhost:7474/import" placeholder="http://localhost:7474/import" />
+        <button id="btn-post" disabled>POST</button>
+      </div>
+    </div>
+
+    <div id="status-msg"></div>
+
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>
