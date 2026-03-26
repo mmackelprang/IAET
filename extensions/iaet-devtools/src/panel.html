@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IAET Panel</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+        font-size: 12px;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* ---- Toolbar ---- */
+      #toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        background: #252526;
+        border-bottom: 1px solid #3e3e42;
+        flex-shrink: 0;
+      }
+
+      #toolbar button {
+        padding: 3px 10px;
+        border: 1px solid #3e3e42;
+        border-radius: 3px;
+        background: #2d2d30;
+        color: #ccc;
+        cursor: pointer;
+        font-size: 11px;
+      }
+
+      #toolbar button:hover {
+        background: #3e3e42;
+      }
+
+      #toolbar button#btn-export {
+        background: #0e639c;
+        border-color: #1177bb;
+        color: #fff;
+      }
+
+      #toolbar button#btn-export:hover {
+        background: #1177bb;
+      }
+
+      #toolbar label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #ccc;
+        font-size: 11px;
+        cursor: pointer;
+      }
+
+      #session-name {
+        background: #2d2d30;
+        border: 1px solid #3e3e42;
+        border-radius: 3px;
+        color: #d4d4d4;
+        font-size: 11px;
+        padding: 3px 6px;
+        width: 160px;
+      }
+
+      #request-count {
+        margin-left: auto;
+        color: #858585;
+        font-size: 11px;
+      }
+
+      /* ---- Main layout ---- */
+      #main {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* ---- Endpoint list ---- */
+      #endpoint-list {
+        width: 320px;
+        min-width: 200px;
+        border-right: 1px solid #3e3e42;
+        overflow-y: auto;
+        flex-shrink: 0;
+      }
+
+      .endpoint-group {
+        border-bottom: 1px solid #2d2d30;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .endpoint-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+      }
+
+      .endpoint-header:hover {
+        background: #2a2d2e;
+      }
+
+      .endpoint-header.selected {
+        background: #094771;
+      }
+
+      .method-badge {
+        font-size: 10px;
+        font-weight: bold;
+        padding: 1px 5px;
+        border-radius: 2px;
+        min-width: 38px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .method-get    { background: #0e639c; color: #fff; }
+      .method-post   { background: #267f3e; color: #fff; }
+      .method-put    { background: #8b6914; color: #fff; }
+      .method-patch  { background: #6f42c1; color: #fff; }
+      .method-delete { background: #a31515; color: #fff; }
+      .method-other  { background: #555; color: #fff; }
+
+      .endpoint-path {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #c8c8c8;
+        font-size: 11px;
+      }
+
+      .endpoint-count {
+        background: #3e3e42;
+        border-radius: 8px;
+        padding: 1px 6px;
+        font-size: 10px;
+        color: #a0a0a0;
+        flex-shrink: 0;
+      }
+
+      /* ---- Request sub-list ---- */
+      .request-sublist {
+        display: none;
+        background: #1a1a1a;
+      }
+
+      .request-sublist.open {
+        display: block;
+      }
+
+      .request-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 8px 3px 24px;
+        cursor: pointer;
+        color: #a0a0a0;
+        font-size: 11px;
+      }
+
+      .request-item:hover {
+        background: #2a2d2e;
+      }
+
+      .request-item.selected {
+        background: #094771;
+        color: #fff;
+      }
+
+      .request-status {
+        min-width: 28px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .status-2xx { color: #4ec9b0; }
+      .status-3xx { color: #dcdcaa; }
+      .status-4xx { color: #f44747; }
+      .status-5xx { color: #ce9178; }
+
+      .request-duration {
+        color: #858585;
+        flex-shrink: 0;
+      }
+
+      .request-tag-badge {
+        background: #267f3e;
+        color: #fff;
+        border-radius: 3px;
+        padding: 0 4px;
+        font-size: 10px;
+        flex-shrink: 0;
+      }
+
+      /* ---- Detail pane ---- */
+      #detail-pane {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        background: #1e1e1e;
+      }
+
+      .detail-section {
+        margin-bottom: 14px;
+      }
+
+      .detail-section h3 {
+        font-size: 11px;
+        font-weight: 600;
+        color: #9cdcfe;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        padding-bottom: 3px;
+        border-bottom: 1px solid #3e3e42;
+      }
+
+      .detail-url {
+        word-break: break-all;
+        color: #d4d4d4;
+        margin-bottom: 8px;
+        font-size: 11px;
+      }
+
+      .kv-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+      }
+
+      .kv-table td {
+        padding: 2px 4px;
+        vertical-align: top;
+        border-bottom: 1px solid #2d2d30;
+      }
+
+      .kv-table td:first-child {
+        color: #9cdcfe;
+        width: 200px;
+        word-break: break-word;
+      }
+
+      .kv-table td:last-child {
+        color: #d4d4d4;
+        word-break: break-all;
+      }
+
+      .body-block {
+        background: #252526;
+        border: 1px solid #3e3e42;
+        border-radius: 3px;
+        padding: 6px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: #d4d4d4;
+        font-size: 11px;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: "Consolas", "Courier New", monospace;
+      }
+
+      .tag-form {
+        display: flex;
+        gap: 6px;
+        margin-top: 4px;
+      }
+
+      .tag-form input {
+        flex: 1;
+        background: #2d2d30;
+        border: 1px solid #3e3e42;
+        border-radius: 3px;
+        color: #d4d4d4;
+        padding: 3px 6px;
+        font-size: 11px;
+      }
+
+      .tag-form button {
+        padding: 3px 10px;
+        background: #267f3e;
+        border: 1px solid #2d9452;
+        border-radius: 3px;
+        color: #fff;
+        cursor: pointer;
+        font-size: 11px;
+      }
+
+      .tag-form button:hover {
+        background: #2d9452;
+      }
+
+      .empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #555;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toolbar">
+      <button id="btn-clear">Clear</button>
+      <label>
+        <input type="checkbox" id="chk-filter" checked />
+        Hide analytics
+      </label>
+      <input
+        id="session-name"
+        type="text"
+        placeholder="Session name…"
+        value="devtools-capture"
+      />
+      <button id="btn-export">Export to IAET</button>
+      <span id="request-count">0 requests</span>
+    </div>
+
+    <div id="main">
+      <div id="endpoint-list">
+        <div class="empty-state" id="empty-endpoints">No requests yet</div>
+      </div>
+      <div id="detail-pane">
+        <div class="empty-state" id="empty-detail">Select a request to inspect</div>
+      </div>
+    </div>
+
+    <script type="module" src="./panel.ts"></script>
+  </body>
+</html>
