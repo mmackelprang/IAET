@@ -3,6 +3,8 @@ using System.Globalization;
 using Iaet.Capture;
 using Iaet.Catalog;
 using Iaet.Cli.Commands;
+using Iaet.Replay;
+using Iaet.Schema;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -19,6 +21,8 @@ var host = Host.CreateDefaultBuilder(args)
         var dbPath = context.Configuration["Iaet:DatabasePath"] ?? "catalog.db";
         services.AddIaetCapture();
         services.AddIaetCatalog($"DataSource={dbPath}");
+        services.AddIaetSchema();
+        services.AddIaetReplay();
     })
     .Build();
 
@@ -26,7 +30,9 @@ var rootCommand = new RootCommand("IAET - Internal API Extraction Toolkit")
 {
     CaptureCommand.Create(host.Services),
     CatalogCommand.Create(host.Services),
-    StreamsCommand.Create(host.Services)
+    StreamsCommand.Create(host.Services),
+    SchemaCommand.Create(host.Services),
+    ReplayCommand.Create(host.Services)
 };
 
 return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(false);
