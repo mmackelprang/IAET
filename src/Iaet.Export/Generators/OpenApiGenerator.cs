@@ -50,24 +50,27 @@ public static class OpenApiGenerator
     {
         sb.AppendLine("paths:");
 
-        foreach (var group in ctx.EndpointGroups)
+        foreach (var pathGroup in ctx.EndpointGroups.GroupBy(g => g.Signature.NormalizedPath))
         {
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  '{group.Signature.NormalizedPath}':");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  '{pathGroup.Key}':");
 
-            var method = HttpMethodToYamlKey(group.Signature.Method);
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    {method}:");
-            sb.AppendLine("      summary: ''");
-            sb.AppendLine("      responses:");
-            sb.AppendLine("        '200':");
-            sb.AppendLine("          description: OK");
-
-            if (ctx.SchemasByEndpoint.TryGetValue(group.Signature.Normalized, out _))
+            foreach (var group in pathGroup)
             {
-                var schemaRef = BuildSchemaRefName(group.Signature.Normalized);
-                sb.AppendLine("          content:");
-                sb.AppendLine("            application/json:");
-                sb.AppendLine("              schema:");
-                sb.AppendLine(CultureInfo.InvariantCulture, $"                $ref: '#/components/schemas/{schemaRef}'");
+                var method = HttpMethodToYamlKey(group.Signature.Method);
+                sb.AppendLine(CultureInfo.InvariantCulture, $"    {method}:");
+                sb.AppendLine("      summary: ''");
+                sb.AppendLine("      responses:");
+                sb.AppendLine("        '200':");
+                sb.AppendLine("          description: OK");
+
+                if (ctx.SchemasByEndpoint.TryGetValue(group.Signature.Normalized, out _))
+                {
+                    var schemaRef = BuildSchemaRefName(group.Signature.Normalized);
+                    sb.AppendLine("          content:");
+                    sb.AppendLine("            application/json:");
+                    sb.AppendLine("              schema:");
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"                $ref: '#/components/schemas/{schemaRef}'");
+                }
             }
         }
     }

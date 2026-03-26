@@ -191,30 +191,6 @@ public static class MarkdownReportGenerator
         sb.AppendLine();
     }
 
-    /// <summary>
-    /// Returns <c>&lt;REDACTED&gt;</c> when the value already contains that sentinel,
-    /// or when it looks like a credential (Bearer token, session cookie, etc.).
-    /// All other values are returned unchanged.
-    /// </summary>
-    private static string RedactHeaderValue(string key, string value)
-    {
-        if (value.Contains("<REDACTED>", StringComparison.OrdinalIgnoreCase))
-            return "<REDACTED>";
-
-        if (value.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            return "<REDACTED>";
-
-        if (value.Contains("session=", StringComparison.OrdinalIgnoreCase))
-            return "<REDACTED>";
-
-        // Treat Authorization / Cookie headers as always sensitive
-        if (key.Equals("Authorization", StringComparison.OrdinalIgnoreCase) ||
-            key.Equals("Cookie", StringComparison.OrdinalIgnoreCase) ||
-            key.Equals("Set-Cookie", StringComparison.OrdinalIgnoreCase))
-        {
-            return "<REDACTED>";
-        }
-
-        return value;
-    }
+    private static string RedactHeaderValue(string key, string value) =>
+        HeaderRedactor.RedactHeaderValue(key, value);
 }

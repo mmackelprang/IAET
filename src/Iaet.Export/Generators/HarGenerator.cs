@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Iaet.Core.Models;
@@ -45,7 +46,7 @@ public static class HarGenerator
     {
         var uri      = new Uri(req.Url);
         var headers  = req.RequestHeaders
-                          .Select(kv => new HarNameValue(Name: kv.Key, Value: kv.Value))
+                          .Select(kv => new HarNameValue(Name: kv.Key, Value: HeaderRedactor.RedactHeaderValue(kv.Key, kv.Value)))
                           .ToArray();
         var queryParams = uri.Query.TrimStart('?')
                              .Split('&', StringSplitOptions.RemoveEmptyEntries)
@@ -74,13 +75,13 @@ public static class HarGenerator
             QueryString: queryParams,
             PostData: postData,
             HeadersSize: -1,
-            BodySize: req.RequestBody?.Length ?? 0);
+            BodySize: req.RequestBody is not null ? Encoding.UTF8.GetByteCount(req.RequestBody) : 0);
     }
 
     private static HarResponse BuildResponse(CapturedRequest req)
     {
         var headers = req.ResponseHeaders
-                        .Select(kv => new HarNameValue(Name: kv.Key, Value: kv.Value))
+                        .Select(kv => new HarNameValue(Name: kv.Key, Value: HeaderRedactor.RedactHeaderValue(kv.Key, kv.Value)))
                         .ToArray();
 
         return new HarResponse(
@@ -89,12 +90,12 @@ public static class HarGenerator
             HttpVersion: "HTTP/1.1",
             Headers: headers,
             Content: new HarContent(
-                Size: req.ResponseBody?.Length ?? 0,
+                Size: req.ResponseBody is not null ? Encoding.UTF8.GetByteCount(req.ResponseBody) : 0,
                 MimeType: req.ResponseHeaders.TryGetValue("Content-Type", out var ct) ? ct : "application/octet-stream",
                 Text: req.ResponseBody),
             RedirectUrl: string.Empty,
             HeadersSize: -1,
-            BodySize: req.ResponseBody?.Length ?? 0);
+            BodySize: req.ResponseBody is not null ? Encoding.UTF8.GetByteCount(req.ResponseBody) : 0);
     }
 
     private static string GetStatusText(int status) => status switch

@@ -89,14 +89,46 @@ public static class CSharpClientGenerator
     private static void AppendMethod(StringBuilder sb, EndpointGroup group)
     {
         var methodName = BuildMethodName(group.Signature);
+        var path = group.Signature.NormalizedPath;
+        var httpMethod = group.Signature.Method;
 
         sb.AppendLine(CultureInfo.InvariantCulture,
             $"    public async Task<string?> {methodName}(CancellationToken ct = default)");
         sb.AppendLine("    {");
-        sb.AppendLine(CultureInfo.InvariantCulture,
-            $"        var response = await _httpClient.{HttpClientMethodName(group.Signature.Method)}(");
-        sb.AppendLine(CultureInfo.InvariantCulture,
-            $"            \"{group.Signature.NormalizedPath}\", ct).ConfigureAwait(false);");
+
+        switch (httpMethod)
+        {
+            case "GET":
+            case "DELETE":
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"        var response = await _httpClient.{HttpClientMethodName(httpMethod)}(");
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"            \"{path}\", ct).ConfigureAwait(false);");
+                break;
+
+            case "POST":
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"        var response = await _httpClient.PostAsync(");
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"            \"{path}\", null, ct).ConfigureAwait(false);");
+                break;
+
+            case "PUT":
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"        var response = await _httpClient.PutAsync(");
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"            \"{path}\", null, ct).ConfigureAwait(false);");
+                break;
+
+            default:
+                // PATCH and any other method: use SendAsync with HttpRequestMessage
+                sb.AppendLine(CultureInfo.InvariantCulture,
+                    $"        using var request = new HttpRequestMessage(new HttpMethod(\"{httpMethod}\"), \"{path}\");");
+                sb.AppendLine(
+                    "        var response = await _httpClient.SendAsync(request, ct).ConfigureAwait(false);");
+                break;
+        }
+
         sb.AppendLine("        response.EnsureSuccessStatusCode();");
         sb.AppendLine("        return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);");
         sb.AppendLine("    }");
@@ -139,6 +171,6 @@ public static class CSharpClientGenerator
     {
         "GET"    => "GetAsync",
         "DELETE" => "DeleteAsync",
-        _        => "SendAsync",
+        _        => throw new ArgumentOutOfRangeException(nameof(httpMethod), httpMethod, "Unhandled HTTP method"),
     };
 }

@@ -76,7 +76,7 @@ public static class PostmanGenerator
             return [];
 
         return [.. req.RequestHeaders.Select(kv =>
-            new PostmanHeader(Key: kv.Key, Value: kv.Value))];
+            new PostmanHeader(Key: kv.Key, Value: HeaderRedactor.RedactHeaderValue(kv.Key, kv.Value)))];
     }
 
     private static PostmanBody? BuildBody(CapturedRequest? req)
