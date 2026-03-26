@@ -3,6 +3,7 @@ using Iaet.Capture;
 using Iaet.Capture.Listeners;
 using Iaet.Catalog;
 using Iaet.Core.Abstractions;
+using Iaet.Crawler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -119,6 +120,44 @@ internal static class CaptureCommand
         });
 
         captureCmd.Add(startCmd);
+        captureCmd.Add(CreateRunCmd(services));
         return captureCmd;
+    }
+
+    private static Command CreateRunCmd(IServiceProvider services)
+    {
+        var runCmd       = new Command("run", "Execute a TypeScript Playwright recipe against a running browser session");
+        var recipeOption  = new Option<string>("--recipe")  { Description = "Path to the TypeScript recipe file (.ts)", Required = true };
+        var sessionOption = new Option<string>("--session") { Description = "Session name for reference", Required = true };
+
+        runCmd.Add(recipeOption);
+        runCmd.Add(sessionOption);
+
+        runCmd.SetAction(async (parseResult) =>
+        {
+            var recipePath  = parseResult.GetRequiredValue(recipeOption);
+            var sessionName = parseResult.GetRequiredValue(sessionOption);
+
+            using var scope = services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+            await db.Database.MigrateAsync().ConfigureAwait(false);
+
+            // Validate recipe path
+            RecipeRunner.ValidateRecipe(recipePath);
+
+            var (command, args) = RecipeRunner.BuildCommand(recipePath, 9222);
+            var env             = RecipeRunner.GetEnvironment(9222);
+
+            Console.WriteLine($"Session:  {sessionName}");
+            Console.WriteLine($"Recipe:   {recipePath}");
+            Console.WriteLine($"Command:  {command} {args}");
+            Console.WriteLine($"Env:      CDP_ENDPOINT={env["CDP_ENDPOINT"]}");
+            Console.WriteLine();
+            Console.WriteLine("NOTE: Full CDP integration requires a running browser with remote-debugging enabled.");
+            Console.WriteLine("      Launch Chrome with --remote-debugging-port=9222, then run this command.");
+            Console.WriteLine("      The recipe will connect via CDP_ENDPOINT and drive the browser.");
+        });
+
+        return runCmd;
     }
 }

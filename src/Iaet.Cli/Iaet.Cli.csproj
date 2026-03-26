@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Iaet.Schema\Iaet.Schema.csproj" />
     <ProjectReference Include="..\Iaet.Replay\Iaet.Replay.csproj" />
     <ProjectReference Include="..\Iaet.Export\Iaet.Export.csproj" />
+    <ProjectReference Include="..\Iaet.Crawler\Iaet.Crawler.csproj" />
   </ItemGroup>
 
   <ItemGroup>
