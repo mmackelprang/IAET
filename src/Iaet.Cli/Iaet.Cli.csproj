@@ -17,6 +17,7 @@
     <ProjectReference Include="..\Iaet.Catalog\Iaet.Catalog.csproj" />
     <ProjectReference Include="..\Iaet.Schema\Iaet.Schema.csproj" />
     <ProjectReference Include="..\Iaet.Replay\Iaet.Replay.csproj" />
+    <ProjectReference Include="..\Iaet.Export\Iaet.Export.csproj" />
   </ItemGroup>
 
   <ItemGroup>

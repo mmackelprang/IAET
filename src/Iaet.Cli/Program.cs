@@ -3,6 +3,7 @@ using System.Globalization;
 using Iaet.Capture;
 using Iaet.Catalog;
 using Iaet.Cli.Commands;
+using Iaet.Export;
 using Iaet.Replay;
 using Iaet.Schema;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddIaetCatalog($"DataSource={dbPath}");
         services.AddIaetSchema();
         services.AddIaetReplay();
+        services.AddIaetExport();
     })
     .Build();
 
@@ -32,7 +34,8 @@ var rootCommand = new RootCommand("IAET - Internal API Extraction Toolkit")
     CatalogCommand.Create(host.Services),
     StreamsCommand.Create(host.Services),
     SchemaCommand.Create(host.Services),
-    ReplayCommand.Create(host.Services)
+    ReplayCommand.Create(host.Services),
+    ExportCommand.Create(host.Services)
 };
 
 return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(false);
