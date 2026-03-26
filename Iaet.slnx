@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Iaet.Capture/Iaet.Capture.csproj" />
     <Project Path="src/Iaet.Catalog/Iaet.Catalog.csproj" />
+    <Project Path="src/Iaet.Cli/Iaet.Cli.csproj" />
     <Project Path="src/Iaet.Core/Iaet.Core.csproj" />
   </Folder>
   <Folder Name="/tests/">
