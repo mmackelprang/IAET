@@ -37,9 +37,12 @@ This plan is structured for **AI-first execution** using Claude Code with CLI to
 | # | Severity | Component | Description | Status |
 |---|---|---|---|---|
 | 1 | **Critical** | `WebRtcListener` | `WebRTC.enable` CDP domain doesn't exist — crashes capture on startup | **Fixed** — wrapped in try-catch, degrades gracefully |
-| 2 | **High** | Export pipeline | `JsonReaderException` when response body is HTML, not JSON — crashes all exports for sessions with non-JSON responses (Spotify, Google Maps, Facebook) | **Open** — needs graceful handling of non-JSON bodies |
-| 3 | **Medium** | Explorer Replay API | `POST /api/replay/{id}` returns HTTP 500 with empty body when replay HTTP call fails — unhandled exception | **Open** — needs error wrapping |
+| 2 | **High** | `JsonTypeMap.Analyze` | `JsonReaderException` when response body is HTML, JSONP, or `for(;;);`-prefixed (Facebook) — crashes all exports for sessions with non-JSON responses | **Open** — needs content-type check or try-catch before `JsonDocument.Parse` |
+| 3 | **Medium** | Explorer `ReplayApi` | `POST /api/replay/{id}` returns HTTP 500 with empty body when replay HTTP call fails — unhandled exception | **Open** — needs error wrapping |
 | 4 | **Low** | `PageInteractor` | `Uri.TryCreate("/path", UriKind.Absolute)` succeeds on Linux with `file://` scheme — causes wrong URL resolution | **Fixed** — added `!= Uri.UriSchemeFile` guard |
+| 5 | **High** | `JsonDiffer.Diff` | Same root cause as #2 but in replay path — `JsonDocument.Parse` crashes on non-JSON response bodies during diff comparison. Also crashes batch replay, aborting all remaining requests. | **Open** — needs try-catch, fallback to text diff or "non-JSON, skipping diff" |
+| 6 | **Medium** | `CrawlCommand` | Crawler is dry-run only — `PlaywrightPageNavigator` not wired into `CrawlEngine`. All crawl commands parse options correctly but produce placeholder output. Exit code 2. | **Open** — needs browser integration |
+| 7 | **Low** | CLI logging | Serilog INF log lines go to stdout, mixing with export content when using `--output -` (stdout). Logs should go to stderr. | **Open** |
 
 ---
 
@@ -85,9 +88,10 @@ This plan is structured for **AI-first execution** using Claude Code with CLI to
 
 | # | Step | Mode | Expected Result | Status |
 |---|---|---|---|---|
-| 17 | `iaet replay run --request-id <id> --dry-run` | [AI] | Shows method, URL. No HTTP sent. | [PASS] (tested by agent) |
-| 18 | `iaet replay run --request-id <id>` (live) | [AI] | Sends request. Shows status, duration, diffs. | [PASS] (tested by agent) |
-| 19 | `iaet replay batch --session-id <id> --dry-run` | [AI] | Lists one representative per endpoint. | [PASS] (tested by agent) |
+| 17 | `iaet replay run --request-id <id> --dry-run` | [AI] | Shows method, URL. No HTTP sent. | [PASS] Displays method, URL, timestamp. No HTTP call. |
+| 18 | `iaet replay run --request-id <id>` (live) | [AI] | Sends request. Shows status, duration, diffs. | [FAIL] HTTP call succeeds (200, ~258ms) but `JsonDiffer.Diff` crashes on non-JSON body (Bug #5) |
+| 19 | `iaet replay batch --session-id <id> --dry-run` | [AI] | Lists one representative per endpoint. | [PASS] "5 representative request(s)" listed in table. |
+| 20 | `iaet replay batch --session-id <id>` (live) | [AI] | Replays all representatives. | [FAIL] First request succeeds then crashes on diff. Aborts remaining requests (Bug #5) |
 
 ### 1.6 Explorer Web UI
 
@@ -279,12 +283,14 @@ This plan is structured for **AI-first execution** using Claude Code with CLI to
 
 ## Phase 6: Crawler
 
+**Note:** The crawler is currently dry-run only (Bug #6). `PlaywrightPageNavigator` is not wired into `CrawlEngine`. All commands parse options correctly and echo configuration but do not execute a live crawl. Exit code 2.
+
 | # | Step | Mode | Expected Result | Status |
 |---|---|---|---|---|
-| 88 | `iaet crawl --url https://gv.com --target "GV" --session gv-crawl-01 --max-depth 2 --max-pages 5 --headless` | [AI] | Crawl starts. Respects limits. Summary printed. | [PASS] (tested by agent) |
-| 89 | `iaet crawl ... --blacklist "/portfolio/*"` | [AI] | No requests to /portfolio/* paths. | [PASS] (tested by agent) |
-| 90 | `iaet crawl ... --max-duration 15` | [AI] | Stops within ~15 seconds. | [PASS] (tested by agent) |
-| 91 | `iaet crawl ... --output crawl-report.json` | [AI] | JSON file created. Valid JSON. | [PASS] 408 bytes, valid JSON |
+| 88 | `iaet crawl --url https://gv.com --target "GV" --session gv-crawl-01 --max-depth 2 --max-pages 5 --headless` | [AI] | Crawl starts. Respects limits. Summary printed. | [PARTIAL] Options parsed and echoed in banner. DRY RUN message. No live crawl (Bug #6) |
+| 89 | `iaet crawl ... --blacklist "/portfolio/*"` | [AI] | No requests to /portfolio/* paths. | [PARTIAL] `--blacklist` parsed and displayed in banner. Cannot verify filtering without live crawl |
+| 90 | `iaet crawl ... --max-duration 15` | [AI] | Stops within ~15 seconds. | [PARTIAL] `--max-duration 15` parsed correctly (shown as "15s"). Cannot verify time-based stopping |
+| 91 | `iaet crawl ... --output crawl-report.json` | [AI] | JSON file created. Valid JSON. | [PASS] Placeholder JSON written with crawl options. Valid JSON, 408 bytes. Status: "pending-browser-integration" |
 
 ---
 
@@ -341,27 +347,49 @@ This plan is structured for **AI-first execution** using Claude Code with CLI to
 
 | Phase | Target | Total Steps | AI Auto | AI Passed | AI Failed | Human Only |
 |---|---|---|---|---|---|---|
-| 1 | GV | 34 | 30 | 29 | 1 (replay API 500) | 4 |
+| 1 | GV | 34 | 31 | 28 | 3 (replay diff crash, API 500) | 3 |
 | 2 | Spotify | 18 | 10 | 8 | 2 (export crash) | 8 |
 | 3 | Google Maps | 9 | 8 | 7 | 1 (export crash) | 1 |
 | 4 | Facebook | 8 | 6 | 5 | 1 (export crash) | 2 |
 | 5 | Extensions | 18 | 5 | 5 | 0 | 13 |
-| 6 | Crawler | 4 | 4 | 4 | 0 | 0 |
+| 6 | Crawler | 4 | 4 | 1 | 3 (dry-run only) | 0 |
 | 7 | Import | 5 | 5 | 5 | 0 | 0 |
 | 8 | Error Handling | 6 | 6 | 6 | 0 | 0 |
 | 9 | Cross-Cutting | 5 | 5 | 5 | 0 | 0 |
-| **Total** | | **107** | **79** | **74** | **5** | **28** |
+| **Total** | | **107** | **80** | **70** | **10** | **27** |
 
-**AI automation rate: 74%** (79 of 107 steps executable by AI, 74 passed)
-**Human-required: 26%** (28 steps — mainly browser extensions and authenticated captures)
+**AI automation rate: 75%** (80 of 107 steps executable by AI)
+**AI pass rate: 88%** (70 of 80 AI-executed steps passed)
+**Human-required: 25%** (27 steps — browser extensions and authenticated captures)
+**Blocked by bugs: 10 steps** across 3 root causes
 
 ---
 
 ## Open Issues Requiring Fixes Before Full UAT
 
-1. **Bug #2 (High):** Export pipeline crashes on non-JSON response bodies. Blocks all exports for Spotify, Google Maps, and Facebook sessions. Fix the `JsonReaderException` in the export/schema code path to skip or gracefully handle HTML/binary bodies.
+### Priority 1 — Blocks 18 export steps + 2 replay steps
 
-2. **Bug #3 (Medium):** Explorer replay API returns HTTP 500 instead of a structured error when the replay HTTP call fails. Wrap the exception in the minimal API handler.
+**Bug #2 + #5: Non-JSON body handling in `JsonTypeMap.Analyze` and `JsonDiffer.Diff`**
+
+Both call `JsonDocument.Parse` without checking content-type or wrapping in try-catch. Crashes on:
+- HTML pages (Spotify login page)
+- JSONP/protobuf prefixes (Google Maps responses start with `)]}'\n`)
+- Facebook XSS protection (`for(;;);{...}`)
+- BOM-prefixed or compressed response bodies
+
+**Fix:** Check `content-type` header before parsing, or wrap `JsonDocument.Parse` in try-catch and skip/warn on non-JSON bodies. In batch replay, catch per-request errors so one failure doesn't abort the batch.
+
+### Priority 2 — Blocks 3 crawler steps
+
+**Bug #6: Crawler dry-run only — `PlaywrightPageNavigator` not wired into `CrawlEngine`**
+
+The CLI parses all crawl options correctly but the `CrawlEngine` has no browser instance. Need to instantiate `PlaywrightPageNavigator` in the crawl command handler.
+
+### Priority 3 — Quality issues
+
+**Bug #3:** Explorer replay API needs error wrapping (returns 500 instead of structured error).
+
+**Bug #7:** Serilog logs go to stdout, mixing with export content in stdout mode. Route logs to stderr.
 
 ---
 
@@ -379,13 +407,15 @@ The following steps **cannot be automated** and require manual execution:
 - [ ] Facebook: Log in, browse Feed, open profile → verify GraphQL endpoints, credential redaction
 - [ ] Spotify stream frames inspection (requires authenticated WebSocket capture)
 
-### Visual/UX Verification (4 steps)
-- [ ] Explorer web UI page rendering (sessions, endpoints, streams pages)
-- [ ] HTML report visual quality
-- [ ] Investigation wizard full interactive flow
+### Visual/UX Verification (3 steps)
+- [ ] HTML report visual quality in browser
+- [ ] Investigation wizard full interactive flow (capture + analyze + export)
 - [ ] Interactive (non-headless) capture with manual browsing
 
-### Post-Fix Verification (3 steps)
-- [ ] After Bug #2 fix: re-run all exports for Spotify, Google Maps, Facebook
-- [ ] After Bug #3 fix: re-test Explorer replay API
-- [ ] Full export credential redaction audit on authenticated sessions
+### AI-Automatable After Bug Fixes (re-run with Claude Code)
+- [ ] After Bug #2/#5 fix: `iaet export *` for Spotify, Google Maps, Facebook (18 steps) — [AI]
+- [ ] After Bug #2/#5 fix: `iaet replay run/batch` with live HTTP (2 steps) — [AI]
+- [ ] After Bug #3 fix: Explorer `POST /api/replay/{id}` (1 step) — [AI]
+- [ ] After Bug #6 fix: All 4 crawler tests with live browser (3 steps) — [AI]
+- [ ] Full credential redaction audit on all exports post-fix — [AI]
+- [ ] Explorer web UI via Playwright MCP: browse all pages visually — [AI+MCP]
