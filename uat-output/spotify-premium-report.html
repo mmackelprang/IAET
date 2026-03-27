@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Investigation Report</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 20px; color: #333; }
+h1 { border-bottom: 2px solid #333; padding-bottom: 8px; }
+h2 { border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-top: 2em; }
+h3 { margin-top: 1.5em; }
+h4 { margin-top: 1em; color: #555; }
+pre { background: #f4f4f4; border: 1px solid #ddd; border-radius: 4px; padding: 12px; overflow-x: auto; }
+code { font-family: 'Consolas', 'Courier New', monospace; font-size: 0.9em; }
+pre code { font-size: 0.85em; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+th { background: #f0f0f0; font-weight: bold; }
+tr:nth-child(even) { background: #f9f9f9; }
+blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 16px; color: #666; }
+ul { padding-left: 1.5em; }
+li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<h1>API Investigation Report</h1>
+
+<li><strong>Target Application:</strong> Spotify</li>
+<li><strong>Session:</strong> spotify-premium-investigation</li>
+<li><strong>Date:</strong> 2026-03-27</li>
+<li><strong>Requests Captured:</strong> 18</li>
+
+<h2>Endpoint Catalog</h2>
+
+<table>
+<thead><tr>
+<th>Method</th>
+<th>Path</th>
+<th>Observations</th>
+<th>First Seen</th>
+<th>Last Seen</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td>/manifests/v9/json/sources/{id}/options/supports_drm</td>
+<td>2</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/metadata/{id}/track/{id}</td>
+<td>2</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/masthead/v1/masthead</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/color-lyrics/v2/track/0G21yYKMZoHa30cYVi1iA8/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b27321ebf49b3292c3f0f575f0f5</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/color-lyrics/v2/track/1EHh1fC9FCKw31wotfXx7L/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2730f9b32498b1d1053d4cc5c9c</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/color-lyrics/v2/track/2SiXAy7TuUkycRVbbWDEpo/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273ff191d7fbdb5a13eaf84132b</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/melody/v1/time</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/storage-resolve/v2/files/audio/interactive/{id}/{id}</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/track-playback/v1/media/spotify:track:1EHh1fC9FCKw31wotfXx7L</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/collection/v2/contains</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/gabo-receiver-service/public/v3/events</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/gabo-receiver-service/v3/events</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/melody/v1/msg/batch</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/pathfinder/v2/query</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/widevine-license/v1/audio/license</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td>/track-playback/v1/devices/{id}/state</td>
+<td>1</td>
+<td>2026-03-27 19:16:05 UTC</td>
+<td>2026-03-27 19:16:05 UTC</td>
+</tr>
+</tbody></table>
+
+<h2>Endpoint Details</h2>
+
+<h3>GET /manifests/v9/json/sources/{id}/options/supports_drm</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://gue1-spclient.spotify.com/manifests/v9/json/sources/1b450f23a5144e46873622007366f091/options/supports_drm</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{
+  "contents": [{
+    "encoding_id": "6de1bd6000fa11f0ad1c8f5e3f2a48cb",
+    "segment_length": 4,
+    "start_time_millis": 0,
+    "end_time_millis": 206922,
+    "profiles": [{
+      "id": 4,
+      "audio_bitrate": 160000,
+      "audio_codec": "mp4a.40.2",
+      "file_type": "mp4",
+      "encryption_index": 0,
+      "encryption_indices": [0, 1],
+      "max_bitrate": 167950,
+      "mime_type": "audio/mp4",
+      "key_id": "sFrYRYb8h1vzLMlqVnaQww=="
+    }, {
+      "id": 3,
+      "file_type": "mp4",
+      "encryption_index": 0,
+      "encryption_indices": [0, 1],
+      "max_bitrate": 313988,
+      "mime_type": "video/mp4",
+      "video_bitrate": 212506,
+      "video_codec": "avc1.4d400d",
+      "video_height": 180,
+      "video_resolution": 180,
+      "video_width": 314,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQww=="
+    }, {
+      "id": 2,
+      "file_type": "mp4",
+      "encryption_index": 0,
+      "encryption_indices": [0, 1],
+      "max_bitrate": 704632,
+      "mime_type": "video/mp4",
+      "video_bitrate": 376020,
+      "video_codec": "avc1.4d4015",
+      "video_height": 240,
+      "video_resolution": 240,
+      "video_width": 418,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQww=="
+    }, {
+      "id": 1,
+      "file_type": "mp4",
+      "encryption_index": 0,
+      "encryption_indices": [0, 1],
+      "max_bitrate": 1236180,
+      "mime_type": "video/mp4",
+      "video_bitrate": 618440,
+      "video_codec": "avc1.4d401e",
+      "video_height": 320,
+      "video_resolution": 320,
+      "video_width": 556,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQww=="
+    }, {
+      "id": 0,
+      "file_type": "mp4",
+      "encryption_index": 0,
+      "encryption_indices": [0, 1],
+      "max_bitrate": 1265384,
+      "mime_type": "video/mp4",
+      "video_bitrate": 764698,
+      "video_codec": "avc1.4d401e",
+      "video_height": 368,
+      "video_resolution": 368,
+      "video_width": 640,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQww=="
+    }, {
+      "id": 13,
+      "audio_bitrate": 160000,
+      "audio_codec": "mp4a.40.2",
+      "file_type": "ts",
+      "encryption_index": 2,
+      "encryption_indices": [2],
+      "max_bitrate": 219584,
+      "mime_type": "audio/mp2t",
+      "key_id": "sFrYRYb8h1vzLMlqVnaQw/rM"
+    }, {
+      "id": 11,
+      "file_type": "ts",
+      "encryption_index": 2,
+      "encryption_indices": [2],
+      "max_bitrate": 334264,
+      "mime_type": "video/mp2t",
+      "video_bitrate": 234545,
+      "video_codec": "avc1.4d400d",
+      "video_height": 180,
+      "video_resolution": 180,
+      "video_width": 314,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQw/rM"
+    }, {
+      "id": 10,
+      "file_type": "ts",
+      "encryption_index": 2,
+      "encryption_indices": [2],
+      "max_bitrate": 738840,
+      "mime_type": "video/mp2t",
+      "video_bitrate": 401573,
+      "video_codec": "avc1.4d4015",
+      "video_height": 240,
+      "video_resolution": 240,
+      "video_width": 418,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQw/rM"
+    }, {
+      "id": 9,
+      "file_type": "ts",
+      "encryption_index": 2,
+      "encryption_indices": [2],
+      "max_bitrate": 1279904,
+      "mime_type": "video/mp2t",
+      "video_bitrate": 649449,
+      "video_codec": "avc1.4d401e",
+      "video_height": 320,
+      "video_resolution": 320,
+      "video_width": 556,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQw/rM"
+    }, {
+      "id": 8,
+      "file_type": "ts",
+      "encryption_index": 2,
+      "encryption_indices": [2],
+      "max_bitrate": 1309984,
+      "mime_type": "video/mp2t",
+      "video_bitrate": 798603,
+      "video_codec": "avc1.4d401e",
+      "video_height": 368,
+      "video_resolution": 368,
+      "video_width": 640,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQw/rM"
+    }, {
+      "id": 7,
+      "audio_bitrate": 160000,
+      "audio_codec": "opus",
+      "file_type": "webm",
+      "encryption_index": 0,
+      "encryption_indices": [0, 1],
+      "max_bitrate": 177740,
+      "mime_type": "audio/webm",
+      "key_id": "sFrYRYb8h1vzLMlqVnaQww=="
+    }, {
+      "id": 6,
+      "file_type": "webm",
+      "encryption_index": 0,
+      "encryption_indices": [0, 1],
+      "max_bitrate": 1038794,
+      "mime_type": "video/webm",
+      "video_bitrate": 575069,
+      "video_codec": "vp9",
+      "video_height": 320,
+      "video_resolution": 320,
+      "video_width": 556,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQww=="
+    }, {
+      "id": 5,
+      "file_type": "webm",
+      "encryption_index": 0,
+      "encryption_indices": [0, 1],
+      "max_bitrate": 1070016,
+      "mime_type": "video/webm",
+      "video_bitrate": 647283,
+      "video_codec": "vp9",
+      "video_height": 368,
+      "video_resolution": 368,
+      "video_width": 640,
+      "key_id": "sFrYRYb8h1vzLMlqVnaQww=="
+    }],
+    "offline_profiles": [],
+    "background_profiles": [{
+      "id": 12,
+      "file_type": "ts",
+      "encryption_index": 2,
+      "encryption_indices": [2],
+      "max_bitrate": 38352,
+      "mime_type": "video/mp2t",
+      "video_bitrate": 37571,
+      "video_codec": "avc1.4d400d",
+     
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+
+</code></pre>
+
+<h3>GET /metadata/{id}/track/{id}</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://spclient.wg.spotify.com/metadata/4/track/366cba62168f422d9641c4894cf98add?market=from_token</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"gid": "366cba62168f422d9641c4894cf98add","name": "How Far We've Come","album": {"gid": "9d54f9878a7f44ada618cd7cee0adb95","name": "How Far We've Come","artist": [{"gid": "7cad5c7b80dc46c88e1c6b90f514d43f","name": "Matchbox Twenty"}],"label": "Atlantic Records","date": {"year": 2007,"month": 9,"day": 15},"cover_group": {"image": [{"file_id": "ab67616d00001e020f9b32498b1d1053d4cc5c9c","size": "DEFAULT","width": 300,"height": 300},{"file_id": "ab67616d000048510f9b32498b1d1053d4cc5c9c","size": "SMALL","width": 64,"height": 64},{"file_id": "ab67616d0000b2730f9b32498b1d1053d4cc5c9c","size": "LARGE","width": 640,"height": 640}]},"licensor": {"uuid": "8337a6aeaca744a7b32050f0c66e138f"},"prerelease_config": {"earliest_reveal_date": {"year": 2007,"month": 9,"day": 14,"hour": 12},"earliest_coverart_reveal_date": {"year": 2007,"month": 9,"day": 14,"hour": 12}}},"artist": [{"gid": "7cad5c7b80dc46c88e1c6b90f514d43f","name": "Matchbox Twenty"}],"number": 1,"disc_number": 1,"duration": 212253,"popularity": 67,"external_id": [{"type": "isrc","id": "USAT20703843"}],"earliest_live_timestamp": 413146860,"has_lyrics": true,"licensor": {"uuid": "8337a6aeaca744a7b32050f0c66e138f"},"language_of_performance": ["en"],"original_audio": {"uuid": "c8a9d238574d426ca18b4ea4f515fe3a","format": "AUDIO_FORMAT_STEREO"},"original_title": "How Far We've Come","artist_with_role": [{"artist_gid": "7cad5c7b80dc46c88e1c6b90f514d43f","artist_name": "Matchbox Twenty","role": "ARTIST_ROLE_MAIN_ARTIST"}],"canonical_uri": "spotify:track:6FYuXs13pZOuTPYJZODbRs","prerelease_config": {"earliest_reveal_date": {"year": 2007,"month": 9,"day": 14,"hour": 12}},"content_authorization_attributes": "0a2c180352280a2438333337613661652d616361372d343461372d623332302d3530663063363665313338661003","audio_formats": [{"original_audio": {"uuid": "c8a9d238574d426ca18b4ea4f515fe3a","format": "AUDIO_FORMAT_STEREO"}}],"media_type": "AUDIO","implementation_details": {"catalog_insertion_date": {"seconds": 1307496710,"nanos": 589000000}}}
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+public sealed record InferredResponse(string Gid, string Name, AlbumType Album, IReadOnlyList&lt;ArtistItem&gt; Artist, double Number, double DiscNumber, double Duration, double Popularity, IReadOnlyList&lt;ExternalIdItem&gt; ExternalId, double EarliestLiveTimestamp, bool HasLyrics, LicensorType Licensor, IReadOnlyList&lt;string&gt; LanguageOfPerformance, OriginalAudioType OriginalAudio, string OriginalTitle, IReadOnlyList&lt;ArtistWithRoleItem&gt; ArtistWithRole, string CanonicalUri, PrereleaseConfigType? PrereleaseConfig, string ContentAuthorizationAttributes, IReadOnlyList&lt;AudioFormatsItem&gt; AudioFormats, string MediaType, ImplementationDetailsType ImplementationDetails);
+
+public sealed record ArtistItem(string Gid, string Name);
+
+public sealed record DateType(double Year, double Month, double Day);
+
+public sealed record ImageItem(string FileId, string Size, double Width, double Height);
+
+public sealed record CoverGroupType(IReadOnlyList&lt;ImageItem&gt; Image);
+
+public sealed record LicensorType(string Uuid);
+
+public sealed record EarliestRevealDateType(double Year, double Month, double Day, double Hour);
+
+public sealed record EarliestCoverartRevealDateType(double Year, double Month, double Day, double Hour);
+
+public sealed record PrereleaseConfigType(EarliestRevealDateType EarliestRevealDate, EarliestCoverartRevealDateType EarliestCoverartRevealDate);
+
+public sealed record AlbumType(string Gid, string Name, IReadOnlyList&lt;ArtistItem&gt; Artist, string Label, DateType Date, CoverGroupType CoverGroup, LicensorType Licensor, PrereleaseConfigType PrereleaseConfig);
+
+public sealed record ArtistItem(string Gid, string Name);
+
+public sealed record ExternalIdItem(string Type, string Id);
+
+public sealed record LicensorType(string Uuid);
+
+public sealed record OriginalAudioType(string Uuid, string Format);
+
+public sealed record ArtistWithRoleItem(string ArtistGid, string ArtistName, string Role);
+
+public sealed record EarliestRevealDateType(double Year, double Month, double Day, double Hour);
+
+public sealed record PrereleaseConfigType(EarliestRevealDateType EarliestRevealDate);
+
+public sealed record OriginalAudioType(string Uuid, string Format);
+
+public sealed record AudioFormatsItem(OriginalAudioType OriginalAudio);
+
+public sealed record CatalogInsertionDateType(double Seconds, double Nanos);
+
+public sealed record ImplementationDetailsType(CatalogInsertionDateType CatalogInsertionDate);
+
+</code></pre>
+
+<h3>GET /api/masthead/v1/masthead</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://www.spotify.com/api/masthead/v1/masthead?market=us&amp;language=en&amp;countryHub=true</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: x-unknown</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: x-unknown</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+ewogICJoZWFkZXIiOiB7CiAgICAibmF2aWdhdGlvbiI6IHsKICAgICAgImJyYW5kIjogewogICAgICAgICJocmVmIjogImh0dHBzOi8vd3d3LnNwb3RpZnkuY29tL3VzLyIsCiAgICAgICAgImFsdCI6ICJTcG90aWZ5IiwKICAgICAgICAiZGF0YUF0dHJpYnV0ZXMiOiB7CiAgICAgICAgICAiZGF0YS10cmFja2luZyI6ICJ7XCJjYXRlZ29yeVwiOiBcIm1lbnVcIiwgXCJhY3Rpb25cIjogXCJzcG90aWZ5LWxvZ29cIn0iCiAgICAgICAgfQogICAgICB9LAogICAgICAidXNlciI6IHsKICAgICAgICAidXNlckljb25VcmwiOiAiaHR0cHM6Ly9zY29udGVudC1saHI4LTEueHguZmJjZG4ubmV0L3YvdDM5LjMwODA4LTEvMzA5MTY0NzI5XzEwMTYwMzMzNzgyMTc0NTgzXzM0OTkzOTU2NDkwMzY3MDAwOTBfbi5qcGc/c3RwXHUwMDNkY3AwX2RzdC1qcGdfczUweDUwX3R0Nlx1MDAyNl9uY19jYXRcdTAwM2QxMDhcdTAwMjZjY2JcdTAwM2QxLTdcdTAwMjZfbmNfc2lkXHUwMDNkMjg4ODViXHUwMDI2X25jX29oY1x1MDAzZHM2S0NtaV8tNTNFUTdrTnZ3RmVHaUtIXHUwMDI2X25jX29jXHUwMDNkQWRycEFYRWRRMl9PWDBUUjdMYmVzbVozRjcxN2haUVg4Q3lHVmhEVVhCcEJfNURCRi1ETnNodllpN3NSU1JPUVI4WWNKRV82ek1GYVhrS0Q1cmRZS1ZpMFx1MDAyNl9uY196dFx1MDAzZDI0XHUwMDI2X25jX2h0XHUwMDNkc2NvbnRlbnQtbGhyOC0xLnh4XHUwMDI2ZWRtXHUwMDNkQVA0aEwzSUVBQUFBXHUwMDI2X25jX2dpZFx1MDAzZDd6dnMwYTF1ejd0RTdiWDFrdEM3d1FcdTAwMjZfbmNfdHBhXHUwMDNkUTViTUJRRmpsM0tLWkZMc0tBQl9qTmR3MVotT1E5WFI5Z1RZNEY5M0lpeTRqaDBtRXFwWXA3VW5hMk13c2RpTEJXRVFqN05NV1FBNlx1MDAyNm9oXHUwMDNkMDBfQWZ4SG8xb0tacVhTUEpUUGhxVWxUbXNHTmo2aWhRTXlxcXNIVko2WnpaZTBiUVx1MDAyNm9lXHUwMDNkNjlDQzlDM0QiLAogICAgICAgICJ1c2VySWNvbkFsdCI6ICJQcm9maWxlIgogICAgICB9LAogICAgICAibW9iaWxlTWVudSI6IHsKICAgICAgICAicHJvZmlsZUxpbmsiOiB7CiAgICAgICAgICAiaHJlZiI6ICJodHRwczovL3d3dy5zcG90aWZ5LmNvbS91cy9hY2NvdW50L292ZXJ2aWV3LyIsCiAgICAgICAgICAiYWx0IjogIkFjY291bnQiCiAgICAgICAgfQogICAgICB9LAogICAgICAibmF2IjogW3sKICAgICAgICAidHlwZSI6ICJwcmVtaXVtRHJvcGRvd24iLAogICAgICAgICJwYXJhbWV0ZXJzIjogewogICAgICAgICAgInRleHQiOiAiUHJlbWl1bSBwbGFucyIsCiAgICAgICAgICAiaXRlbXMiOiBbewogICAgICAgICAgICAidHlwZSI6ICJsaW5rQW5kQ29udGVudCIsCiAgICAgICAgICAgICJwYXJhbWV0ZXJzIjogewogICAgICAgICAgICAgICJocmVmIjogImh0dHBzOi8vd3d3LnNwb3RpZnkuY29tL3VzL3ByZW1pdW0vI3JlZlx1MDAzZHNwb3RpZnljb21faGVhZGVyX3ByZW1pdW1faW5kaXZpZHVhbCIsCiAgICAgICAgICAgICAgInRleHQiOiAiUHJlbWl1bSBJbmRpdmlkdWFsIiwKICAgICAgICAgICAgICAiZGF0YUF0dHJpYnV0ZXMiOiB7CiAgICAgICAgICAgICAgICAiZGF0YS1nYS1jYXRlZ29yeSI6ICJtZW51IiwKICAgICAgICAgICAgICAgICJkYXRhLWdhLWFjdGlvbiI6ICJwcmVtaXVtLWluZGl2aWR1YWwiCiAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAic3ViVGV4dCI6ICIxIGFjY291bnQgLSBGb3Igb25lIHBlcnNvbi4iCiAgICAgICAgICAgIH0KICAgICAgICAgIH0sIHsKICAgICAgICAgICAgInR5cGUiOiAibGlua0FuZENvbnRlbnQiLAogICAgICAgICAgICAicGFyYW1ldGVycyI6IHsKICAgICAgICAgICAgICAiaHJlZiI6ICJodHRwczovL3d3dy5zcG90aWZ5LmNvbS91cy9kdW8vI3JlZlx1MDAzZHNwb3RpZnljb21faGVhZGVyX3ByZW1pdW1fZHVvIiwKICAgICAgICAgICAgICAidGV4dCI6ICJQcmVtaXVtIER1byIsCiAgICAgICAgICAgICAgImRhdGFBdHRyaWJ1dGVzIjogewogICAgICAgICAgICAgICAgImRhdGEtZ2EtY2F0ZWdvcnkiOiAibWVudSIsCiAgICAgICAgICAgICAgICAiZGF0YS1nYS1hY3Rpb24iOiAicHJlbWl1bS1kdW8iCiAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAic3ViVGV4dCI6ICIyIGFjY291bnRzIC0gRm9yIGNvdXBsZXMgdW5kZXIgb25lIHJvb2YuIgogICAgICAgICAgICB9CiAgICAgICAgICB9LCB7CiAgICAgICAgICAgICJ0eXBlIjogImxpbmtBbmRDb250ZW50IiwKICAgICAgICAgICAgInBhcmFtZXRlcnMiOiB7CiAgICAgICAgICAgICAgImhyZWYiOiAiaHR0cHM6Ly93d3cuc3BvdGlmeS5jb20vdXMvZmFtaWx5LyNyZWZcdTAwM2RzcG90aWZ5Y29tX2hlYWRlcl9wcmVtaXVtX2ZhbWlseSIsCiAgICAgICAgICAgICAgInRleHQiOiAiUHJlbWl1bSBGYW1pbHkiLAogICAgICAgICAgICAgICJkYXRhQXR0cmlidXRlcyI6IHsKICAgICAgICAgICAgICAgICJkYXRhLWdhLWNhdGVnb3J5IjogIm1lbnUiLAogICAgICAgICAgICAgICAgImRhdGEtZ2EtYWN0aW9uIjogInByZW1pdW0tZmFtaWx5IgogICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgInN1YlRleHQiOiAiVXAgdG8gNiBhY2NvdW50cyAtIEZvciBmYW1pbHkgdW5kZXIgb25lIHJvb2YuIgogICAgICAgICAgICB9CiAgICAgICAgICB9LCB7CiAgICAgICAgICAgICJ0eXBlIjogImxpbmtBbmRDb250ZW50IiwKICAgICAgICAgICAgInBhcmFtZXRlcnMiOiB7CiAgICAgICAgICAgICAgImhyZWYiOiAiaHR0cHM6Ly93d3cuc3BvdGlmeS5jb20vdXMvc3R1ZGVudC8jcmVmXHUwMDNkc3BvdGlmeWNvbV9oZWFkZXJfcHJlbWl1bV9zdHVkZW50IiwKICAgICAgICAgICAgICAidGV4dCI6ICJQcmVtaXVtIFN0dWRlbnQiLAogICAgICAgICAgICAgICJkYXRhQXR0cmlidXRlcyI6IHsKICAgICAgICAgICAgICAgICJkYXRhLWdhLWNhdGVnb3J5IjogIm1lbnUiLAogICAgICAgICAgICAgICAgImRhdGEtZ2EtYWN0aW9uIjogInByZW1pdW0tc3R1ZGVudCIKICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICJzdWJUZXh0IjogIjEgYWNjb3VudCAtIERpc2NvdW50IGZvciBlbGlnaWJsZSBzdHVkZW50cy4iCiAgICAgICAgICAgIH0KICAgICAgICAgIH1dLAogICAgICAgICAgImRhdGFBdHRyaWJ1dGVzIjogewogICAgICAgICAgICAiZGF0YS1nYS1jYXRlZ29yeSI6ICJtZW51IiwKICAgICAgICAgICAgImRhdGEtZ2EtYWN0aW9uIjogInByZW1pdW0iCiAgICAgICAgICB9CiAgICAgICAgfQogICAgICB9LCB7CiAgICAgICAgInR5cGUiOiAibGluayIsCiAgICAgICAgInBhcmFtZXRlcnMiOiB7CiAgICAgICAgICAiaHJlZiI6ICJodHRwczovL3N1cHBvcnQuc3BvdGlmeS5jb20vIiwKICAgICAgICAgICJ0ZXh0IjogIlN1cHBvcnQiLAogICAgICAgICAgImRhdGFBdHRyaWJ1dGVzIjogewogICAgICAgICAgICAiZGF0YS1nYS1jYXRlZ29yeSI6ICJtZW51IiwKICAgICAgICAgICAgImRhdGEtZ2EtYWN0aW9uIjogImhlbHAiCiAgICAgICAgICB9CiAgICAgICAgfQogICAgICB9LCB7CiAgICAgICAgInR5cGUiOiAibGluayIsCiAgICAgICAgInBhcmFtZXRlcnMiOiB7CiAgICAgICAgICAiaHJlZiI6ICJodHRwczovL3d3dy5zcG90aWZ5LmNvbS91cy9kb3dubG9hZC8iLAogICAgICAgICAgInRleHQiOiAiRG93bmxvYWQiLAogICAgICAgICAgImRhdGFBdHRyaWJ1dGVzIjogewogICAgICAgICAgICAiZGF0YS1nYS1jYXRlZ29yeSI6ICJtZW51IiwKICAgICAgICAgICAgImRhdGEtZ2EtYWN0aW9uIjogImRvd25sb2FkIiwKICAg
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+
+</code></pre>
+
+<h3>GET /color-lyrics/v2/track/0G21yYKMZoHa30cYVi1iA8/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b27321ebf49b3292c3f0f575f0f5</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://spclient.wg.spotify.com/color-lyrics/v2/track/0G21yYKMZoHa30cYVi1iA8/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b27321ebf49b3292c3f0f575f0f5?format=json&amp;vocalRemoval=false&amp;market=from_token</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"lyrics":{"syncType":"LINE_SYNCED","lines":[{"startTimeMs":"7590","words":"Oh, my God","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"10370","words":"Whoa","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"26020","words":"♪","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"28770","words":"♪","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"40260","words":"Welcome to the jungle","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"42180","words":"We got fun and games","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"44140","words":"We got everything you want","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"46020","words":"Honey, we know the names","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"47320","words":"We are the people that can find","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"49780","words":"Whatever you may need","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"51870","words":"If you got the money, honey","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"53840","words":"We got your disease","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"55360","words":"In the jungle, welcome to the jungle","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"58250","words":"Watch it bring you to your, sha-na-na-na-na-na-na, knees, knees","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"63740","words":"Ooh, I, I wanna watch you bleed","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"67500","words":"Welcome to the jungle","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"69260","words":"We take it day by day","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"71410","words":"If you want it, you\u0027re gonna bleed","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"73070","words":"But that\u0027s the price you pay","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"74630","words":"And you\u0027re a very sexy girl","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"77080","words":"Who\u0027s very hard to please","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"79010","words":"You can taste the bright lights","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"80640","words":"But you won\u0027t get them for free","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"82520","words":"In the jungle, welcome to the jungle","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"85810","words":"Feel my, my, my, my serpentine","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"91660","words":"I-I wanna hear you scream","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"95470","words":"♪","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"110460","words":"Welcome to the jungle","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"112050","words":"It gets worse here everyday","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"114010","words":"You learn to live like an animal","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"116270","words":"In the jungle where we play","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"117520","words":"If you got a hunger for what you see","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"119890","words":"You\u0027ll take it eventually","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"122130","words":"You can have anything you want","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"123720","words":"But you better not take it from me","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"125470","words":"In the jungle, welcome to the jungle","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"128490","words":"Watch it bring you to your, sha-na-na-na-na-na-na, knees, knees","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"133900","words":"Ooh-ah, I\u0027m gonna watch you bleed","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"138350","words":"♪","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"146210","words":"And when you\u0027re high, you never","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"150130","words":"Ever wanna come down","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"152820","words":"So down, so down, so down","syllables":[],"endTimeMs":"0","transliteratedWord
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+
+</code></pre>
+
+<h3>GET /color-lyrics/v2/track/1EHh1fC9FCKw31wotfXx7L/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2730f9b32498b1d1053d4cc5c9c</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://spclient.wg.spotify.com/color-lyrics/v2/track/1EHh1fC9FCKw31wotfXx7L/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2730f9b32498b1d1053d4cc5c9c?format=json&amp;vocalRemoval=false&amp;market=from_token</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"lyrics":{"syncType":"LINE_SYNCED","lines":[{"startTimeMs":"1360","words":"Hello, hello, hello","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"4940","words":"♪","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"23110","words":"I\u0027m wakin\u0027 up at the start of the end of the world","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"26270","words":"But it\u0027s feeling just like every other morning before","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"29130","words":"Now I wonder what my life is gonna mean if it\u0027s gone","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"34880","words":"The cars are moving like a half a mile an hour and I","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"37910","words":"Started staring at the passengers and waving goodbye","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"40940","words":"Can you tell me what was ever really special about me all this time?","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"45920","words":"But I believe the world is burning to the ground","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"49710","words":"Oh well, I guess we\u0027re gonna find out","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"52360","words":"Let\u0027s see how far we\u0027ve come","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"55160","words":"Let\u0027s see how far we\u0027ve come","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"57650","words":"Well, I believe it all is coming to an end","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"61110","words":"Oh well, I guess we\u0027re gonna pretend","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"63970","words":"Let\u0027s see how far we\u0027ve come","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"66920","words":"Let\u0027s see how far we\u0027ve come","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"69600","words":"I think it turned ten o\u0027 clock, but I don\u0027t really know","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"72630","words":"And I can\u0027t remember caring for an hour or so","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"75420","words":"Started crying and I couldn\u0027t stop myself","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"78280","words":"I started running, but there\u0027s nowhere to run to","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"80990","words":"I sat down on the street, took a look at myself","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"83900","words":"Said, \"Where you going man, you know the world is headed for hell?\"","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"87010","words":"Say your goodbyes if you got someone you can say goodbye to","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"92520","words":"I believe the world is burning to the ground","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"95920","words":"Oh well, I guess we\u0027re gonna find out","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"98500","words":"Let\u0027s see how far we\u0027ve come (right now)","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"101590","words":"Let\u0027s see how far we\u0027ve come","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"103860","words":"And I believe it all is coming to an end","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"107460","words":"Oh well, I guess we\u0027re gonna pretend","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"110140","words":"Let\u0027s see how far we\u0027ve come (again)","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"113210","words":"Let\u0027s see how far we\u0027ve come","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"116840","words":"♪","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"126770","words":"It\u0027s gone, gone, baby, it\u0027s all gone","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"130010","words":"There\u0027s no one on the corner and there\u0027s no one at home","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"132330","words":"Well, it was cool cool, it was just all cool","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"135440","words":"Now it\u0027s over for me, and it\u0027s over for you","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"138340","words":"Well, it\
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+
+</code></pre>
+
+<h3>GET /color-lyrics/v2/track/2SiXAy7TuUkycRVbbWDEpo/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273ff191d7fbdb5a13eaf84132b</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://spclient.wg.spotify.com/color-lyrics/v2/track/2SiXAy7TuUkycRVbbWDEpo/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273ff191d7fbdb5a13eaf84132b?format=json&amp;vocalRemoval=false&amp;market=from_token</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"lyrics":{"syncType":"LINE_SYNCED","lines":[{"startTimeMs":"30610","words":"She was a fast machine, she kept her motor clean","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"34740","words":"She was the best damn woman that I ever seen","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"38520","words":"She had the sightless eyes, telling me no lies","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"42830","words":"Knocking me out with those American thighs","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"46410","words":"Taking more than her share, had me fighting for air","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"50040","words":"She told me to come, but I was already there","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"53780","words":"\u0027Cause the walls start shaking, the Earth was quaking","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"57700","words":"My mind was aching and we were making it","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"61480","words":"And you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"66570","words":"","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"68580","words":"Yeah, you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"76250","words":"Working double time on the seduction line","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"79940","words":"She\u0027s one of a kind, she\u0027s just mine, all mine","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"83790","words":"Wanted no applause, it\u0027s just another course","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"87440","words":"Made a meal outta me, and come back for more","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"91310","words":"Had to cool me down to take another round","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"95190","words":"Now I\u0027m back in the ring to take another swing","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"98850","words":"That the walls were shaking, the Earth was quaking","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"102520","words":"My mind was aching and we were making it","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"106720","words":"And you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"113640","words":"Yeah, you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"119580","words":"And knocked me out, I said you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"127440","words":"You had me shaking and you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"134890","words":"Yeah, you shook me","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"138250","words":"Well, you took me","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"141720","words":"♪","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"168440","words":"You really took me and you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"176490","words":"Ooh, you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"183790","words":"Yeah, yeah, you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"190650","words":"You really got me and you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"197840","words":"Yeah, you shook me","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"201510","words":"Yeah, you shook me all night long","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"205890","words":"","syllables":[],"endTimeMs":"0","transliteratedWords":""}],"provider":"MusixMatch","providerLyricsId":"207894","providerDisplayName":"Musixmatch","syncLyricsUri":"","isDenseTypeface":false,"alternatives":[],"language":"en","isRtlLanguage":false,"capStatus":"NONE","previewLines":[{"startTimeMs":"30610","words":"She was a fast machine, she kept her motor clean","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"34740","words":"She was the best damn woman that I ever seen","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"38520","words":"She had the sightless eyes, telling me no lies","syllables":[],"endTimeMs":"0","transliteratedWords":""},{"startTimeMs":"42830","words":"Knocking me out with those American th
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+
+</code></pre>
+
+<h3>GET /melody/v1/time</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://gue1-spclient.spotify.com/melody/v1/time</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"timestamp":1774637482800}
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+public sealed record InferredResponse(double Timestamp);
+
+</code></pre>
+
+<h3>GET /storage-resolve/v2/files/audio/interactive/{id}/{id}</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://gue1-spclient.spotify.com/storage-resolve/v2/files/audio/interactive/11/b26d060ce0092971fd4f1dc3c70552a556e583f2?version=10000000&amp;product=9&amp;platform=39&amp;alt=json</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"result": "CDN","cdnurl": ["https://audio-fa-tls130.spotifycdn.com/audio/b26d060ce0092971fd4f1dc3c70552a556e583f2?1774723848_zEonvBBavaJcxOO227Wfthe_GxUOPolrBfYNwalwpIg=","https://audio-ak.spotifycdn.com/audio/b26d060ce0092971fd4f1dc3c70552a556e583f2?__token__=exp=1774723848~hmac=aaeb0cd5e5c36affedfb807de4d8c7b7789e2f333228aef2469c5559cd48c9f9","https://audio-fa-quic0.spotifycdn.com/audio/b26d060ce0092971fd4f1dc3c70552a556e583f2?1774723848_zEonvBBavaJcxOO227Wfthe_GxUOPolrBfYNwalwpIg=","https://audio-fa-quic.spotifycdn.com/audio/b26d060ce0092971fd4f1dc3c70552a556e583f2?1774723848_zEonvBBavaJcxOO227Wfthe_GxUOPolrBfYNwalwpIg=","https://audio-fa-tls13.spotifycdn.com/audio/b26d060ce0092971fd4f1dc3c70552a556e583f2?1774723848_zEonvBBavaJcxOO227Wfthe_GxUOPolrBfYNwalwpIg=","https://audio-fa.scdn.co/audio/b26d060ce0092971fd4f1dc3c70552a556e583f2?1774723848_zEonvBBavaJcxOO227Wfthe_GxUOPolrBfYNwalwpIg="],"fileid": "b26d060ce0092971fd4f1dc3c70552a556e583f2","ttl": 86400}
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+public sealed record InferredResponse(string Result, IReadOnlyList&lt;string&gt; Cdnurl, string Fileid, double Ttl);
+
+</code></pre>
+
+<h3>GET /track-playback/v1/media/spotify:track:1EHh1fC9FCKw31wotfXx7L</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>GET https://gue1-spclient.spotify.com/track-playback/v1/media/spotify:track:1EHh1fC9FCKw31wotfXx7L?manifestFileFormat=file_ids_mp3&amp;manifestFileFormat=file_urls_mp3&amp;manifestFileFormat=manifest_urls_audio_ad&amp;manifestFileFormat=manifest_ids_video&amp;manifestFileFormat=file_urls_external&amp;manifestFileFormat=file_ids_mp4&amp;manifestFileFormat=file_ids_mp4_dual&amp;manifestFileFormat=manifest_urls_audio_ad</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: x-unknown</code></li>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: x-unknown</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+eyJtZWRpYSI6eyJzcG90aWZ5OnRyYWNrOjFFSGgxZkM5RkNLdzMxd290Zlh4N0wiOnsidmlkZW9fdmVyc2lvbl91cmkiOiJzcG90aWZ5OnRyYWNrOjYyblVTbnQzVjIwTHh4V0dseGRlQVIiLCJpdGVtIjp7Im1ldGFkYXRhIjp7InVyaSI6InNwb3RpZnk6dHJhY2s6MUVIaDFmQzlGQ0t3MzF3b3RmWHg3TCIsImxpbmtlZF9mcm9tX3VyaSI6bnVsbCwiY29udGV4dF9kZXNjcmlwdGlvbiI6bnVsbCwiY29udGV4dF91cmkiOiJzcG90aWZ5OnRyYWNrOjFFSGgxZkM5RkNLdzMxd290Zlh4N0wiLCJuYW1lIjoiSG93IEZhciBXZSd2ZSBDb21lIiwiZ3JvdXBfbmFtZSI6IkhvdyBGYXIgV2UndmUgQ29tZSIsImdyb3VwX3VyaSI6InNwb3RpZnk6YWxidW06NE1TQ1p0YUVFNm8xRXlyaEpYVlZmNyIsImF1dGhvcnMiOlt7Im5hbWUiOiJNYXRjaGJveCBUd2VudHkiLCJ1cmkiOiJzcG90aWZ5OmFydGlzdDozTmdoMnpEQlJQRXJpeXhRREFNS2QxIn1dLCJkdXJhdGlvbiI6MjEyMjUzLCJpbWFnZXMiOlt7InVybCI6Imh0dHBzOi8vaS5zY2RuLmNvL2ltYWdlL2FiNjc2MTZkMDAwMGIyNzMwZjliMzI0OThiMWQxMDUzZDRjYzVjOWMiLCJoZWlnaHQiOjY0MCwid2lkdGgiOjY0MH0seyJ1cmwiOiJodHRwczovL2kuc2Nkbi5jby9pbWFnZS9hYjY3NjE2ZDAwMDA0ODUxMGY5YjMyNDk4YjFkMTA1M2Q0Y2M1YzljIiwiaGVpZ2h0Ijo2NCwid2lkdGgiOjY0fSx7InVybCI6Imh0dHBzOi8vaS5zY2RuLmNvL2ltYWdlL2FiNjc2MTZkMDAwMDFlMDIwZjliMzI0OThiMWQxMDUzZDRjYzVjOWMiLCJoZWlnaHQiOjMwMCwid2lkdGgiOjMwMH1dLCJlcGlzb2RlX2NvbnRlbnRfdHlwZSI6bnVsbCwic2hvd19jb250ZW50X3R5cGUiOm51bGwsImlzX2V4cGxpY2l0IjpmYWxzZX0sIm1hbmlmZXN0Ijp7ImZpbGVfaWRzX21wNF9kdWFsIjpbeyJiaXRyYXRlIjoyNTYwMDAsImZpbGVfaWQiOiJhY2FlOGNmYTU0YzAzN2JjOTE3MTAzYmIwM2Y4NGU4MWIwNDAzZjNkIiwiZmlsZV91cmwiOm51bGwsImltcHJlc3Npb25fdXJscyI6bnVsbCwidHJhY2tfdHlwZSI6IkFVRElPIiwiZm9ybWF0IjoiMTMiLCJhdWRpb19xdWFsaXR5IjoiVkVSWV9ISUdIIiwiaGlmaV9zdGF0dXMiOiJOT05FIiwiZ2Fpbl9kYiI6bnVsbCwiZXhwaXJlc19hdCI6bnVsbCwiYXZlcmFnZV9iaXRyYXRlIjoyNTYwMDB9LHsiYml0cmF0ZSI6MTI4MDAwLCJmaWxlX2lkIjoiOWQ1NWYzYWI5NWE2NTkxNjIyYzU4ZGJkYTlhZGM2NDRiZjIzZDQ0YiIsImZpbGVfdXJsIjpudWxsLCJpbXByZXNzaW9uX3VybHMiOm51bGwsInRyYWNrX3R5cGUiOiJBVURJTyIsImZvcm1hdCI6IjEyIiwiYXVkaW9fcXVhbGl0eSI6IkhJR0giLCJoaWZpX3N0YXR1cyI6Ik5PTkUiLCJnYWluX2RiIjpudWxsLCJleHBpcmVzX2F0IjpudWxsLCJhdmVyYWdlX2JpdHJhdGUiOjEyODAwMH1dLCJmaWxlX2lkc19tcDQiOlt7ImJpdHJhdGUiOjI1NjAwMCwiZmlsZV9pZCI6ImIyNmQwNjBjZTAwOTI5NzFmZDRmMWRjM2M3MDU1MmE1NTZlNTgzZjIiLCJmaWxlX3VybCI6bnVsbCwiaW1wcmVzc2lvbl91cmxzIjpudWxsLCJ0cmFja190eXBlIjoiQVVESU8iLCJmb3JtYXQiOiIxMSIsImF1ZGlvX3F1YWxpdHkiOiJWRVJZX0hJR0giLCJoaWZpX3N0YXR1cyI6Ik5PTkUiLCJnYWluX2RiIjpudWxsLCJleHBpcmVzX2F0IjpudWxsLCJhdmVyYWdlX2JpdHJhdGUiOjI1NjAwMH0seyJiaXRyYXRlIjoxMjgwMDAsImZpbGVfaWQiOiJhYTU0OTQ2MmRhZjUxNzYyZDBhZDk0MGU4NGVkZGFkYThjNDJlMzBjIiwiZmlsZV91cmwiOm51bGwsImltcHJlc3Npb25fdXJscyI6bnVsbCwidHJhY2tfdHlwZSI6IkFVRElPIiwiZm9ybWF0IjoiMTAiLCJhdWRpb19xdWFsaXR5IjoiSElHSCIsImhpZmlfc3RhdHVzIjoiTk9ORSIsImdhaW5fZGIiOm51bGwsImV4cGlyZXNfYXQiOm51bGwsImF2ZXJhZ2VfYml0cmF0ZSI6MTI4MDAwfV19LCJhdWRpb19pZCI6bnVsbCwidmlkZW9faWQiOm51bGwsInRyYWNrX3R5cGUiOiJBVURJTyIsIm1zX3BsYXllZF91bnRpbF91cGRhdGUiOjMwMDAwLCJtc19wbGF5aW5nX3VwZGF0ZV9pbnRlcnZhbCI6MCwiY29udGVudF90eXBlIjoiVFJBQ0sifX0sInNwb3RpZnk6dHJhY2s6NjJuVVNudDNWMjBMeHhXR2x4ZGVBUiI6eyJpdGVtIjp7Im1ldGFkYXRhIjp7InVyaSI6InNwb3RpZnk6dHJhY2s6NjJuVVNudDNWMjBMeHhXR2x4ZGVBUiIsImxpbmtlZF9mcm9tX3VyaSI6bnVsbCwiY29udGV4dF9kZXNjcmlwdGlvbiI6bnVsbCwiY29udGV4dF91cmkiOiJzcG90aWZ5OnRyYWNrOjFFSGgxZkM5RkNLdzMxd290Zlh4N0wiLCJuYW1lIjoiSG93IEZhciBXZSd2ZSBDb21lIiwiZ3JvdXBfbmFtZSI6IkhvdyBGYXIgV2UndmUgQ29tZSIsImdyb3VwX3VyaSI6InNwb3RpZnk6YWxidW06NERIT3ZLMUk3ZVpzbzJ4bnk5cGhWciIsImF1dGhvcnMiOlt7Im5hbWUiOiJNYXRjaGJveCBUd2VudHkiLCJ1cmkiOiJzcG90aWZ5OmFydGlzdDozTmdoMnpEQlJQRXJpeXhRREFNS2QxIn1dLCJkdXJhdGlvbiI6MjA2OTExLCJpbWFnZXMiOlt7InVybCI6Imh0dHBzOi8vaS5zY2RuLmNvL2ltYWdlL2FiNjc0MmQzMDAwMDUyYjdhMTkyZDdjMTQ3YzZkNjdiZWMxZjRhOGIiLCJoZWlnaHQiOjM2MCwid2lkdGgiOjY0MH0seyJ1cmwiOiJodHRwczovL2kuc2Nkbi5jby9pbWFnZS9hYjY3NDJkMzAwMDA1M2I3YTE5MmQ3YzE0N2M2ZDY3YmVjMWY0YThiIiwiaGVpZ2h0Ijo3MjAsIndpZHRoIjoxMjgwfSx7InVybCI6Imh0dHBzOi8vaS5zY2RuLmNvL2ltYWdlL2FiNjc0MmQzMDAwMDUzYjdhMTkyZDdjMTQ3YzZkNjdiZWMxZjRhOGIiLCJoZWlnaHQiOjcyMCwid2lkdGgiOjEyODB9XSwiZXBpc29kZV9jb250ZW50X3R5cGUiOm51bGwsInNob3dfY29udGVudF90eXBlIjpudWxsLCJpc19leHBsaWNpdCI6ZmFsc2V9LCJtYW5pZmVzdCI6eyJmaWxlX2lkc19tcDRfZHVhbCI6W3siYml0cmF0ZSI6MjU2MDAwLCJmaWxlX2lkIjoiNDAzYzc5ZGJjMTc2MTNiYWMxNWJhZTExOTc5OTQ0YTFiZjYzZGMyNCIsImZpbGVfdXJsIjpudWxsLCJpbXByZXNzaW9uX3VybHMiOm51bGwsInRyYWNrX3R5cGUiOiJBVURJTyIsImZvcm1hdCI6IjEzIiwiYXVkaW9fcXVhbGl0eSI6IlZFUllfSElHSCIsImhpZmlfc3RhdHVzIjoiTk9ORSIsImdhaW5fZGIiOm51bGwsImV4cGlyZXNfYXQiOm51bGwsImF2ZXJhZ2VfYml0cmF0ZSI6MjYwNDE3fSx7ImJpdHJhdGUiOjEyODAwMCwiZmlsZV9pZCI6Ijg4NzAzZGMwMzc3YWI4OTRlODdlODZmMjA2NWE5ZjRhMGJlZjk0YTgiLCJmaWxlX3VybCI6bnVsbCwiaW1wcmVzc2lvbl91cmxzIjpudWxsLCJ0cmFja190eXBlIjoiQVVESU8iLCJmb3JtYXQiOiIxMiIsImF1ZGlvX3F1YWxpdHkiOiJISUdIIiwiaGlmaV9zdGF0dXMiOiJOT05FIiwiZ2Fpbl9kYiI6bnVsbCwiZXhwaXJlc19hdCI6bnVsbCwiYXZlcmFnZV9iaXRyYXRlIjoxMzIzODd9XSwibWFuaWZlc3RfaWRzX3ZpZGVvIjpbeyJiaXRyYXRlIjpudWxsLCJmaWxlX2lkIjoiMWI0NTBmMjNhNTE0NGU0Njg3MzYyMjAwNzM2NmYwOTEiLCJmaWxlX3VybCI6bnVsbCwiaW1wcmVzc2lvbl91cmxzIjpudWxsLCJ0cmFja190eXBlIjoiVklERU8iLCJmb3JtYXQiOm51bGwsImF1ZGlvX3F1YWxpdHkiOm51bGwsImhpZmlfc3RhdHVzIjoiTk9ORSIsImdhaW5fZGIiOm51bGwsImV4cGlyZXNfYXQiOm51bGwsImF2ZXJhZ2VfYml0cmF0ZSI6bnVsbH1dLCJmaWxlX2lkc19tcDQiOlt7ImJpdHJhdGUiOjI1NjAwMCwiZmlsZV9pZCI6IjJlZmU3ZWI3YzkwZjAxOWQxN2ViZDE2ODllZjE0NjQ2
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+
+</code></pre>
+
+<h3>POST /collection/v2/contains</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>POST https://spclient.wg.spotify.com/collection/v2/contains?market=from_token</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"username":"1286511162","set":"artistban","items":[{"uri":"spotify:artist:711MCceyCBcFnzjGY4Q7Un"}]}
+</code></pre>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{
+  "found": [false]
+}
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+public sealed record InferredResponse(IReadOnlyList&lt;bool&gt; Found);
+
+</code></pre>
+
+<h3>POST /gabo-receiver-service/public/v3/events</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>POST https://gue1-spclient.spotify.com/gabo-receiver-service/public/v3/events</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"suppress_persist":false,"events":[{"sequence_id":"LTE3NjQ3MDIyNzU=","sequence_number":6258,"event_name":"EventSenderStats2NonAuth","fragments":{"context_sdk":{"version_name":"5.0.2-LS","type":"javascript"},"context_time":{"timestamp":1774637496906},"context_client_id":{"value":"2KXtlY0nTC6O5xfmpLCXHQ=="},"context_application":{"version":"open-server_2026-03-27_1774634007464_e6153d8"},"context_user_agent":{"value":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"},"context_correlation_id":{"value":"4315c914-9fa0-45d7-8b26-c2cf88eeb009"},"message":{"sequence_ids":["LTE3NjQ3MDIyNzU=","MTM1NzMwODU5OQ=="],"event_names":["EventSenderStats2NonAuth","ConfigurationApplied"],"loss_stats_num_entries_per_sequence_id":[1,1],"loss_stats_event_name_index":[0,1],"loss_stats_storage_sizes":[0,0],"loss_stats_sequence_number_mins":[6258,8],"loss_stats_sequence_number_nexts":[6258,8],"drop_list_num_entries_per_sequence_id":[0,0],"drop_list_event_name_index":[],"drop_list_counts_unreported":[],"drop_list_counts_total":[]}}}]}
+</code></pre>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"errors":[]}
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+public sealed record InferredResponse(object Errors);
+
+</code></pre>
+
+<h3>POST /gabo-receiver-service/v3/events</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>POST https://gue1-spclient.spotify.com/gabo-receiver-service/v3/events</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"suppress_persist":false,"events":[{"sequence_id":"LTE1Mzg4Nzg1NjI=","sequence_number":39,"event_name":"UbiExpr2PageView","fragments":{"context_sdk":{"version_name":"5.0.2-LS","type":"javascript"},"context_time":{"timestamp":1774637372156},"context_client_id":{"value":"2KXtlY0nTC6O5xfmpLCXHQ=="},"context_application":{"version":"open-server_2026-03-27_1774634007464_e6153d8"},"context_user_agent":{"value":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"},"context_correlation_id":{"value":"4315c914-9fa0-45d7-8b26-c2cf88eeb009"},"message":{"page_instance_id":"eededc6b-f4d8-41dd-9dc1-65bef65ce317","page_id":"home","entity_uri":"spotify:app:home","navigational_root":"home","from_page_instance_id":"2a76398d-0ef9-4297-83e1-6afb23891390","from_page_id":"background","from_entity_uri":null,"from_navigational_root":null,"navigation_reason":"client_gained_focus","app_instance_id":"d183e749-fe4f-4ad2-8945-b18eaa2523ae","app_visit_index":2}}},{"sequence_id":"LTE1Mzg4Nzg1NjI=","sequence_number":290,"event_name":"UbiProd1Impression","fragments":{"context_sdk":{"version_name":"5.0.2-LS","type":"javascript"},"context_time":{"timestamp":1774637373146},"context_client_id":{"value":"2KXtlY0nTC6O5xfmpLCXHQ=="},"context_application":{"version":"open-server_2026-03-27_1774634007464_e6153d8"},"context_user_agent":{"value":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"},"context_correlation_id":{"value":"4315c914-9fa0-45d7-8b26-c2cf88eeb009"},"message":{"app":"music","element_path_ids":[""],"element_path_names":["desktop-shortcuts-play-nav-card"],"element_path_pos":["0"],"element_path_reasons":[""],"element_path_uris":["spotify:playlist:37i9dQZF1E8QT4lb0kxLVM"],"generator_version":"17.2.1","impression_id":"ca6babd6-f1cc-40f9-92f9-6c36ad16c88d","parent_modes":["default","default"],"parent_path_ids":["home","spotify:section:0JQ5DAIiKWzVFULQfUm85Y"],"parent_path_names":["desktop-home","desktop-shortcuts"],"parent_path_pos":["","0"],"parent_path_reasons":["8638f066-4c9f-3b73-e4d2-eabd9b7cc8a7",""],"parent_path_uris":["spotify:home","spotify:section:0JQ5DAIiKWzVFULQfUm85Y"],"parent_specification_versions":["15.1.0","4.0.0"],"specification_version":"6.0.0","specification_mode":"default","page_instance_id":"eededc6b-f4d8-41dd-9dc1-65bef65ce317","page_uri":"spotify:app:home","page_id":"home","playback_id":"b007ba4bf9f14c319a91d0dd07f9d7a6","play_context_uri":"spotify:playlist:37i9dQZF1E8MvjZfCOtfGQ","is_visible_for_min_duration":true,"client_debug_metadata":{"pbl":"1"},"ubi_event_creation_timestamp":1774637373146,"app_instance_id":"d183e749-fe4f-4ad2-8945-b18eaa2523ae","app_visit_index":2}}},{"sequence_id":"LTE1Mzg4Nzg1NjI=","sequence_number":291,"event_name":"UbiProd1Impression","fragments":{"context_sdk":{"version_name":"5.0.2-LS","type":"javascript"},"context_time":{"timestamp":1774637373146},"context_client_id":{"value":"2KXtlY0nTC6O5xfmpLCXHQ==
+</code></pre>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"errors":[]}
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+public sealed record InferredResponse(object Errors);
+
+</code></pre>
+
+<h3>POST /melody/v1/msg/batch</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>POST https://gue1-spclient.spotify.com/melody/v1/msg/batch</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"messages":[{"type":"jssdk_playback_start","message":{"play_track":"spotify:track:5qtwzv99vOr5UTwnTixn7j","file_id":"7829259bc867ef273b50e1301591281d8af2f6c8","playback_id":"b007ba4bf9f14c319a91d0dd07f9d7a6","session_id":"1774637296755","ms_start_position":100271,"initially_paused":true,"client_id":"","correlation_id":"","feature_identifier":""}}],"sdk_id":"harmony:4.69.0","platform":"web_player windows 10;chrome 146.0.0.0;desktop","client_version":"0.0.0"}
+</code></pre>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 202</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"status":202}
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+public sealed record InferredResponse(double Status);
+
+</code></pre>
+
+<h3>POST /pathfinder/v2/query</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>POST https://api-partner.spotify.com/pathfinder/v2/query</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"variables":{"trackUri":"spotify:track:1EHh1fC9FCKw31wotfXx7L"},"operationName":"canvas","extensions":{"persistedQuery":{"version":1,"sha256Hash":"575138ab27cd5c1b3e54da54d0a7cc8d85485402de26340c2145f0f6bb5e7a9f"}}}
+</code></pre>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: application/json</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"data":{"trackUnion":{"__typename":"Track","canvas":{"fileId":"4edfe735b8433e089ced4702bc47f5fc","type":"VIDEO_LOOPING_RANDOM","uri":"spotify:canvas:57ghoskNMMCFstU9UMzTvm","url":"https://canvaz.scdn.co/upload/artist/3Ngh2zDBRPEriyxQDAMKd1/video/a82211b088314d3ba071ea6b39e8b49c.cnvs.mp4"},"uri":"spotify:track:1EHh1fC9FCKw31wotfXx7L"}}}
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+public sealed record InferredResponse(DataType Data);
+
+public sealed record CanvasType(string FileId, string Type, string Uri, string Url);
+
+public sealed record TrackUnionType(string Typename, CanvasType Canvas, string Uri);
+
+public sealed record DataType(TrackUnionType TrackUnion);
+
+</code></pre>
+
+<h3>POST /widevine-license/v1/audio/license</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>POST https://gue1-spclient.spotify.com/widevine-license/v1/audio/license</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: x-unknown</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+ O
+M
+7b26d060ce0092971spotify"²mà	)qýOÃÇR¥VåòHãÜÓÐÞÀ&gt;ß/Û®¸_ý £Î08Æ¸æB§
+spotify.comO-'ÙaYz|½*44hëRðSYì·hÌ×BÒ6w«)Ø7lqÆ,8ÈDÀÍE8ìlìIbïvu0¤ßËÇÀ¼YÚs½ÕME3à&lt;
+}û¾á®Sæf&amp;¤ÏGS´å½¢Ï*½)¥«3ßÙã~ZÜ:Ã[L¤ÒËËËr&lt;+NàXõ^Ç7çÀ¶«Ú;Gl°OInó})äÜQÁOþ"iFóHè	£/ÇM_gïg'J£!Î1JüÓOK*é2fÕÌjoÜÅ
+Bã3x£ðÑ{;G®Àué	9õ%ÁEKÓÓâØÈS·{Â 	KòÈÌJ²HPc:å4²»ç¢aÑñÉòÖé¤ÌÄ÷î±ê_÷mc­9ºúdQÿÓ)áöNlcÚiðÊ¯ºÍµ(r*OiÄ3ñF[lUÈ6_ûõ0­O·ò?TLÈÿìÉÍãàq¨É«­`¸U&amp;¯?F::FîìÄ$¬})Bùjó$S'T³þb0ÞÓ&gt;rÌ6LÅ6}N³JÜÖg	Ù{xò¿#'Züm¨(,Ï$Bª^´Õ*YÇEÏhXÌ|7JÃ.X*m¥­3Å°·¨ï}û¦n¬CÍr8rRF¸5bB@O3ñ_!&gt;3IÔ
+Çô(Ì'ÉW
+</code></pre>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: x-unknown</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+CAIS0QEKLQoQDBPT0N7APt8OL9uuuF8R/RIIQOtLQRZUkmsgASgAOABAgOeED0iIo5vOBhIkCAEQABgAIKA4KIDnhA8woDg4AEIASABQAFgAYABwAHgBgAEAGmwKELJtBgzgCSlx/U8dw8cFUqUSENVjMZ7xNBriOoYhgsjRbR4aEEwkAgi631if7tMM7ptI+NIgAigBMgwIABAqGAAgACgAMAA6DAgAECoYACAAKAAwAEISChBrYzE2AAAcIHzBnEagAAAIYgAgiKObzgY449yVmwZQBRog5rFpewjLvVFyFo5VTv9rLWERZkUC7rb4xyIHD1k2vtoigAE/34qKML4RYTsbt9FYf+WTSquMxX/g1Dn/jxpbLHo6TA8n5bfmtpG0NuLMHj+GJ2QwWPxUVs8RH4qbg5cdAwfLwiuo/mgTegOOxKC80BBdcabJqSmk1kLY6ibeZ8LvlIObUPar78SA+4xbhNnOxMxcfrhbTRbgWUf6B3psQupe1ToICgYxOS4wLjZAAUqwAQAAAAIAAACwAAUAEHzBnEY1/gw8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAAAAAAAAAAAAAAAAAAAAAAAcIAAAAAAB4TOAAAAAAAAAAAAAAAABAAAAWQAAABAAAABrAAAAEAAAAH0AAAAQAAAAAAAAAAAAAACxAAAAECRi5WZYE25qLVvsUalDcbZyqIIA0iMMus2WyBML+POvWAE=
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+
+</code></pre>
+
+<h3>PUT /track-playback/v1/devices/{id}/state</h3>
+
+<h4>Example Request</h4>
+
+<blockquote><code>PUT https://gue1-spclient.spotify.com/track-playback/v1/devices/0fb1d1ee2bd2b0f3a1274b4c6fa7fd74c837a832/state</code></blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: x-unknown</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+{"seq_num":6,"state_ref":{"state_machine_id":"ChT-fLSZJ1YB5wLpEpz9AJxKJwkayw","state_id":"b007ba4bf9f14c319a91d0dd07f9d7a6","paused":false},"sub_state":{"playback_speed":1,"position":100271,"duration":190242,"media_type":"AUDIO","bitrate":256000,"audio_quality":"VERY_HIGH","format":11,"is_video_on":false},"previous_position":100271,"debug_source":"resume"}
+</code></pre>
+
+<h4>Example Response</h4>
+
+<blockquote>HTTP 200</blockquote>
+
+<p><strong>Headers:</strong></p>
+
+<li><code>content-type: x-unknown</code></li>
+
+<p><strong>Body:</strong></p>
+
+<pre><code>
+eyJzdGF0ZV9tYWNoaW5lIjp7InN0YXRlX21hY2hpbmVfaWQiOiJDaFJ3LTJWSFF0bDhjdVFTZW03TVRTNi1JUkQ2Z2ciLCJ0cmFja3MiOlt7Im1ldGFkYXRhIjp7InVyaSI6InNwb3RpZnk6dHJhY2s6MlNpWEF5N1R1VWt5Y1JWYmJXREVwbyIsImxpbmtlZF9mcm9tX3VyaSI6bnVsbCwiY29udGV4dF9kZXNjcmlwdGlvbiI6Iktub3cgWW91ciBFbmVteSBSYWRpbyIsImNvbnRleHRfdXJpIjoic3BvdGlmeTpwbGF5bGlzdDozN2k5ZFFaRjFFOE12alpmQ090ZkdRIiwibmFtZSI6IllvdSBTaG9vayBNZSBBbGwgTmlnaHQgTG9uZyIsImdyb3VwX25hbWUiOiJCYWNrIEluIEJsYWNrIiwiZ3JvdXBfdXJpIjoic3BvdGlmeTphbGJ1bTo2bVVkZURaQ3NFeHlKTE1kQWZEdXdoIiwiYXV0aG9ycyI6W3sibmFtZSI6IkFDL0RDIiwidXJpIjoic3BvdGlmeTphcnRpc3Q6NzExTUNjZXlDQmNGbnpqR1k0UTdVbiJ9XSwiZHVyYXRpb24iOjIxMDMyOCwiaW1hZ2VzIjpbeyJ1cmwiOiJodHRwczovL2kuc2Nkbi5jby9pbWFnZS9hYjY3NjE2ZDAwMDBiMjczZmYxOTFkN2ZiZGI1YTEzZWFmODQxMzJiIiwiaGVpZ2h0Ijo2NDAsIndpZHRoIjo2NDB9LHsidXJsIjoiaHR0cHM6Ly9pLnNjZG4uY28vaW1hZ2UvYWI2NzYxNmQwMDAwNDg1MWZmMTkxZDdmYmRiNWExM2VhZjg0MTMyYiIsImhlaWdodCI6NjQsIndpZHRoIjo2NH0seyJ1cmwiOiJodHRwczovL2kuc2Nkbi5jby9pbWFnZS9hYjY3NjE2ZDAwMDAxZTAyZmYxOTFkN2ZiZGI1YTEzZWFmODQxMzJiIiwiaGVpZ2h0IjozMDAsIndpZHRoIjozMDB9XSwiZXBpc29kZV9jb250ZW50X3R5cGUiOm51bGwsInNob3dfY29udGVudF90eXBlIjpudWxsLCJpc19leHBsaWNpdCI6ZmFsc2V9LCJtYW5pZmVzdCI6eyJmaWxlX2lkc19tcDRfZHVhbCI6W3siYml0cmF0ZSI6MjU2MDAwLCJmaWxlX2lkIjoiNTQ2NGJiZjhmNDFjNTFmN2NiZTA4YjExOTJlNGFhNjgyYTc3NzFmMCIsImZpbGVfdXJsIjpudWxsLCJpbXByZXNzaW9uX3VybHMiOm51bGwsInRyYWNrX3R5cGUiOiJBVURJTyIsImZvcm1hdCI6IjEzIiwiYXVkaW9fcXVhbGl0eSI6IlZFUllfSElHSCIsImhpZmlfc3RhdHVzIjoiTk9ORSIsImdhaW5fZGIiOi02LjE0MzYyOTYsImV4cGlyZXNfYXQiOm51bGwsImF2ZXJhZ2VfYml0cmF0ZSI6MjYwNDIwfSx7ImJpdHJhdGUiOjEyODAwMCwiZmlsZV9pZCI6ImM2NzFmNzI5ZDc1NTZiY2MyMGI3NDIwOTFiYjk1YzhlZTYyNTRiMWQiLCJmaWxlX3VybCI6bnVsbCwiaW1wcmVzc2lvbl91cmxzIjpudWxsLCJ0cmFja190eXBlIjoiQVVESU8iLCJmb3JtYXQiOiIxMiIsImF1ZGlvX3F1YWxpdHkiOiJISUdIIiwiaGlmaV9zdGF0dXMiOiJOT05FIiwiZ2Fpbl9kYiI6LTYuMTQzNjI5NiwiZXhwaXJlc19hdCI6bnVsbCwiYXZlcmFnZV9iaXRyYXRlIjoxMzIzOTV9XSwiZmlsZV9pZHNfbXA0IjpbeyJiaXRyYXRlIjoyNTYwMDAsImZpbGVfaWQiOiIwMDZhNjQ1YjZkOGNjNmExZmNiZTk0NzI4NTBiMThjYzhkYThkOTk5IiwiZmlsZV91cmwiOm51bGwsImltcHJlc3Npb25fdXJscyI6bnVsbCwidHJhY2tfdHlwZSI6IkFVRElPIiwiZm9ybWF0IjoiMTEiLCJhdWRpb19xdWFsaXR5IjoiVkVSWV9ISUdIIiwiaGlmaV9zdGF0dXMiOiJOT05FIiwiZ2Fpbl9kYiI6LTYuMTQzNjI5NiwiZXhwaXJlc19hdCI6bnVsbCwiYXZlcmFnZV9iaXRyYXRlIjoyNjAyNjd9LHsiYml0cmF0ZSI6MTI4MDAwLCJmaWxlX2lkIjoiZGFkNjcyNGNhYWU0NDBmMTM1ZGQxZWYxMTgyY2VmNTVlMDdjODQxNSIsImZpbGVfdXJsIjpudWxsLCJpbXByZXNzaW9uX3VybHMiOm51bGwsInRyYWNrX3R5cGUiOiJBVURJTyIsImZvcm1hdCI6IjEwIiwiYXVkaW9fcXVhbGl0eSI6IkhJR0giLCJoaWZpX3N0YXR1cyI6Ik5PTkUiLCJnYWluX2RiIjotNi4xNDM2Mjk2LCJleHBpcmVzX2F0IjpudWxsLCJhdmVyYWdlX2JpdHJhdGUiOjEzMjI0Mn1dfSwiYXVkaW9faWQiOm51bGwsInZpZGVvX2lkIjpudWxsLCJ0cmFja190eXBlIjoiQVVESU8iLCJtc19wbGF5ZWRfdW50aWxfdXBkYXRlIjozMDAwMCwibXNfcGxheWluZ191cGRhdGVfaW50ZXJ2YWwiOjAsImNvbnRlbnRfdHlwZSI6IlRSQUNLIn0seyJtZXRhZGF0YSI6eyJ1cmkiOiJzcG90aWZ5OnRyYWNrOjVxdHd6djk5dk9yNVVUd25UaXhuN2oiLCJsaW5rZWRfZnJvbV91cmkiOm51bGwsImNvbnRleHRfZGVzY3JpcHRpb24iOiJLbm93IFlvdXIgRW5lbXkgUmFkaW8iLCJjb250ZXh0X3VyaSI6InNwb3RpZnk6cGxheWxpc3Q6MzdpOWRRWkYxRThNdmpaZkNPdGZHUSIsIm5hbWUiOiJLbm93IFlvdXIgRW5lbXkiLCJncm91cF9uYW1lIjoiMjFzdCBDZW50dXJ5IEJyZWFrZG93biIsImdyb3VwX3VyaSI6InNwb3RpZnk6YWxidW06MUFIWmQzQzNTOG04ZkZyaEZ4eWs3OSIsImF1dGhvcnMiOlt7Im5hbWUiOiJHcmVlbiBEYXkiLCJ1cmkiOiJzcG90aWZ5OmFydGlzdDo3b1BmdHZsd3I2VnJzVmlTRFY3ZkpZIn1dLCJkdXJhdGlvbiI6MTkwOTg2LCJpbWFnZXMiOlt7InVybCI6Imh0dHBzOi8vaS5zY2RuLmNvL2ltYWdlL2FiNjc2MTZkMDAwMGIyNzNjMmNlZDM5ODk5YjBkNjdjZDVhNzI0ZmEiLCJoZWlnaHQiOjY0MCwid2lkdGgiOjY0MH0seyJ1cmwiOiJodHRwczovL2kuc2Nkbi5jby9pbWFnZS9hYjY3NjE2ZDAwMDA0ODUxYzJjZWQzOTg5OWIwZDY3Y2Q1YTcyNGZhIiwiaGVpZ2h0Ijo2NCwid2lkdGgiOjY0fSx7InVybCI6Imh0dHBzOi8vaS5zY2RuLmNvL2ltYWdlL2FiNjc2MTZkMDAwMDFlMDJjMmNlZDM5ODk5YjBkNjdjZDVhNzI0ZmEiLCJoZWlnaHQiOjMwMCwid2lkdGgiOjMwMH1dLCJlcGlzb2RlX2NvbnRlbnRfdHlwZSI6bnVsbCwic2hvd19jb250ZW50X3R5cGUiOm51bGwsImlzX2V4cGxpY2l0IjpmYWxzZX0sIm1hbmlmZXN0Ijp7ImZpbGVfaWRzX21wNF9kdWFsIjpbeyJiaXRyYXRlIjoyNTYwMDAsImZpbGVfaWQiOiI2ZmE0ZDQ4OGQwNDc1OWM2ZGMzOGEzYTVlYzFlZGFhYTMxOTlkODVlIiwiZmlsZV91cmwiOm51bGwsImltcHJlc3Npb25fdXJscyI6bnVsbCwidHJhY2tfdHlwZSI6IkFVRElPIiwiZm9ybWF0IjoiMTMiLCJhdWRpb19xdWFsaXR5IjoiVkVSWV9ISUdIIiwiaGlmaV9zdGF0dXMiOiJOT05FIiwiZ2Fpbl9kYiI6LTguNjI3ODk2LCJleHBpcmVzX2F0IjpudWxsLCJhdmVyYWdlX2JpdHJhdGUiOjI2MTg2MH0seyJiaXRyYXRlIjoxMjgwMDAsImZpbGVfaWQiOiI3MmU3ZmE4NzUxYjAzODBlYmUzMmQxNGM2OTU1NzZiNmZiM2M3ZGNjIiwiZmlsZV91cmwiOm51bGwsImltcHJlc3Npb25fdXJscyI6bnVsbCwidHJhY2tfdHlwZSI6IkFVRElPIiwiZm9ybWF0IjoiMTIiLCJhdWRpb19xdWFsaXR5IjoiSElHSCIsImhpZmlfc3RhdHVzIjoiTk9ORSIsImdhaW5fZGIiOi04LjYyNzg5NiwiZXhwaXJlc19hdCI6bnVsbCwiYXZlcmFnZV9iaXRyYXRlIjoxMzA0NjR9XSwiZmlsZV9pZHNfbXA0IjpbeyJiaXRyYXRlIjoyNTYwMDAsImZpbGVfaWQiOiI3ODI5MjU5YmM4NjdlZjI3M2I1MGUxMzAxNTkxMjgxZDhhZjJmNmM4IiwiZmlsZV91cmwiOm51bGwsImltcHJlc3Npb25fdXJscyI6bnVsbCwidHJhY2tfdHlwZSI6IkFVRElPIiwiZm9ybWF0IjoiMTEiLCJhdWRpb19xdWFsaXR5IjoiVkVSWV9ISUdIIiwiaGlmaV9zdGF0dXMiOiJOT05FIiwiZ2Fpbl9kYiI6LTguNjI3ODk2LCJleHBpcmVzX2F0IjpudWxsLCJhdmVyYWdlX2JpdHJhdGUiOjI2MTg2MH0seyJiaXRyYXRlIjoxMjgwMDAsImZpbGVfaWQiOiJjMjcwMzE2YjI3ZjNhOTE5OWNiNWFiMWY0Mzk0M2Q0N2I2NjY2NDQwIiwiZmlsZV91cmwi
+</code></pre>
+
+<h4>Inferred C# Record</h4>
+
+<pre><code>
+
+</code></pre>
+
+<h2>Generation Info</h2>
+
+<p>Generated at: 2026-03-27 19:16:42 UTC</p>
+
+
+
+</body>
+</html>
