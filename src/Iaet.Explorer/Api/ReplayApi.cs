@@ -24,18 +24,18 @@ internal static class ReplayApi
                     var result = await replayEngine.ReplayAsync(request, ct).ConfigureAwait(false);
                     return Results.Ok(result);
                 }
-                catch (HttpRequestException ex)
+                catch (HttpRequestException)
                 {
-                    return Results.Json(new { message = $"Replay failed: {ex.Message}" }, statusCode: 502);
+                    return Results.Json(new { message = "Replay failed: upstream request error." }, statusCode: 502);
                 }
                 catch (InvalidOperationException ex) when (ex.Message.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
                 {
-                    return Results.Json(new { message = ex.Message }, statusCode: 429);
+                    return Results.Json(new { message = "Rate limit exceeded. Try again later." }, statusCode: 429);
                 }
                 #pragma warning disable CA1031 // Catch general exception — API boundary must not leak unhandled exceptions
-                catch (Exception ex)
+                catch
                 {
-                    return Results.Json(new { message = $"Replay error: {ex.Message}" }, statusCode: 500);
+                    return Results.Json(new { message = "Replay failed due to an internal error." }, statusCode: 500);
                 }
                 #pragma warning restore CA1031
             });

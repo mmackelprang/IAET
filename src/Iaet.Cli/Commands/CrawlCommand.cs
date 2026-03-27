@@ -95,7 +95,7 @@ internal static class CrawlCommand
                     Console.WriteLine("Crawling...");
                     var report = await engine.RunAsync().ConfigureAwait(false);
 
-                    Console.WriteLine($"Crawl complete — {report.Pages.Count} page(s) discovered, {report.TotalRequestsCaptured} API call(s) captured.");
+                    Console.WriteLine($"Crawl complete — {report.Pages.Count} page(s) discovered.");
 
                     var json = JsonSerializer.Serialize(report, JsonOptions);
 
