@@ -89,4 +89,37 @@ public class JsonTypeMapTests
         itemType.NestedFields!.Should().ContainKey("name");
         itemType.NestedFields!.Should().ContainKey("color");
     }
+
+    [Fact]
+    public void TryAnalyze_ValidJsonObject_ReturnsMap()
+    {
+        var map = JsonTypeMap.TryAnalyze("""{"name":"Alice"}""");
+
+        map.Should().NotBeNull();
+        map!.Fields.Should().ContainKey("name");
+    }
+
+    [Fact]
+    public void TryAnalyze_InvalidJson_ReturnsNull()
+    {
+        JsonTypeMap.TryAnalyze("<html>Not JSON</html>").Should().BeNull();
+    }
+
+    [Fact]
+    public void TryAnalyze_JsonArray_ReturnsNull()
+    {
+        JsonTypeMap.TryAnalyze("[1,2,3]").Should().BeNull();
+    }
+
+    [Fact]
+    public void TryAnalyze_JsonpPrefix_ReturnsNull()
+    {
+        JsonTypeMap.TryAnalyze(")]}'\n{\"key\":1}").Should().BeNull();
+    }
+
+    [Fact]
+    public void TryAnalyze_FacebookForPrefix_ReturnsNull()
+    {
+        JsonTypeMap.TryAnalyze("for (;;);{\"key\":1}").Should().BeNull();
+    }
 }

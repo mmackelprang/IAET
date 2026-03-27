@@ -83,4 +83,43 @@ public class JsonDifferTests
         diffs.Should().Contain(d => d.Path == "$.name" && d.Expected == "\"Alice\"" && d.Actual == null);
         diffs.Should().Contain(d => d.Path == "$.age"  && d.Expected == "30"        && d.Actual == null);
     }
+
+    [Fact]
+    public void Diff_NonJsonBodies_Identical_ReturnsNoDiffs()
+    {
+        var html = "<html><body>Hello</body></html>";
+
+        var diffs = JsonDiffer.Diff(html, html);
+
+        diffs.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Diff_NonJsonBodies_Different_ReturnsSingleRootDiff()
+    {
+        var expected = "<html>Page A</html>";
+        var actual   = "<html>Page B</html>";
+
+        var diffs = JsonDiffer.Diff(expected, actual);
+
+        diffs.Should().ContainSingle()
+            .Which.Path.Should().Be("$");
+    }
+
+    [Fact]
+    public void Diff_JsonpPrefix_DoesNotCrash()
+    {
+        var diffs = JsonDiffer.Diff(")]}'\n{\"a\":1}", "{\"a\":1}");
+
+        diffs.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Diff_OneJsonOneHtml_DoesNotCrash()
+    {
+        var diffs = JsonDiffer.Diff("{\"a\":1}", "<html>not json</html>");
+
+        diffs.Should().NotBeNull();
+        diffs.Should().NotBeEmpty();
+    }
 }

@@ -18,7 +18,18 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
             return Task.FromResult(new SchemaResult("{}", "", "", []));
         }
 
-        var maps = jsonBodies.Select(JsonTypeMap.Analyze).ToList();
+        var maps = jsonBodies
+            .Select(JsonTypeMap.TryAnalyze)
+            .Where(m => m is not null)
+            .Cast<JsonTypeMap>()
+            .ToList();
+
+        if (maps.Count == 0)
+        {
+            return Task.FromResult(new SchemaResult("{}", "", "",
+                ["No valid JSON response bodies found — bodies may be HTML, protobuf, or otherwise non-JSON."]));
+        }
+
         var merged = TypeMerger.Merge(maps);
 
         var jsonSchema = JsonSchemaGenerator.Generate(merged.MergedMap);

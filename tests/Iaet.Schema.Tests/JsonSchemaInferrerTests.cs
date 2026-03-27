@@ -53,4 +53,39 @@ public class JsonSchemaInferrerTests
         result.OpenApiFragment.Should().BeEmpty();
         result.Warnings.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task InferAsync_AllNonJsonBodies_ReturnsWarning()
+    {
+        var inferrer = new JsonSchemaInferrer();
+        var bodies = new[]
+        {
+            "<html>Not JSON</html>",
+            "for(;;);{\"key\":1}",
+        };
+
+        var result = await inferrer.InferAsync(bodies);
+
+        result.JsonSchema.Should().Be("{}");
+        result.CSharpRecord.Should().BeEmpty();
+        result.OpenApiFragment.Should().BeEmpty();
+        result.Warnings.Should().ContainSingle()
+            .Which.Should().Contain("non-JSON");
+    }
+
+    [Fact]
+    public async Task InferAsync_MixedJsonAndNonJson_InfersFromValidBodiesOnly()
+    {
+        var inferrer = new JsonSchemaInferrer();
+        var bodies = new[]
+        {
+            "<html>Not JSON</html>",
+            """{"name":"Alice","age":30}""",
+        };
+
+        var result = await inferrer.InferAsync(bodies);
+
+        result.JsonSchema.Should().Contain("\"name\"");
+        result.Warnings.Should().BeEmpty();
+    }
 }

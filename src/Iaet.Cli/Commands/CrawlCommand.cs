@@ -1,9 +1,11 @@
 using System.CommandLine;
 using System.Text.Json;
+using Iaet.Capture;
 using Iaet.Catalog;
 using Iaet.Crawler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Playwright;
 
 namespace Iaet.Cli.Commands;
 
@@ -76,25 +78,47 @@ internal static class CrawlCommand
             if (excludeSelectors.Length > 0)
                 Console.WriteLine($"  Exclude CSS:  {string.Join(", ", excludeSelectors)}");
 
-            Console.WriteLine();
-            Console.WriteLine("DRY RUN: The crawl engine requires a live Playwright browser instance.");
-            Console.WriteLine("         No crawl was performed. To run a real crawl, wire up");
-            Console.WriteLine("         PlaywrightPageNavigator (Iaet.Capture) and pass it to CrawlEngine:");
-            Console.WriteLine("           var engine = new CrawlEngine(options, navigator);");
-            Console.WriteLine("           var report = await engine.RunAsync(ct);");
-            Console.WriteLine();
-            Console.WriteLine("Exit code 2 signals dry-run / no browser integration available.");
-
-            if (!string.IsNullOrEmpty(outputPath))
+            var playwright = await Playwright.CreateAsync().ConfigureAwait(false);
+            try
             {
-                // Write a placeholder report so the --output path is honoured
-                var placeholder = new { Session = session, Options = options, Status = "pending-browser-integration" };
-                var json = JsonSerializer.Serialize(placeholder, JsonOptions);
-                await File.WriteAllTextAsync(outputPath, json).ConfigureAwait(false);
-                Console.WriteLine($"Report placeholder written to: {outputPath}");
-            }
+                var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+                {
+                    Headless = options.Headless
+                }).ConfigureAwait(false);
 
-            Environment.Exit(2);
+                try
+                {
+                    var page = await browser.NewPageAsync().ConfigureAwait(false);
+                    var navigator = new PlaywrightPageNavigator(page);
+                    var engine = new CrawlEngine(options, navigator);
+
+                    Console.WriteLine("Crawling...");
+                    var report = await engine.RunAsync().ConfigureAwait(false);
+
+                    Console.WriteLine($"Crawl complete — {report.Pages.Count} page(s) discovered.");
+
+                    var json = JsonSerializer.Serialize(report, JsonOptions);
+
+                    if (!string.IsNullOrEmpty(outputPath))
+                    {
+                        await File.WriteAllTextAsync(outputPath, json).ConfigureAwait(false);
+                        Console.WriteLine($"Report written to: {outputPath}");
+                    }
+                    else
+                    {
+                        Console.WriteLine(json);
+                    }
+                }
+                finally
+                {
+                    try { await browser.CloseAsync().ConfigureAwait(false); }
+                    catch (PlaywrightException) { /* browser may already be closed */ }
+                }
+            }
+            finally
+            {
+                playwright.Dispose();
+            }
         });
 
         return crawlCmd;

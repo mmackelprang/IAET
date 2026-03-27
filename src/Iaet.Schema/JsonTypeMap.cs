@@ -56,6 +56,26 @@ public sealed class JsonTypeMap
     }
 
     /// <summary>
+    /// Attempts to parse a JSON string. Returns <see langword="null"/> if the body is not valid JSON
+    /// (e.g. HTML, protobuf, JSONP, or BOM-prefixed content).
+    /// </summary>
+    public static JsonTypeMap? TryAnalyze(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object)
+                return null;
+            var fields = AnalyzeObject(doc.RootElement);
+            return new JsonTypeMap(fields);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Creates a <see cref="JsonTypeMap"/> from an existing field dictionary.
     /// Used internally for merging.
     /// </summary>
