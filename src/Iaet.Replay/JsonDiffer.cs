@@ -22,11 +22,29 @@ public static class JsonDiffer
             return [];
         }
 
+        try
+        {
+            return DiffCore(expected, actual);
+        }
+        catch (JsonException)
+        {
+            // One or both bodies are not valid JSON (HTML, protobuf, JSONP, etc.).
+            // Fall back to a simple equality check on the raw strings.
+            if (!string.Equals(expected, actual, StringComparison.Ordinal))
+            {
+                return [new FieldDiff("$", expected ?? "(null)", actual ?? "(null)")];
+            }
+
+            return [];
+        }
+    }
+
+    private static List<FieldDiff> DiffCore(string? expected, string? actual)
+    {
         var diffs = new List<FieldDiff>();
 
         if (expected is null)
         {
-            // Every field in actual is an addition (expected = null)
             using var actualDoc = JsonDocument.Parse(actual!);
             CollectAll(actualDoc.RootElement, "$", isExpected: false, diffs);
             return diffs;
@@ -34,7 +52,6 @@ public static class JsonDiffer
 
         if (actual is null)
         {
-            // Every field in expected is a removal (actual = null)
             using var expectedDoc = JsonDocument.Parse(expected);
             CollectAll(expectedDoc.RootElement, "$", isExpected: true, diffs);
             return diffs;
