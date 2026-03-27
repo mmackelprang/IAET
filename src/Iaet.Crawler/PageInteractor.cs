@@ -39,7 +39,8 @@ public sealed class PageInteractor
         Justification = "URL stored as plain string for serialization compatibility.")]
     private static string ResolveUrl(string baseUrl, string href)
     {
-        if (Uri.TryCreate(href, UriKind.Absolute, out var abs)) return abs.ToString();
+        if (Uri.TryCreate(href, UriKind.Absolute, out var abs) && abs.Scheme != Uri.UriSchemeFile)
+            return abs.ToString();
         return new Uri(new Uri(baseUrl), href).ToString();
     }
 }
