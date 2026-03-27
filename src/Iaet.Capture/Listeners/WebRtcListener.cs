@@ -30,12 +30,17 @@ public sealed class WebRtcListener : IProtocolListener
         ArgumentNullException.ThrowIfNull(catalog);
         _sessionId = Guid.NewGuid();
 
-        // TODO (Phase 3): WebRTC CDP domain events vary significantly between Chrome versions.
-        // The WebRTC domain may expose peerConnectionCreated / addedICECandidate in some versions.
-        // In others, hooking RTCPeerConnection requires Runtime domain JS injection.
-        // For now we enable the domain to receive whatever events Chrome exposes, and
-        // subscribe defensively — unknown events are silently ignored.
-        await cdpSession.SubscribeToDomainAsync("WebRTC", ct).ConfigureAwait(false);
+        // The WebRTC CDP domain is not available in all Chromium builds.
+        // Degrade gracefully — event subscriptions below will simply never fire.
+        try
+        {
+            await cdpSession.SubscribeToDomainAsync("WebRTC", ct).ConfigureAwait(false);
+        }
+        catch (Microsoft.Playwright.PlaywrightException)
+        {
+            // Domain not available in this browser version — continue without WebRTC capture.
+            return;
+        }
 
         _subscriptions.Add(cdpSession.OnEvent("WebRTC.peerConnectionCreated", data =>
         {
