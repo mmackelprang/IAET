@@ -10,6 +10,8 @@ public static class ServiceCollectionExtensions
         string rootDirectory = ".iaet-projects")
     {
         services.AddSingleton<IProjectStore>(new ProjectStore(rootDirectory));
+        services.AddSingleton<IRoundStore>(new RoundStore(rootDirectory));
+        services.AddSingleton<IKnowledgeStore>(new KnowledgeStore(rootDirectory));
         return services;
     }
 }
