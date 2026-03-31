@@ -24,7 +24,9 @@ public static class AuthChainDetector
 
         foreach (var req in requests)
         {
-            var sig = $"{req.HttpMethod} {new Uri(req.Url).AbsolutePath}";
+            var sig = GetPathSignature(req);
+            if (sig is null)
+                continue;
 
             if (req.ResponseBody is not null)
             {
@@ -51,6 +53,13 @@ public static class AuthChainDetector
         steps.AddRange(consumers);
 
         return [new AuthChain { Name = "Detected auth chain", Steps = steps }];
+    }
+
+    private static string? GetPathSignature(CapturedRequest req)
+    {
+        if (!Uri.TryCreate(req.Url, UriKind.Absolute, out var uri))
+            return null;
+        return $"{req.HttpMethod} {uri.AbsolutePath}";
     }
 
     private static IEnumerable<string> ExtractAuthFields(string body)

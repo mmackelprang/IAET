@@ -34,6 +34,13 @@ public sealed class JsonTypeMapRobustnessTests
     }
 
     [Fact]
+    public void TryAnalyze_handles_xss_protection_with_real_newline()
+    {
+        var result = JsonTypeMap.TryAnalyze(")]}'\n{\"key\":\"val\"}");
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
     public void TryAnalyze_handles_empty_string()
     {
         JsonTypeMap.TryAnalyze("").Should().BeNull();

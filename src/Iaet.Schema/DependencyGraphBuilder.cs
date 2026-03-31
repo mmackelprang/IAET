@@ -16,7 +16,10 @@ public static class DependencyGraphBuilder
 
         foreach (var req in requests)
         {
-            var signature = $"{req.HttpMethod} {new Uri(req.Url).AbsolutePath}";
+            var signature = GetPathSignature(req);
+            if (signature is null)
+                continue;
+
             if (req.ResponseBody is not null)
             {
                 foreach (var (key, value) in ExtractJsonValues(req.ResponseBody))
@@ -29,7 +32,9 @@ public static class DependencyGraphBuilder
 
         foreach (var req in requests)
         {
-            var signature = $"{req.HttpMethod} {new Uri(req.Url).AbsolutePath}";
+            var signature = GetPathSignature(req);
+            if (signature is null)
+                continue;
 
             foreach (var (headerKey, headerValue) in req.RequestHeaders)
             {
@@ -48,9 +53,10 @@ public static class DependencyGraphBuilder
                 }
             }
 
-            if (req.Url.Contains('?', StringComparison.Ordinal))
+            if (req.Url.Contains('?', StringComparison.Ordinal) &&
+                Uri.TryCreate(req.Url, UriKind.Absolute, out var uriForQuery))
             {
-                var query = new Uri(req.Url).Query;
+                var query = uriForQuery.Query;
                 foreach (var (tokenValue, source) in responseTokens)
                 {
                     if (source != signature && query.Contains(tokenValue, StringComparison.Ordinal))
@@ -67,6 +73,13 @@ public static class DependencyGraphBuilder
         }
 
         return dependencies;
+    }
+
+    private static string? GetPathSignature(CapturedRequest req)
+    {
+        if (!Uri.TryCreate(req.Url, UriKind.Absolute, out var uri))
+            return null;
+        return $"{req.HttpMethod} {uri.AbsolutePath}";
     }
 
     private static IEnumerable<KeyValuePair<string, string>> ExtractJsonValues(string body)

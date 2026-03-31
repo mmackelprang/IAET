@@ -68,15 +68,22 @@ public sealed class JsonTypeMap
         if (json[0] == '\uFEFF')
             json = json[1..];
 
-        // Strip XSS protection prefixes that use the literal two-character sequence \n as separator
-        // (e.g. Google APIs: )]}'\\n{"key":"val"} where \\n is backslash + n, not a real newline)
+        // Strip XSS protection prefixes like )]}'  (followed by literal \n or actual newline)
         if (json.StartsWith(")]}'", StringComparison.Ordinal))
         {
+            // Try literal \n first (Google APIs send this)
             var literalIdx = json.IndexOf("\\n", StringComparison.Ordinal);
             if (literalIdx >= 0)
+            {
                 json = json[(literalIdx + 2)..];
+            }
             else
-                return null;
+            {
+                // Try actual newline
+                var newlineIdx = json.IndexOf('\n', StringComparison.Ordinal);
+                if (newlineIdx >= 0)
+                    json = json[(newlineIdx + 1)..];
+            }
         }
 
         try

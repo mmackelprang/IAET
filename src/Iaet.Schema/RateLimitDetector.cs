@@ -16,7 +16,10 @@ public static class RateLimitDetector
             if (req.ResponseStatus != 429)
                 continue;
 
-            var sig = $"{req.HttpMethod} {new Uri(req.Url).AbsolutePath}";
+            var sig = GetPathSignature(req);
+            if (sig is null)
+                continue;
+
             int? retryAfter = null;
 
             if (req.ResponseHeaders.TryGetValue("Retry-After", out var retryVal) &&
@@ -33,6 +36,13 @@ public static class RateLimitDetector
         }
 
         return results.Values.ToList();
+    }
+
+    private static string? GetPathSignature(CapturedRequest req)
+    {
+        if (!Uri.TryCreate(req.Url, UriKind.Absolute, out var uri))
+            return null;
+        return $"{req.HttpMethod} {uri.AbsolutePath}";
     }
 }
 

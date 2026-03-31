@@ -2334,3 +2334,11 @@ git commit -m "fix: integration fixups from Phase 3 smoke testing"
 3. **SharedIdTracer** — Tracing IDs across endpoints is partially covered by DependencyGraphBuilder (which checks response values appearing in later request headers/URLs). A dedicated SharedIdTracer with deeper JSON nesting traversal can be added incrementally.
 
 4. **Node.js AST parsing** — The spec mentions Acorn-based AST parsing. The v1 implementation uses regex-based extraction which handles 80%+ of real-world patterns. AST parsing can be added as a v2 enhancement when regex proves insufficient for obfuscated bundles.
+
+5. **SipAnalyzer** — SIP message parsing (INVITE, PRACK, BYE) requires dedicated SIP protocol knowledge. Deferred to a targeted follow-up.
+
+6. **WebRtcSessionReconstructor** — Full WebRTC session lifecycle reconstruction from signaling captures. Deferred pending improved WebRTC CDP event coverage.
+
+7. **BinaryFrameHeuristics** — Binary frame decoding (length-prefixed, protobuf, msgpack detection). Deferred to post-v1.
+
+8. **ErrorClassifier** — Error response categorization by HTTP status and body patterns. Deferred to post-v1.
