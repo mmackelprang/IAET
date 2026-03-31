@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Iaet.Projects\Iaet.Projects.csproj" />
     <ProjectReference Include="..\Iaet.Secrets\Iaet.Secrets.csproj" />
     <ProjectReference Include="..\Iaet.Agents\Iaet.Agents.csproj" />
+    <ProjectReference Include="..\Iaet.Cookies\Iaet.Cookies.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Globalization;
 using Iaet.Agents;
 using Iaet.Capture;
+using Iaet.Cookies;
 using Iaet.Catalog;
 using Iaet.Cli.Commands;
 using Iaet.Crawler;
@@ -37,6 +38,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddIaetProjects(projectsRoot);
         services.AddIaetSecrets(projectsRoot);
         services.AddIaetAgents(projectsRoot);
+        services.AddIaetCookies(projectsRoot);
     })
     .Build();
 
@@ -54,7 +56,8 @@ var rootCommand = new RootCommand("IAET - Internal API Extraction Toolkit")
     InvestigateCommand.Create(host.Services),
     ProjectCommand.Create(host.Services),
     SecretsCommand.Create(host.Services),
-    RoundCommand.Create(host.Services)
+    RoundCommand.Create(host.Services),
+    CookiesCommand.Create(host.Services)
 };
 
 return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(false);
