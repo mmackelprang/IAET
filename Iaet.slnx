@@ -9,6 +9,9 @@
     <Project Path="src/Iaet.Explorer/Iaet.Explorer.csproj" />
     <Project Path="src/Iaet.Replay/Iaet.Replay.csproj" />
     <Project Path="src/Iaet.Schema/Iaet.Schema.csproj" />
+    <Project Path="src/Iaet.Projects/Iaet.Projects.csproj" />
+    <Project Path="src/Iaet.Secrets/Iaet.Secrets.csproj" />
+    <Project Path="src/Iaet.Agents/Iaet.Agents.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Iaet.Capture.Tests/Iaet.Capture.Tests.csproj" />
@@ -20,5 +23,8 @@
     <Project Path="tests/Iaet.Replay.Tests/Iaet.Replay.Tests.csproj" />
     <Project Path="tests/Iaet.Schema.Tests/Iaet.Schema.Tests.csproj" />
     <Project Path="tests/Iaet.Cli.Tests/Iaet.Cli.Tests.csproj" />
+    <Project Path="tests/Iaet.Projects.Tests/Iaet.Projects.Tests.csproj" />
+    <Project Path="tests/Iaet.Secrets.Tests/Iaet.Secrets.Tests.csproj" />
+    <Project Path="tests/Iaet.Agents.Tests/Iaet.Agents.Tests.csproj" />
   </Folder>
 </Solution>
