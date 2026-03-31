@@ -44,7 +44,7 @@ public static class HarGenerator
 
     private static HarRequest BuildRequest(CapturedRequest req)
     {
-        var uri      = new Uri(req.Url);
+        var uri      = Uri.TryCreate(req.Url, UriKind.Absolute, out var parsed) ? parsed : new Uri(new Uri("https://unknown"), req.Url);
         var headers  = req.RequestHeaders
                           .Select(kv => new HarNameValue(Name: kv.Key, Value: HeaderRedactor.RedactHeaderValue(kv.Key, kv.Value)))
                           .ToArray();

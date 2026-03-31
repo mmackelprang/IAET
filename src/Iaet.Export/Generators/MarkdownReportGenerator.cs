@@ -94,7 +94,10 @@ public static class MarkdownReportGenerator
     {
         foreach (var req in ctx.Requests)
         {
-            var sig = EndpointSignature.FromRequest(req.HttpMethod, new Uri(req.Url).AbsolutePath);
+            var path = Uri.TryCreate(req.Url, UriKind.Absolute, out var absUri)
+                ? absUri.AbsolutePath
+                : req.Url;
+            var sig = EndpointSignature.FromRequest(req.HttpMethod, path);
             if (sig.Normalized == group.Signature.Normalized)
                 return req;
         }
