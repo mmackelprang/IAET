@@ -61,6 +61,24 @@ public sealed class JsonTypeMap
     /// </summary>
     public static JsonTypeMap? TryAnalyze(string json)
     {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        // Strip BOM
+        if (json[0] == '\uFEFF')
+            json = json[1..];
+
+        // Strip XSS protection prefixes that use the literal two-character sequence \n as separator
+        // (e.g. Google APIs: )]}'\\n{"key":"val"} where \\n is backslash + n, not a real newline)
+        if (json.StartsWith(")]}'", StringComparison.Ordinal))
+        {
+            var literalIdx = json.IndexOf("\\n", StringComparison.Ordinal);
+            if (literalIdx >= 0)
+                json = json[(literalIdx + 2)..];
+            else
+                return null;
+        }
+
         try
         {
             using var doc = JsonDocument.Parse(json);
