@@ -4,6 +4,7 @@
 
 (function () {
   const INJECT_MSG = "__iaet_request__";
+  const INJECT_WS_MSG = "__iaet_ws__";
 
   interface IaetInjectMessage {
     type: typeof INJECT_MSG;
@@ -18,6 +19,20 @@
       responseHeaders: Record<string, string>;
       responseBody: string | null;
       durationMs: number;
+    };
+  }
+
+  interface IaetWsMessage {
+    type: typeof INJECT_WS_MSG;
+    action: "open" | "frame" | "close";
+    payload: {
+      id: string;
+      url: string;
+      timestamp: string;
+      direction?: "Sent" | "Received";
+      textPayload?: string | null;
+      binarySize?: number;
+      protocol?: string;
     };
   }
 
@@ -204,4 +219,114 @@
   }
 
   window.XMLHttpRequest = PatchedXHR;
+
+  // ---- Patch WebSocket ----
+
+  const OriginalWebSocket = window.WebSocket;
+
+  function postWs(msg: IaetWsMessage): void {
+    window.postMessage(msg, "*");
+  }
+
+  class PatchedWebSocket extends OriginalWebSocket {
+    private _iaetId: string;
+    private _iaetUrl: string;
+
+    constructor(url: string | URL, protocols?: string | string[]) {
+      super(url, protocols);
+      this._iaetId = generateId();
+      this._iaetUrl = typeof url === "string" ? url : url.toString();
+
+      const wsId = this._iaetId;
+      const wsUrl = this._iaetUrl;
+
+      postWs({
+        type: INJECT_WS_MSG,
+        action: "open",
+        payload: {
+          id: wsId,
+          url: wsUrl,
+          timestamp: new Date().toISOString(),
+          protocol: typeof protocols === "string" ? protocols : protocols?.[0],
+        },
+      });
+
+      this.addEventListener("message", (event: MessageEvent) => {
+        let textPayload: string | null = null;
+        let binarySize = 0;
+
+        if (typeof event.data === "string") {
+          textPayload = event.data.length > 8192 ? event.data.slice(0, 8192) : event.data;
+        } else if (event.data instanceof ArrayBuffer) {
+          binarySize = event.data.byteLength;
+        } else if (event.data instanceof Blob) {
+          binarySize = event.data.size;
+        }
+
+        postWs({
+          type: INJECT_WS_MSG,
+          action: "frame",
+          payload: {
+            id: wsId,
+            url: wsUrl,
+            timestamp: new Date().toISOString(),
+            direction: "Received",
+            textPayload,
+            binarySize,
+          },
+        });
+      });
+
+      this.addEventListener("close", () => {
+        postWs({
+          type: INJECT_WS_MSG,
+          action: "close",
+          payload: {
+            id: wsId,
+            url: wsUrl,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      });
+    }
+
+    // Intercept send() to capture outgoing frames
+    override send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
+      let textPayload: string | null = null;
+      let binarySize = 0;
+
+      if (typeof data === "string") {
+        textPayload = data.length > 8192 ? data.slice(0, 8192) : data;
+      } else if (data instanceof ArrayBuffer) {
+        binarySize = data.byteLength;
+      } else if (data instanceof Blob) {
+        binarySize = data.size;
+      } else if (ArrayBuffer.isView(data)) {
+        binarySize = data.byteLength;
+      }
+
+      postWs({
+        type: INJECT_WS_MSG,
+        action: "frame",
+        payload: {
+          id: this._iaetId,
+          url: this._iaetUrl,
+          timestamp: new Date().toISOString(),
+          direction: "Sent",
+          textPayload,
+          binarySize,
+        },
+      });
+
+      super.send(data);
+    }
+  }
+
+  // Preserve static properties (CONNECTING, OPEN, CLOSING, CLOSED)
+  Object.defineProperty(PatchedWebSocket, "CONNECTING", { value: 0 });
+  Object.defineProperty(PatchedWebSocket, "OPEN", { value: 1 });
+  Object.defineProperty(PatchedWebSocket, "CLOSING", { value: 2 });
+  Object.defineProperty(PatchedWebSocket, "CLOSED", { value: 3 });
+
+  window.WebSocket = PatchedWebSocket as unknown as typeof WebSocket;
 })();

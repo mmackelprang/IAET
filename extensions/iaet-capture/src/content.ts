@@ -5,6 +5,7 @@
 import type { ContentToBackground, BackgroundToContent } from "./types";
 
 const INJECT_MSG = "__iaet_request__";
+const INJECT_WS_MSG = "__iaet_ws__";
 
 // ---- Inject the interceptor into the main world ----
 
@@ -22,16 +23,22 @@ injectScript();
 
 window.addEventListener("message", (event: MessageEvent) => {
   if (event.source !== window) return;
-  if (!event.data || event.data.type !== INJECT_MSG) return;
+  if (!event.data) return;
 
-  const msg: ContentToBackground = {
-    type: "REQUEST_CAPTURED",
-    payload: event.data.payload,
-  };
-
-  chrome.runtime.sendMessage(msg).catch(() => {
-    // Background may not be listening if extension is disabled
-  });
+  if (event.data.type === INJECT_MSG) {
+    const msg: ContentToBackground = {
+      type: "REQUEST_CAPTURED",
+      payload: event.data.payload,
+    };
+    chrome.runtime.sendMessage(msg).catch(() => {});
+  } else if (event.data.type === INJECT_WS_MSG) {
+    const msg: ContentToBackground = {
+      type: "WS_EVENT",
+      action: event.data.action,
+      payload: event.data.payload,
+    };
+    chrome.runtime.sendMessage(msg).catch(() => {});
+  }
 });
 
 // ---- Listen for recording state changes from background ----

@@ -64,8 +64,19 @@ export interface IaetFile {
 }
 
 // Messages between content script / inject and the background service worker
+export interface WsEventPayload {
+  id: string;
+  url: string;
+  timestamp: string;
+  direction?: "Sent" | "Received";
+  textPayload?: string | null;
+  binarySize?: number;
+  protocol?: string;
+}
+
 export type ContentToBackground =
   | { type: "REQUEST_CAPTURED"; payload: CapturedRequestPayload }
+  | { type: "WS_EVENT"; action: "open" | "frame" | "close"; payload: WsEventPayload }
   | { type: "PING" };
 
 export type BackgroundToContent =

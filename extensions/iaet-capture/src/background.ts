@@ -3,16 +3,28 @@
 
 import type {
   IaetRequest,
+  IaetStream,
+  IaetStreamFrame,
   IaetFile,
   ContentToBackground,
   PopupState,
   IaetSession,
+  WsEventPayload,
 } from "./types";
 import { normalizeEndpoint, generateUuid } from "./types";
 
 // ---- Capture state ----
 
 const MAX_REQUESTS = 10000;
+
+interface WsConnectionState {
+  id: string;
+  url: string;
+  startedAt: string;
+  endedAt: string | null;
+  protocol: string | undefined;
+  frames: IaetStreamFrame[];
+}
 
 interface CaptureState {
   recording: boolean;
@@ -22,7 +34,10 @@ interface CaptureState {
   requests: IaetRequest[];
   endpointSet: Set<string>;
   targetApplication: string;
+  wsConnections: Map<string, WsConnectionState>;
 }
+
+const MAX_WS_FRAMES = 1000;
 
 const state: CaptureState = {
   recording: false,
@@ -32,6 +47,7 @@ const state: CaptureState = {
   requests: [],
   endpointSet: new Set(),
   targetApplication: "unknown",
+  wsConnections: new Map(),
 };
 
 // ---- Message handler ----
@@ -72,6 +88,14 @@ chrome.runtime.onMessage.addListener(
         state.requests.push(req);
         const sig = normalizeEndpoint(req.httpMethod, req.url);
         state.endpointSet.add(sig);
+        updateBadge();
+        break;
+      }
+
+      case "WS_EVENT": {
+        if (!state.recording) break;
+        const wsMsg = msg as ContentToBackground & { type: "WS_EVENT" };
+        handleWsEvent(wsMsg.action, wsMsg.payload);
         updateBadge();
         break;
       }
@@ -120,6 +144,35 @@ chrome.runtime.onMessage.addListener(
 
 // ---- Capture lifecycle ----
 
+function handleWsEvent(action: "open" | "frame" | "close", payload: WsEventPayload): void {
+  if (action === "open") {
+    state.wsConnections.set(payload.id, {
+      id: payload.id,
+      url: payload.url,
+      startedAt: payload.timestamp,
+      endedAt: null,
+      protocol: payload.protocol,
+      frames: [],
+    });
+  } else if (action === "frame") {
+    const conn = state.wsConnections.get(payload.id);
+    if (conn && conn.frames.length < MAX_WS_FRAMES) {
+      conn.frames.push({
+        timestamp: payload.timestamp,
+        direction: payload.direction ?? "Received",
+        textPayload: payload.textPayload ?? null,
+        binaryPayload: null,
+        sizeBytes: payload.textPayload?.length ?? payload.binarySize ?? 0,
+      });
+    }
+  } else if (action === "close") {
+    const conn = state.wsConnections.get(payload.id);
+    if (conn) {
+      conn.endedAt = payload.timestamp;
+    }
+  }
+}
+
 function startRecording(sessionName: string): void {
   state.recording = true;
   state.sessionId = generateUuid();
@@ -127,6 +180,7 @@ function startRecording(sessionName: string): void {
   state.startedAt = new Date().toISOString();
   state.requests = [];
   state.endpointSet = new Set();
+  state.wsConnections = new Map();
   updateBadge();
 }
 
@@ -139,6 +193,7 @@ function clearCapture(): void {
   state.recording = false;
   state.requests = [];
   state.endpointSet = new Set();
+  state.wsConnections = new Map();
   updateBadge();
 }
 
@@ -166,15 +221,31 @@ function buildIaetFile(): IaetFile {
     profile: "default",
     startedAt: state.startedAt,
     stoppedAt: state.recording ? null : new Date().toISOString(),
-    capturedBy: "iaet-capture/0.1.0",
+    capturedBy: "iaet-capture/0.2.0",
   };
+
+  const streams: IaetStream[] = [];
+  for (const conn of state.wsConnections.values()) {
+    streams.push({
+      id: conn.id,
+      sessionId: state.sessionId,
+      protocol: "WebSocket",
+      url: conn.url,
+      startedAt: conn.startedAt,
+      endedAt: conn.endedAt,
+      metadata: conn.protocol ? { subprotocol: conn.protocol } : {},
+      frames: conn.frames.length > 0 ? conn.frames : null,
+      samplePayloadPath: null,
+      tag: null,
+    });
+  }
 
   return {
     iaetVersion: "1.0",
     exportedAt: new Date().toISOString(),
     session,
     requests: [...state.requests],
-    streams: [],
+    streams,
   };
 }
 
