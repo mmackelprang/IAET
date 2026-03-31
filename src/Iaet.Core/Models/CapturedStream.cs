@@ -18,18 +18,6 @@ public sealed record CapturedStream
     public string? Tag { get; init; }
 }
 
-public enum StreamProtocol
-{
-    WebSocket,
-    ServerSentEvents,
-    WebRtc,
-    HlsStream,
-    DashStream,
-    GrpcWeb,
-    WebAudio,
-    Unknown
-}
-
 public sealed record StreamMetadata(
     Dictionary<string, string> Properties
 );
