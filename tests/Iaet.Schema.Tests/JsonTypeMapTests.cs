@@ -112,9 +112,10 @@ public class JsonTypeMapTests
     }
 
     [Fact]
-    public void TryAnalyze_JsonpPrefix_ReturnsNull()
+    public void TryAnalyze_XssPrefix_WithRealNewline_ReturnsMap()
     {
-        JsonTypeMap.TryAnalyze(")]}'\n{\"key\":1}").Should().BeNull();
+        // )]}'<newline> is the Google XSSI protection prefix; real newline is now stripped
+        JsonTypeMap.TryAnalyze(")]}'\n{\"key\":1}").Should().NotBeNull();
     }
 
     [Fact]
