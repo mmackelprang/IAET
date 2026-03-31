@@ -66,6 +66,14 @@ public sealed class DotEnvSecretsStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Handles_values_containing_equals_signs()
+    {
+        await _store.SetAsync("proj", "TOKEN", "abc==def=ghi");
+        var result = await _store.GetAsync("proj", "TOKEN");
+        result.Should().Be("abc==def=ghi");
+    }
+
+    [Fact]
     public async Task Ignores_comments_and_blank_lines()
     {
         var envPath = Path.Combine(_rootDir, "proj", ".env.iaet");

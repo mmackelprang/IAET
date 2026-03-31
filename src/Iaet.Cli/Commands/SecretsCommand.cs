@@ -15,6 +15,7 @@ internal static class SecretsCommand
         cmd.Add(CreateSetCmd(services));
         cmd.Add(CreateGetCmd(services));
         cmd.Add(CreateListCmd(services));
+        cmd.Add(CreateAuditCmd(services));
         return cmd;
     }
 
@@ -96,5 +97,41 @@ internal static class SecretsCommand
             }
         });
         return listCmd;
+    }
+
+    private static Command CreateAuditCmd(IServiceProvider services)
+    {
+        var auditCmd = new Command("audit", "Audit secrets usage for a project");
+        var projectOption = new Option<string>("--project") { Description = "Project name", Required = true };
+        auditCmd.Add(projectOption);
+
+        auditCmd.SetAction(async (parseResult) =>
+        {
+            var project = parseResult.GetRequiredValue(projectOption);
+
+            using var scope = services.CreateScope();
+            var store = scope.ServiceProvider.GetRequiredService<ISecretsStore>();
+            var secrets = await store.ListAsync(project).ConfigureAwait(false);
+
+            if (secrets.Count == 0)
+            {
+                Console.WriteLine($"No secrets found for project '{project}'.");
+                return;
+            }
+
+            Console.WriteLine($"Secrets audit for project: {project}");
+            Console.WriteLine($"  Total keys: {secrets.Count}");
+            Console.WriteLine();
+            Console.WriteLine($"  {"Key",-30} {"Length",-8} {"Status"}");
+            Console.WriteLine($"  {new string('-', 55)}");
+            foreach (var (key, value) in secrets)
+            {
+                Console.WriteLine($"  {key,-30} {value.Length,-8} active");
+            }
+            Console.WriteLine();
+            Console.WriteLine("  Note: Full usage tracking will be available in a future version.");
+        });
+
+        return auditCmd;
     }
 }

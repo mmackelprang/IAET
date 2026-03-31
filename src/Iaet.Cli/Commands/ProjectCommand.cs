@@ -144,8 +144,15 @@ internal static class ProjectCommand
             var name = parseResult.GetRequiredValue(nameOption);
             using var scope = services.CreateScope();
             var store = scope.ServiceProvider.GetRequiredService<IProjectStore>();
-            await store.ArchiveAsync(name).ConfigureAwait(false);
-            Console.WriteLine($"Project '{name}' archived.");
+            try
+            {
+                await store.ArchiveAsync(name).ConfigureAwait(false);
+                Console.WriteLine($"Project '{name}' archived.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         });
         return archiveCmd;
     }

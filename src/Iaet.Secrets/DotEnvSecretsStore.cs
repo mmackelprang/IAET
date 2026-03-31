@@ -53,7 +53,7 @@ public sealed class DotEnvSecretsStore : ISecretsStore
             string.Empty
         };
 
-        foreach (var (key, value) in entries)
+        foreach (var (key, value) in entries.OrderBy(kv => kv.Key, StringComparer.Ordinal))
             lines.Add($"{key}={value}");
 
         await File.WriteAllLinesAsync(path, lines).ConfigureAwait(false);

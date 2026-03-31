@@ -8,7 +8,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         string rootDirectory = ".iaet-projects")
     {
-        services.AddSingleton(_ => new InvestigationLog(rootDirectory));
+        services.AddSingleton<InvestigationLog>(sp => new InvestigationLog(rootDirectory));
         services.AddSingleton<HumanInteractionBroker>();
         return services;
     }

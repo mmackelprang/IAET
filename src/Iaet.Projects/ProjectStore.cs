@@ -85,10 +85,8 @@ public sealed class ProjectStore : IProjectStore
 
     public async Task ArchiveAsync(string projectName, CancellationToken ct = default)
     {
-        var config = await LoadAsync(projectName, ct).ConfigureAwait(false);
-        if (config is null)
-            return;
-
+        var config = await LoadAsync(projectName, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException($"Project '{projectName}' not found.");
         var archived = config with { Status = ProjectStatus.Archived };
         await SaveAsync(archived, ct).ConfigureAwait(false);
     }
