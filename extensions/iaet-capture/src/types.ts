@@ -74,9 +74,20 @@ export interface WsEventPayload {
   protocol?: string;
 }
 
+export interface RtcEventPayload {
+  id: string;
+  timestamp: string;
+  sdp?: string;
+  sdpType?: string;
+  candidate?: string;
+  state?: string;
+  config?: string;
+}
+
 export type ContentToBackground =
   | { type: "REQUEST_CAPTURED"; payload: CapturedRequestPayload }
   | { type: "WS_EVENT"; action: "open" | "frame" | "close"; payload: WsEventPayload }
+  | { type: "RTC_EVENT"; action: "create" | "setLocalDesc" | "setRemoteDesc" | "addIceCandidate" | "localIceCandidate" | "stateChange"; payload: RtcEventPayload }
   | { type: "PING" };
 
 export type BackgroundToContent =

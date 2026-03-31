@@ -38,6 +38,13 @@ window.addEventListener("message", (event: MessageEvent) => {
       payload: event.data.payload,
     };
     chrome.runtime.sendMessage(msg).catch(() => {});
+  } else if (event.data.type === "__iaet_rtc__") {
+    const msg: ContentToBackground = {
+      type: "RTC_EVENT",
+      action: event.data.action,
+      payload: event.data.payload,
+    };
+    chrome.runtime.sendMessage(msg).catch(() => {});
   }
 });
 

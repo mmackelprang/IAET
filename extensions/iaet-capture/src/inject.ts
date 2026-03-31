@@ -5,6 +5,7 @@
 (function () {
   const INJECT_MSG = "__iaet_request__";
   const INJECT_WS_MSG = "__iaet_ws__";
+  const INJECT_RTC_MSG = "__iaet_rtc__";
 
   interface IaetInjectMessage {
     type: typeof INJECT_MSG;
@@ -33,6 +34,20 @@
       textPayload?: string | null;
       binarySize?: number;
       protocol?: string;
+    };
+  }
+
+  interface IaetRtcMessage {
+    type: typeof INJECT_RTC_MSG;
+    action: "create" | "setLocalDesc" | "setRemoteDesc" | "addIceCandidate" | "localIceCandidate" | "stateChange";
+    payload: {
+      id: string;
+      timestamp: string;
+      sdp?: string;
+      sdpType?: string;
+      candidate?: string;
+      state?: string;
+      config?: string;
     };
   }
 
@@ -259,8 +274,32 @@
           textPayload = event.data.length > 8192 ? event.data.slice(0, 8192) : event.data;
         } else if (event.data instanceof ArrayBuffer) {
           binarySize = event.data.byteLength;
+          // Try to decode binary as UTF-8 text (SIP messages are text even in binary frames)
+          try {
+            const decoded = new TextDecoder("utf-8", { fatal: true }).decode(event.data);
+            textPayload = decoded.length > 8192 ? decoded.slice(0, 8192) : decoded;
+          } catch {
+            // Truly binary data — keep as size only
+          }
         } else if (event.data instanceof Blob) {
           binarySize = event.data.size;
+          // Read blob as text asynchronously
+          event.data.text().then((text) => {
+            postWs({
+              type: INJECT_WS_MSG,
+              action: "frame",
+              payload: {
+                id: wsId,
+                url: wsUrl,
+                timestamp: new Date().toISOString(),
+                direction: "Received",
+                textPayload: text.length > 8192 ? text.slice(0, 8192) : text,
+                binarySize: text.length,
+              },
+            });
+          }).catch(() => {});
+          // Still post immediately with size for non-decodable blobs
+          if (binarySize > 0) return; // skip double-post; blob handler above will post
         }
 
         postWs({
@@ -299,10 +338,18 @@
         textPayload = data.length > 8192 ? data.slice(0, 8192) : data;
       } else if (data instanceof ArrayBuffer) {
         binarySize = data.byteLength;
+        try {
+          const decoded = new TextDecoder("utf-8", { fatal: true }).decode(data);
+          textPayload = decoded.length > 8192 ? decoded.slice(0, 8192) : decoded;
+        } catch { /* truly binary */ }
       } else if (data instanceof Blob) {
         binarySize = data.size;
       } else if (ArrayBuffer.isView(data)) {
         binarySize = data.byteLength;
+        try {
+          const decoded = new TextDecoder("utf-8", { fatal: true }).decode(data);
+          textPayload = decoded.length > 8192 ? decoded.slice(0, 8192) : decoded;
+        } catch { /* truly binary */ }
       }
 
       postWs({
@@ -329,4 +376,112 @@
   Object.defineProperty(PatchedWebSocket, "CLOSED", { value: 3 });
 
   window.WebSocket = PatchedWebSocket as unknown as typeof WebSocket;
+
+  // ---- Patch RTCPeerConnection ----
+
+  const OriginalRTCPeerConnection = window.RTCPeerConnection;
+
+  function postRtc(msg: IaetRtcMessage): void {
+    window.postMessage(msg, "*");
+  }
+
+  class PatchedRTCPeerConnection extends OriginalRTCPeerConnection {
+    private _iaetId: string;
+
+    constructor(config?: RTCConfiguration) {
+      super(config);
+      this._iaetId = generateId();
+
+      postRtc({
+        type: INJECT_RTC_MSG,
+        action: "create",
+        payload: {
+          id: this._iaetId,
+          timestamp: new Date().toISOString(),
+          config: config ? JSON.stringify({
+            iceServers: config.iceServers?.map(s => ({
+              urls: s.urls,
+              // Never capture credentials
+            })),
+            bundlePolicy: config.bundlePolicy,
+            rtcpMuxPolicy: config.rtcpMuxPolicy,
+          }) : undefined,
+        },
+      });
+
+      // Track ICE candidates
+      this.addEventListener("icecandidate", (event) => {
+        if (event.candidate) {
+          postRtc({
+            type: INJECT_RTC_MSG,
+            action: "localIceCandidate",
+            payload: {
+              id: this._iaetId,
+              timestamp: new Date().toISOString(),
+              candidate: event.candidate.candidate,
+            },
+          });
+        }
+      });
+
+      // Track connection state changes
+      this.addEventListener("connectionstatechange", () => {
+        postRtc({
+          type: INJECT_RTC_MSG,
+          action: "stateChange",
+          payload: {
+            id: this._iaetId,
+            timestamp: new Date().toISOString(),
+            state: this.connectionState,
+          },
+        });
+      });
+    }
+
+    override async setLocalDescription(desc?: RTCLocalSessionDescriptionInit): Promise<void> {
+      postRtc({
+        type: INJECT_RTC_MSG,
+        action: "setLocalDesc",
+        payload: {
+          id: this._iaetId,
+          timestamp: new Date().toISOString(),
+          sdpType: desc?.type,
+          sdp: desc?.sdp?.length && desc.sdp.length > 16384 ? desc.sdp.slice(0, 16384) : desc?.sdp,
+        },
+      });
+      return super.setLocalDescription(desc);
+    }
+
+    override async setRemoteDescription(desc: RTCSessionDescriptionInit): Promise<void> {
+      postRtc({
+        type: INJECT_RTC_MSG,
+        action: "setRemoteDesc",
+        payload: {
+          id: this._iaetId,
+          timestamp: new Date().toISOString(),
+          sdpType: desc.type,
+          sdp: desc.sdp?.length && desc.sdp.length > 16384 ? desc.sdp.slice(0, 16384) : desc.sdp,
+        },
+      });
+      return super.setRemoteDescription(desc);
+    }
+
+    override async addIceCandidate(candidate?: RTCIceCandidateInit | RTCIceCandidate): Promise<void> {
+      if (candidate) {
+        const c = candidate instanceof RTCIceCandidate ? candidate : candidate;
+        postRtc({
+          type: INJECT_RTC_MSG,
+          action: "addIceCandidate",
+          payload: {
+            id: this._iaetId,
+            timestamp: new Date().toISOString(),
+            candidate: typeof c.candidate === "string" ? c.candidate : JSON.stringify(c),
+          },
+        });
+      }
+      return super.addIceCandidate(candidate);
+    }
+  }
+
+  window.RTCPeerConnection = PatchedRTCPeerConnection as unknown as typeof RTCPeerConnection;
 })();
