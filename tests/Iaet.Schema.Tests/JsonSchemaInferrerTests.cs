@@ -70,7 +70,7 @@ public class JsonSchemaInferrerTests
         result.CSharpRecord.Should().BeEmpty();
         result.OpenApiFragment.Should().BeEmpty();
         result.Warnings.Should().ContainSingle()
-            .Which.Should().Contain("non-JSON");
+            .Which.Should().Contain("non-parseable");
     }
 
     [Fact]

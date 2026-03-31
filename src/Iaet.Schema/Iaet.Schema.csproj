@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Iaet.Core\Iaet.Core.csproj" />
+    <ProjectReference Include="..\Iaet.JsAnalysis\Iaet.JsAnalysis.csproj" />
   </ItemGroup>
 
   <ItemGroup>
