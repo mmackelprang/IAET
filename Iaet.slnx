@@ -12,6 +12,7 @@
     <Project Path="src/Iaet.Projects/Iaet.Projects.csproj" />
     <Project Path="src/Iaet.Secrets/Iaet.Secrets.csproj" />
     <Project Path="src/Iaet.Agents/Iaet.Agents.csproj" />
+    <Project Path="src/Iaet.Cookies/Iaet.Cookies.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Iaet.Capture.Tests/Iaet.Capture.Tests.csproj" />
@@ -26,5 +27,6 @@
     <Project Path="tests/Iaet.Projects.Tests/Iaet.Projects.Tests.csproj" />
     <Project Path="tests/Iaet.Secrets.Tests/Iaet.Secrets.Tests.csproj" />
     <Project Path="tests/Iaet.Agents.Tests/Iaet.Agents.Tests.csproj" />
+    <Project Path="tests/Iaet.Cookies.Tests/Iaet.Cookies.Tests.csproj" />
   </Folder>
 </Solution>
