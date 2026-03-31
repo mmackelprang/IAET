@@ -35,6 +35,10 @@ internal static class ExportCommand
         exportCmd.Add(CreateSubcommand("har",     "Generate a HAR 1.2 HTTP archive",            sessionIdOption, outputOption, services,
             ctx => HarGenerator.Generate(ctx), "HAR archive"));
 
+        exportCmd.Add(CreateSubcommand("narrative", "Generate investigation narrative report",
+            sessionIdOption, outputOption, services,
+            ctx => InvestigationNarrativeGenerator.Generate(ctx), "Investigation narrative"));
+
         return exportCmd;
     }
 

@@ -99,6 +99,25 @@ internal static class TestContextFactory
     }
 
     /// <summary>
+    /// Returns an <see cref="ExportContext"/> with no requests, endpoints, streams, or schemas.
+    /// </summary>
+    public static ExportContext MakeEmptyContext() => new()
+    {
+        Session = new CaptureSessionInfo
+        {
+            Id = Guid.NewGuid(),
+            Name = "empty-session",
+            TargetApplication = "EmptyApp",
+            Profile = "default",
+            StartedAt = DateTimeOffset.UtcNow,
+        },
+        Requests = [],
+        EndpointGroups = [],
+        Streams = [],
+        SchemasByEndpoint = new Dictionary<string, SchemaResult>(),
+    };
+
+    /// <summary>
     /// Returns an <see cref="ExportContext"/> identical to <see cref="MakeContext"/> but
     /// with one additional WebSocket stream.
     /// </summary>

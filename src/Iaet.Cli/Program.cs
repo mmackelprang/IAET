@@ -3,6 +3,7 @@ using System.Globalization;
 using Iaet.Agents;
 using Iaet.Capture;
 using Iaet.Cookies;
+using Iaet.Diagrams;
 using Iaet.Catalog;
 using Iaet.Cli.Commands;
 using Iaet.Crawler;
@@ -39,6 +40,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddIaetSecrets(projectsRoot);
         services.AddIaetAgents(projectsRoot);
         services.AddIaetCookies(projectsRoot);
+        services.AddIaetDiagrams();
     })
     .Build();
 
