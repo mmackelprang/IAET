@@ -40,3 +40,4 @@ dist/
 ## OS
 Thumbs.db
 .DS_Store
+.iaet-projects/**/.env.iaet

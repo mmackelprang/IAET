@@ -54,12 +54,74 @@ internal static class InvestigateCommand
     {
         var cmd = new Command("investigate", "Guided interactive wizard: capture → analyze → document");
 
-        cmd.SetAction(async (_) =>
+        var projectOption = new Option<string?>("--project") { Description = "Investigation project name (uses agent-based workflow)" };
+        cmd.Add(projectOption);
+
+        cmd.SetAction(async (parseResult) =>
         {
-            await RunWizardAsync(services).ConfigureAwait(false);
+            var projectName = parseResult.GetValue(projectOption);
+            if (projectName is not null)
+            {
+                await RunProjectInvestigationAsync(services, projectName).ConfigureAwait(false);
+            }
+            else
+            {
+                await RunWizardAsync(services).ConfigureAwait(false);
+            }
         });
 
         return cmd;
+    }
+
+    // ── Project-based investigation ─────────────────────────────────────────
+
+    private static async Task RunProjectInvestigationAsync(IServiceProvider services, string projectName)
+    {
+        using var scope = services.CreateScope();
+        var projectStore = scope.ServiceProvider.GetRequiredService<IProjectStore>();
+
+        var config = await projectStore.LoadAsync(projectName).ConfigureAwait(false);
+        if (config is null)
+        {
+            Console.WriteLine($"Project '{projectName}' not found.");
+            Console.WriteLine($"Create it first: iaet project create --name {projectName} --url <target-url>");
+            return;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("╔══════════════════════════════════════════════════════╗");
+        Console.WriteLine("║     IAET — Agent Investigation Team                  ║");
+        Console.WriteLine("╚══════════════════════════════════════════════════════╝");
+        Console.WriteLine();
+        Console.WriteLine($"  Project:  {config.DisplayName}");
+        Console.WriteLine($"  Target:   {config.EntryPoints[0].Url}");
+        Console.WriteLine($"  Type:     {config.TargetType}");
+        Console.WriteLine($"  Auth:     {(config.AuthRequired ? "required" : "none")}");
+        Console.WriteLine($"  Status:   {config.Status}");
+        Console.WriteLine($"  Rounds:   {config.CurrentRound}");
+        Console.WriteLine($"  Dir:      {projectStore.GetProjectDirectory(projectName)}");
+        Console.WriteLine();
+
+        if (config.Status == ProjectStatus.New)
+        {
+            var updated = config with { Status = ProjectStatus.Investigating };
+            await projectStore.SaveAsync(updated).ConfigureAwait(false);
+        }
+
+        Console.WriteLine("  To begin the investigation, tell Claude Code:");
+        Console.WriteLine();
+        Console.WriteLine($"    \"Investigate the project {projectName} following the Lead");
+        Console.WriteLine("     Investigator protocol in agents/lead-investigator.md\"");
+        Console.WriteLine();
+        Console.WriteLine("  The Lead Investigator will:");
+        Console.WriteLine("    1. Assess the target and plan the first round");
+        Console.WriteLine("    2. Ask you to log in if auth is required");
+        Console.WriteLine("    3. Dispatch specialist agents (capture, cookies, crawler)");
+        Console.WriteLine("    4. Analyze findings and decide: another round or finalize");
+        Console.WriteLine();
+        Console.WriteLine("  Available agents: agents/*.md");
+        Console.WriteLine("  Project data:     .iaet-projects/" + projectName + "/");
+        Console.WriteLine();
     }
 
     // ── Main wizard loop ────────────────────────────────────────────────────
