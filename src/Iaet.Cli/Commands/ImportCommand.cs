@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -32,19 +33,22 @@ internal static class ImportCommand
     {
         var importCmd = new Command("import", "Import a .iaet.json file into the catalog, or listen for POST uploads");
 
-        var fileOption   = new Option<FileInfo?>("--file")   { Description = "Path to a .iaet.json file to import" };
-        var listenOption = new Option<bool>("--listen")      { Description = "Start an HTTP server that accepts POST of .iaet.json" };
-        var portOption   = new Option<int>("--port")         { Description = "Port for the HTTP listener (default: 7474)", DefaultValueFactory = _ => 7474 };
+        var fileOption    = new Option<FileInfo?>("--file")    { Description = "Path to a .iaet.json file to import" };
+        var projectOption = new Option<string?>("--project")  { Description = "Archive capture with this project (compressed)" };
+        var listenOption = new Option<bool>("--listen")       { Description = "Start an HTTP server that accepts POST of .iaet.json" };
+        var portOption   = new Option<int>("--port")          { Description = "Port for the HTTP listener (default: 7474)", DefaultValueFactory = _ => 7474 };
 
         importCmd.Add(fileOption);
+        importCmd.Add(projectOption);
         importCmd.Add(listenOption);
         importCmd.Add(portOption);
 
         importCmd.SetAction(async (parseResult) =>
         {
-            var file   = parseResult.GetValue(fileOption);
-            var listen = parseResult.GetValue(listenOption);
-            var port   = parseResult.GetValue(portOption);
+            var file    = parseResult.GetValue(fileOption);
+            var project = parseResult.GetValue(projectOption);
+            var listen  = parseResult.GetValue(listenOption);
+            var port    = parseResult.GetValue(portOption);
 
             if (file is not null && listen)
             {
@@ -55,6 +59,12 @@ internal static class ImportCommand
             if (file is not null)
             {
                 await HandleFileImport(file, services).ConfigureAwait(false);
+
+                // Archive capture with project if specified
+                if (project is not null)
+                {
+                    await ArchiveCaptureAsync(file, project, services).ConfigureAwait(false);
+                }
                 return;
             }
 
@@ -458,5 +468,49 @@ internal static class ImportCommand
 
         [JsonPropertyName("sizeBytes")]
         public long SizeBytes { get; init; }
+    }
+
+    // ---- Capture archival ----
+
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types")]
+    private static async Task ArchiveCaptureAsync(FileInfo captureFile, string projectName, IServiceProvider services)
+    {
+        try
+        {
+            using var scope = services.CreateScope();
+            var projectStore = scope.ServiceProvider.GetRequiredService<IProjectStore>();
+            var projectDir = projectStore.GetProjectDirectory(projectName);
+
+            var capturesDir = Path.Combine(projectDir, "captures");
+            Directory.CreateDirectory(capturesDir);
+
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+            var archiveName = $"{timestamp}-{Path.GetFileNameWithoutExtension(captureFile.Name)}.iaet.json.gz";
+            var archivePath = Path.Combine(capturesDir, archiveName);
+
+            var inputStream = captureFile.OpenRead();
+            await using (inputStream.ConfigureAwait(false))
+            {
+            var outputStream = File.Create(archivePath);
+            await using (outputStream.ConfigureAwait(false))
+            {
+            var gzipStream = new GZipStream(outputStream, CompressionLevel.Optimal);
+            await using (gzipStream.ConfigureAwait(false))
+            {
+            await inputStream.CopyToAsync(gzipStream).ConfigureAwait(false);
+            } // gzipStream
+            } // outputStream
+            } // inputStream
+
+            var originalSize = captureFile.Length;
+            var compressedSize = new FileInfo(archivePath).Length;
+            var ratio = originalSize > 0 ? (compressedSize * 100) / originalSize : 0;
+
+            Console.WriteLine($"Archived capture to project '{projectName}': {archiveName} ({compressedSize / 1024}KB, {ratio}% of original)");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Could not archive capture to project: {ex.Message}");
+        }
     }
 }
