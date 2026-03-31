@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Globalization;
 using Iaet.Agents;
+using Iaet.Android;
 using Iaet.Capture;
 using Iaet.Cookies;
 using Iaet.Diagrams;
@@ -41,6 +42,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddIaetAgents(projectsRoot);
         services.AddIaetCookies(projectsRoot);
         services.AddIaetDiagrams();
+        services.AddIaetAndroid();
     })
     .Build();
 
@@ -60,7 +62,8 @@ var rootCommand = new RootCommand("IAET - Internal API Extraction Toolkit")
     SecretsCommand.Create(host.Services),
     RoundCommand.Create(host.Services),
     CookiesCommand.Create(host.Services),
-    DashboardCommand.Create(host.Services)
+    DashboardCommand.Create(host.Services),
+    ApkCommand.Create(host.Services)
 };
 
 return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(false);
