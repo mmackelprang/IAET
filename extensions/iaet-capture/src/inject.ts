@@ -484,4 +484,70 @@
   }
 
   window.RTCPeerConnection = PatchedRTCPeerConnection as unknown as typeof RTCPeerConnection;
+
+  // ---- Patch EventSource (SSE) ----
+
+  const OriginalEventSource = window.EventSource;
+  const INJECT_SSE_MSG = "__iaet_sse__";
+
+  interface IaetSseMessage {
+    type: typeof INJECT_SSE_MSG;
+    action: "open" | "message" | "error" | "close";
+    payload: {
+      id: string;
+      url: string;
+      timestamp: string;
+      eventType?: string;
+      data?: string;
+    };
+  }
+
+  function postSse(msg: IaetSseMessage): void {
+    window.postMessage(msg, "*");
+  }
+
+  class PatchedEventSource extends OriginalEventSource {
+    private _iaetId: string;
+    private _iaetUrl: string;
+
+    constructor(url: string | URL, eventSourceInitDict?: EventSourceInit) {
+      super(url, eventSourceInitDict);
+      this._iaetId = generateId();
+      this._iaetUrl = typeof url === "string" ? url : url.toString();
+
+      const sseId = this._iaetId;
+      const sseUrl = this._iaetUrl;
+
+      postSse({
+        type: INJECT_SSE_MSG,
+        action: "open",
+        payload: { id: sseId, url: sseUrl, timestamp: new Date().toISOString() },
+      });
+
+      this.addEventListener("message", (event: MessageEvent) => {
+        const data = typeof event.data === "string"
+          ? (event.data.length > 8192 ? event.data.slice(0, 8192) : event.data)
+          : null;
+        postSse({
+          type: INJECT_SSE_MSG,
+          action: "message",
+          payload: { id: sseId, url: sseUrl, timestamp: new Date().toISOString(), eventType: "message", data },
+        });
+      });
+
+      this.addEventListener("error", () => {
+        postSse({
+          type: INJECT_SSE_MSG,
+          action: "error",
+          payload: { id: sseId, url: sseUrl, timestamp: new Date().toISOString() },
+        });
+      });
+    }
+  }
+
+  Object.defineProperty(PatchedEventSource, "CONNECTING", { value: 0 });
+  Object.defineProperty(PatchedEventSource, "OPEN", { value: 1 });
+  Object.defineProperty(PatchedEventSource, "CLOSED", { value: 2 });
+
+  window.EventSource = PatchedEventSource as unknown as typeof EventSource;
 })();
