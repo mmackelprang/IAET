@@ -90,6 +90,36 @@ public sealed class CookieDifferTests
     }
 
     [Fact]
+    public void Diff_treats_same_name_and_domain_but_different_path_as_separate_cookies()
+    {
+        // Two cookies share name+domain but differ by path — they must be keyed independently.
+        var cookieRoot = new CapturedCookie { Name = "SID", Value = "v1", Domain = ".example.com", Path = "/" };
+        var cookieSub  = new CapturedCookie { Name = "SID", Value = "v2", Domain = ".example.com", Path = "/sub" };
+
+        var before = new CookieSnapshotInfo
+        {
+            Id = Guid.NewGuid(), ProjectName = "p", CapturedAt = DateTimeOffset.UtcNow, Source = "a",
+            Cookies = [cookieRoot, cookieSub],
+        };
+
+        // After: root path cookie unchanged, /sub path cookie removed, new /api path cookie added.
+        var cookieApi = new CapturedCookie { Name = "SID", Value = "v3", Domain = ".example.com", Path = "/api" };
+        var after = new CookieSnapshotInfo
+        {
+            Id = Guid.NewGuid(), ProjectName = "p", CapturedAt = DateTimeOffset.UtcNow, Source = "b",
+            Cookies = [cookieRoot, cookieApi],
+        };
+
+        var diff = CookieDiffer.Diff(before, after);
+
+        diff.Added.Should().HaveCount(1);
+        diff.Added[0].Path.Should().Be("/api");
+        diff.Removed.Should().HaveCount(1);
+        diff.Removed[0].Path.Should().Be("/sub");
+        diff.Changed.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Diff_handles_empty_snapshots()
     {
         var empty = new CookieSnapshotInfo

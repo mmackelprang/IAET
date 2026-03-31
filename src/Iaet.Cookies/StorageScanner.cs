@@ -23,7 +23,9 @@ public sealed class StorageScanner(ICdpSession cdpSession)
             return JsonSerializer.Deserialize<Dictionary<string, string>>(json)
                 ?? new Dictionary<string, string>();
         }
-        catch (InvalidOperationException)
+#pragma warning disable CA1031 // CDP errors manifest as various exception types; return empty on any failure
+        catch (Exception)
+#pragma warning restore CA1031
         {
             return new Dictionary<string, string>();
         }
@@ -45,7 +47,9 @@ public sealed class StorageScanner(ICdpSession cdpSession)
             return JsonSerializer.Deserialize<Dictionary<string, string>>(json)
                 ?? new Dictionary<string, string>();
         }
-        catch (InvalidOperationException)
+#pragma warning disable CA1031 // CDP errors manifest as various exception types; return empty on any failure
+        catch (Exception)
+#pragma warning restore CA1031
         {
             return new Dictionary<string, string>();
         }

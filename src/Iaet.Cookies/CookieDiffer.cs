@@ -52,5 +52,5 @@ public static class CookieDiffer
         };
     }
 
-    private static string CookieKey(CapturedCookie c) => $"{c.Name}|{c.Domain}";
+    private static string CookieKey(CapturedCookie c) => $"{c.Name}|{c.Domain}|{c.Path}";
 }

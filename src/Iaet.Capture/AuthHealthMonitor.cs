@@ -6,7 +6,7 @@ public sealed class AuthHealthMonitor(int consecutiveFailureThreshold = 3)
 {
     private int _consecutiveFailures;
 
-    public bool IsHealthy => _consecutiveFailures < consecutiveFailureThreshold;
+    public bool IsHealthy => Volatile.Read(ref _consecutiveFailures) < consecutiveFailureThreshold;
 
     public event EventHandler? AuthUnhealthy;
 
@@ -22,15 +22,15 @@ public sealed class AuthHealthMonitor(int consecutiveFailureThreshold = 3)
 
         if (IsAuthFailure(request))
         {
-            _consecutiveFailures++;
-            if (_consecutiveFailures >= consecutiveFailureThreshold)
+            var current = Interlocked.Increment(ref _consecutiveFailures);
+            if (current == consecutiveFailureThreshold)
             {
                 AuthUnhealthy?.Invoke(this, EventArgs.Empty);
             }
         }
         else
         {
-            _consecutiveFailures = 0;
+            Interlocked.Exchange(ref _consecutiveFailures, 0);
         }
     }
 }
