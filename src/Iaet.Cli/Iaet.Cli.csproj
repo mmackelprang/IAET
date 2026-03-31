@@ -20,6 +20,9 @@
     <ProjectReference Include="..\Iaet.Export\Iaet.Export.csproj" />
     <ProjectReference Include="..\Iaet.Crawler\Iaet.Crawler.csproj" />
     <ProjectReference Include="..\Iaet.Explorer\Iaet.Explorer.csproj" />
+    <ProjectReference Include="..\Iaet.Projects\Iaet.Projects.csproj" />
+    <ProjectReference Include="..\Iaet.Secrets\Iaet.Secrets.csproj" />
+    <ProjectReference Include="..\Iaet.Agents\Iaet.Agents.csproj" />
   </ItemGroup>
 
   <ItemGroup>
