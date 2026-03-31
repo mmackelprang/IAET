@@ -39,6 +39,10 @@ internal static class ExportCommand
             sessionIdOption, outputOption, services,
             ctx => InvestigationNarrativeGenerator.Generate(ctx), "Investigation narrative"));
 
+        exportCmd.Add(CreateSubcommand("client-prompt", "Generate AI client generation prompt",
+            sessionIdOption, outputOption, services,
+            ctx => ClientPromptGenerator.Generate(ctx), "Client generation prompt"));
+
         return exportCmd;
     }
 

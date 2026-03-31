@@ -6,6 +6,7 @@ import type { ContentToBackground, BackgroundToContent } from "./types";
 
 const INJECT_MSG = "__iaet_request__";
 const INJECT_WS_MSG = "__iaet_ws__";
+const INJECT_SSE_MSG = "__iaet_sse__";
 
 // ---- Inject the interceptor into the main world ----
 
@@ -41,6 +42,13 @@ window.addEventListener("message", (event: MessageEvent) => {
   } else if (event.data.type === "__iaet_rtc__") {
     const msg: ContentToBackground = {
       type: "RTC_EVENT",
+      action: event.data.action,
+      payload: event.data.payload,
+    };
+    chrome.runtime.sendMessage(msg).catch(() => {});
+  } else if (event.data.type === INJECT_SSE_MSG) {
+    const msg: ContentToBackground = {
+      type: "SSE_EVENT",
       action: event.data.action,
       payload: event.data.payload,
     };

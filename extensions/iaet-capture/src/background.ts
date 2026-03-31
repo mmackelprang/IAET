@@ -11,6 +11,7 @@ import type {
   IaetSession,
   WsEventPayload,
   RtcEventPayload,
+  SseEventPayload,
 } from "./types";
 import { normalizeEndpoint, generateUuid } from "./types";
 
@@ -34,6 +35,14 @@ interface RtcConnectionState {
   events: IaetStreamFrame[];
 }
 
+interface SseConnectionState {
+  id: string;
+  url: string;
+  startedAt: string;
+  endedAt: string | null;
+  frames: IaetStreamFrame[];
+}
+
 interface CaptureState {
   recording: boolean;
   sessionId: string;
@@ -44,6 +53,7 @@ interface CaptureState {
   targetApplication: string;
   wsConnections: Map<string, WsConnectionState>;
   rtcConnections: Map<string, RtcConnectionState>;
+  sseConnections: Map<string, SseConnectionState>;
 }
 
 const MAX_WS_FRAMES = 1000;
@@ -58,6 +68,7 @@ const state: CaptureState = {
   targetApplication: "unknown",
   wsConnections: new Map(),
   rtcConnections: new Map(),
+  sseConnections: new Map(),
 };
 
 // ---- Message handler ----
@@ -114,6 +125,14 @@ chrome.runtime.onMessage.addListener(
         if (!state.recording) break;
         const rtcMsg = msg as ContentToBackground & { type: "RTC_EVENT" };
         handleRtcEvent(rtcMsg.action, rtcMsg.payload);
+        break;
+      }
+
+      case "SSE_EVENT": {
+        if (!state.recording) break;
+        const sseMsg = msg as ContentToBackground & { type: "SSE_EVENT" };
+        handleSseEvent(sseMsg.action, sseMsg.payload);
+        updateBadge();
         break;
       }
 
@@ -219,6 +238,34 @@ function handleRtcEvent(action: string, payload: RtcEventPayload): void {
   }
 }
 
+function handleSseEvent(action: "open" | "message" | "error" | "close", payload: SseEventPayload): void {
+  if (action === "open") {
+    state.sseConnections.set(payload.id, {
+      id: payload.id,
+      url: payload.url,
+      startedAt: payload.timestamp,
+      endedAt: null,
+      frames: [],
+    });
+  } else if (action === "message") {
+    const conn = state.sseConnections.get(payload.id);
+    if (conn && conn.frames.length < MAX_WS_FRAMES) {
+      conn.frames.push({
+        timestamp: payload.timestamp,
+        direction: "Received",
+        textPayload: payload.data ?? null,
+        binaryPayload: null,
+        sizeBytes: payload.data?.length ?? 0,
+      });
+    }
+  } else if (action === "error" || action === "close") {
+    const conn = state.sseConnections.get(payload.id);
+    if (conn) {
+      conn.endedAt = payload.timestamp;
+    }
+  }
+}
+
 function startRecording(sessionName: string): void {
   state.recording = true;
   state.sessionId = generateUuid();
@@ -228,6 +275,7 @@ function startRecording(sessionName: string): void {
   state.endpointSet = new Set();
   state.wsConnections = new Map();
   state.rtcConnections = new Map();
+  state.sseConnections = new Map();
   updateBadge();
 }
 
@@ -242,6 +290,7 @@ function clearCapture(): void {
   state.endpointSet = new Set();
   state.wsConnections = new Map();
   state.rtcConnections = new Map();
+  state.sseConnections = new Map();
   updateBadge();
 }
 
@@ -297,6 +346,20 @@ function buildIaetFile(): IaetFile {
       endedAt: null,
       metadata: conn.config ? { config: conn.config } : {},
       frames: conn.events.length > 0 ? conn.events : null,
+      samplePayloadPath: null,
+      tag: null,
+    });
+  }
+  for (const conn of state.sseConnections.values()) {
+    streams.push({
+      id: conn.id,
+      sessionId: state.sessionId,
+      protocol: "ServerSentEvents",
+      url: conn.url,
+      startedAt: conn.startedAt,
+      endedAt: conn.endedAt,
+      metadata: {},
+      frames: conn.frames.length > 0 ? conn.frames : null,
       samplePayloadPath: null,
       tag: null,
     });

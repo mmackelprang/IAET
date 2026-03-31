@@ -84,10 +84,19 @@ export interface RtcEventPayload {
   config?: string;
 }
 
+export interface SseEventPayload {
+  id: string;
+  url: string;
+  timestamp: string;
+  eventType?: string;
+  data?: string;
+}
+
 export type ContentToBackground =
   | { type: "REQUEST_CAPTURED"; payload: CapturedRequestPayload }
   | { type: "WS_EVENT"; action: "open" | "frame" | "close"; payload: WsEventPayload }
   | { type: "RTC_EVENT"; action: "create" | "setLocalDesc" | "setRemoteDesc" | "addIceCandidate" | "localIceCandidate" | "stateChange"; payload: RtcEventPayload }
+  | { type: "SSE_EVENT"; action: "open" | "message" | "error" | "close"; payload: SseEventPayload }
   | { type: "PING" };
 
 export type BackgroundToContent =
