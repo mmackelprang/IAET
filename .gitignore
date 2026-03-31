@@ -31,6 +31,12 @@ dist/
 ## NuGet
 *.nupkg
 
+## Worktrees
+.worktrees/
+
+## Superpowers brainstorm
+.superpowers/
+
 ## OS
 Thumbs.db
 .DS_Store
