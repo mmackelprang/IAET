@@ -141,6 +141,31 @@ public sealed class ValueTypeInferrerTests
     }
 
     [Fact]
+    public void Infer_detects_ip_address()
+    {
+        var bodies = new[]
+        {
+            """["192.168.1.1"]""",
+            """["10.0.0.255"]""",
+        };
+        var fields = ValueTypeInferrer.InferFromSamples(bodies);
+        fields[0].SemanticType.Should().Be("ip_address");
+        fields[0].SuggestedName.Should().Be("ipAddress");
+        fields[0].Confidence.Should().Be(Iaet.Core.Models.ConfidenceLevel.Medium);
+    }
+
+    [Fact]
+    public void Infer_does_not_classify_ip_as_phone()
+    {
+        var bodies = new[]
+        {
+            """["192.168.1.1"]""",
+        };
+        var fields = ValueTypeInferrer.InferFromSamples(bodies);
+        fields[0].SemanticType.Should().NotBe("phone_number");
+    }
+
+    [Fact]
     public void Infer_handles_empty_input()
     {
         ValueTypeInferrer.InferFromSamples([]).Should().BeEmpty();

@@ -34,7 +34,7 @@ public static partial class ValueTypeInferrer
         {
             try
             {
-                var doc = JsonDocument.Parse(body);
+                using var doc = JsonDocument.Parse(body);
                 if (doc.RootElement.ValueKind == JsonValueKind.Array)
                     samples.Add(doc.RootElement.Clone());
             }
@@ -167,6 +167,9 @@ public static partial class ValueTypeInferrer
     private static (string SemanticType, string? SuggestedName, ConfidenceLevel Confidence) ClassifyStringValues(
         List<string> values)
     {
+        if (values.All(v => IpAddressPattern().IsMatch(v)))
+            return ("ip_address", "ipAddress", ConfidenceLevel.Medium);
+
         if (values.All(v => EmailPattern().IsMatch(v)))
             return ("email", "email", ConfidenceLevel.High);
 
@@ -231,8 +234,11 @@ public static partial class ValueTypeInferrer
     [GeneratedRegex(@"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$")]
     private static partial Regex EmailPattern();
 
-    [GeneratedRegex(@"^\+?\d[\d\s\-().]{6,}$")]
+    [GeneratedRegex(@"^\+\d[\d\s\-]{7,}$|^\(\d{3}\)\s*\d{3}[-.\s]\d{4}$")]
     private static partial Regex PhonePattern();
+
+    [GeneratedRegex(@"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")]
+    private static partial Regex IpAddressPattern();
 
     [GeneratedRegex(@"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", RegexOptions.IgnoreCase)]
     private static partial Regex UuidPattern();

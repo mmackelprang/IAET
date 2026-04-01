@@ -471,7 +471,7 @@ def main():
   {project_divs}
 </div>
 <script>
-  mermaid.initialize({{startOnLoad:false,theme:'default',securityLevel:'loose'}});
+  mermaid.initialize({{startOnLoad:false,theme:'default',securityLevel:'strict'}});
   // Render diagrams for the initially visible project only
   mermaid.run({{nodes:document.querySelectorAll('#project-0 pre.mermaid')}});
   const narrativeData = {narrative_data};
