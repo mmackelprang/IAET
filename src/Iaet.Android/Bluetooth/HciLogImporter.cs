@@ -10,6 +10,22 @@ public sealed record HciLogResult
     public int AttPackets { get; init; }
     public IReadOnlyList<AttOperation> Operations { get; init; } = [];
     public IReadOnlyList<string> Errors { get; init; } = [];
+
+    /// <summary>All L2CAP dynamic channel (channel ID &gt;= 0x0040) packets observed.</summary>
+    public IReadOnlyList<L2capChannelData> L2capData { get; init; } = [];
+
+    /// <summary>Packet count keyed by L2CAP channel ID (all channels, including ATT 0x0004).</summary>
+    public IReadOnlyDictionary<ushort, int> L2capChannelCounts { get; init; } = new Dictionary<ushort, int>();
+}
+
+/// <summary>Payload extracted from a single L2CAP dynamic channel packet.</summary>
+public sealed record L2capChannelData
+{
+    public required ushort ChannelId { get; init; }
+    public required bool IsReceived { get; init; }
+    public required DateTimeOffset Timestamp { get; init; }
+    public required ImmutableArray<byte> Payload { get; init; }
+    public int PayloadLength { get; init; }
 }
 
 /// <summary>A single ATT protocol operation observed in HCI traffic.</summary>
@@ -41,6 +57,9 @@ public static class HciLogImporter
     private const int PacketRecordHeaderSize = 24;
     private const ushort AttChannelId = 0x0004;
 
+    /// <summary>L2CAP dynamic channels start at 0x0040 per the BLE spec.</summary>
+    private const ushort DynamicChannelMin = 0x0040;
+
     /// <summary>Parse a BTSnoop HCI log from a byte array.</summary>
     public static HciLogResult Parse(byte[] data)
     {
@@ -58,6 +77,8 @@ public static class HciLogImporter
             return new HciLogResult { Errors = [$"Unsupported BTSnoop version: {version}"] };
 
         var operations = new List<AttOperation>();
+        var l2capData = new List<L2capChannelData>();
+        var channelCounts = new Dictionary<ushort, int>();
         var totalPackets = 0;
         var attPackets = 0;
         var errors = new List<string>();
@@ -78,10 +99,13 @@ public static class HciLogImporter
             totalPackets++;
             var timestamp = BtSnoopEpoch.AddTicks(timestampUs * 10); // microseconds to ticks
 
-            // Try to parse as ACL data with ATT payload
-            var attOp = TryParseAttFromAcl(
-                data.AsSpan(packetDataOffset, includedLen),
-                timestamp, isReceived);
+            var packetSpan = data.AsSpan(packetDataOffset, includedLen);
+
+            // Track L2CAP channel and extract payload for all ACL packets
+            TryProcessL2cap(packetSpan, timestamp, isReceived, channelCounts, l2capData);
+
+            // Try to parse as ACL data with ATT payload (channel 0x0004)
+            var attOp = TryParseAttFromAcl(packetSpan, timestamp, isReceived);
 
             if (attOp is not null)
             {
@@ -98,6 +122,8 @@ public static class HciLogImporter
             AttPackets = attPackets,
             Operations = operations,
             Errors = errors,
+            L2capData = l2capData,
+            L2capChannelCounts = channelCounts,
         };
     }
 
@@ -110,6 +136,50 @@ public static class HciLogImporter
             return new HciLogResult { Errors = [$"File not found: {path}"] };
 
         return Parse(File.ReadAllBytes(path));
+    }
+
+    /// <summary>
+    /// Inspect an HCI ACL packet for L2CAP header information: track channel counts and, for
+    /// dynamic channels (&gt;= 0x0040), capture the payload into <paramref name="l2capData"/>.
+    /// </summary>
+    private static void TryProcessL2cap(
+        ReadOnlySpan<byte> packet,
+        DateTimeOffset timestamp,
+        bool isReceived,
+        Dictionary<ushort, int> channelCounts,
+        List<L2capChannelData> l2capData)
+    {
+        // Minimum: 4 ACL header + 4 L2CAP header = 8 bytes
+        if (packet.Length < 8)
+            return;
+
+        const int l2capOffset = 4;
+        var channelId = BinaryPrimitives.ReadUInt16LittleEndian(packet.Slice(l2capOffset + 2, 2));
+
+        channelCounts[channelId] = channelCounts.TryGetValue(channelId, out var count) ? count + 1 : 1;
+
+        if (channelId < DynamicChannelMin)
+            return;
+
+        var l2capLength = BinaryPrimitives.ReadUInt16LittleEndian(packet.Slice(l2capOffset, 2));
+        var payloadStart = l2capOffset + 4;
+        var availablePayload = packet.Length - payloadStart;
+
+        if (availablePayload <= 0)
+            return;
+
+        // Clamp to what is actually present (handles truncated packets)
+        var payloadLength = Math.Min(l2capLength, availablePayload);
+        var payload = ImmutableArray.Create(packet.Slice(payloadStart, payloadLength));
+
+        l2capData.Add(new L2capChannelData
+        {
+            ChannelId = channelId,
+            IsReceived = isReceived,
+            Timestamp = timestamp,
+            Payload = payload,
+            PayloadLength = payloadLength,
+        });
     }
 
     /// <summary>
