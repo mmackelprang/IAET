@@ -16,6 +16,7 @@
     <Project Path="src/Iaet.JsAnalysis/Iaet.JsAnalysis.csproj" />
     <Project Path="src/Iaet.ProtocolAnalysis/Iaet.ProtocolAnalysis.csproj" />
     <Project Path="src/Iaet.Diagrams/Iaet.Diagrams.csproj" />
+    <Project Path="src/Iaet.Android/Iaet.Android.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Iaet.Capture.Tests/Iaet.Capture.Tests.csproj" />
@@ -34,5 +35,6 @@
     <Project Path="tests/Iaet.JsAnalysis.Tests/Iaet.JsAnalysis.Tests.csproj" />
     <Project Path="tests/Iaet.ProtocolAnalysis.Tests/Iaet.ProtocolAnalysis.Tests.csproj" />
     <Project Path="tests/Iaet.Diagrams.Tests/Iaet.Diagrams.Tests.csproj" />
+    <Project Path="tests/Iaet.Android.Tests/Iaet.Android.Tests.csproj" />
   </Folder>
 </Solution>
