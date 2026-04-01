@@ -52,6 +52,19 @@ public static partial class NetworkDataFlowTracer
             results.Add(BuildFlow("OkHttp", sourceFile, match, javaSource));
         }
 
+        // Cronet UrlRequest.Callback (used by Google apps instead of OkHttp)
+        foreach (Match match in CronetOnResponseStartedPattern().Matches(javaSource))
+        {
+            results.Add(BuildFlow("Cronet", sourceFile, match, javaSource));
+        }
+        foreach (Match match in CronetOnReadCompletedPattern().Matches(javaSource))
+        {
+            if (!results.Exists(r => r.SourceFile == sourceFile && r.SourceType == "Cronet"))
+            {
+                results.Add(BuildFlow("Cronet", sourceFile, match, javaSource));
+            }
+        }
+
         // Direct Response.body() parsing
         foreach (Match match in ResponseBodyPattern().Matches(javaSource))
         {
@@ -79,6 +92,8 @@ public static partial class NetworkDataFlowTracer
             // Quick filter: skip files without network response patterns
             if (!source.Contains("onNext", StringComparison.Ordinal) &&
                 !source.Contains("onResponse", StringComparison.Ordinal) &&
+                !source.Contains("onResponseStarted", StringComparison.Ordinal) &&
+                !source.Contains("onReadCompleted", StringComparison.Ordinal) &&
                 !source.Contains("Response.body", StringComparison.Ordinal) &&
                 !source.Contains("response.body", StringComparison.Ordinal))
                 continue;
@@ -210,4 +225,10 @@ public static partial class NetworkDataFlowTracer
 
     [GeneratedRegex(@"notifyDataSetChanged\(\)")]
     private static partial Regex NotifyPattern();
+
+    [GeneratedRegex(@"onResponseStarted\s*\([^)]*(?:UrlRequest|urlRequest)[^)]*,\s*[^)]*(?:UrlResponseInfo|urlResponseInfo)[^)]*\)\s*\{", RegexOptions.Multiline)]
+    private static partial Regex CronetOnResponseStartedPattern();
+
+    [GeneratedRegex(@"onReadCompleted\s*\([^)]*(?:UrlRequest|urlRequest)[^)]*,\s*[^)]*(?:UrlResponseInfo|urlResponseInfo)[^)]*,\s*[^)]*(?:ByteBuffer|byteBuffer)[^)]*\)\s*\{", RegexOptions.Multiline)]
+    private static partial Regex CronetOnReadCompletedPattern();
 }
