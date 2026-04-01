@@ -100,12 +100,15 @@ internal static class ApkCommand
     {
         var analyzeCmd = new Command("analyze", "Analyze decompiled APK source");
         var projectOption = new Option<string>("--project") { Description = "Project name", Required = true };
+        var traceDataflowOption = new Option<bool>("--trace-dataflow") { Description = "Trace network data flow through response handlers to UI bindings" };
 
         analyzeCmd.Add(projectOption);
+        analyzeCmd.Add(traceDataflowOption);
 
         analyzeCmd.SetAction(async (parseResult) =>
         {
             var project = parseResult.GetRequiredValue(projectOption);
+            var traceDataflow = parseResult.GetValue(traceDataflowOption);
 
             using var scope = services.CreateScope();
             var projectStore = scope.ServiceProvider.GetRequiredService<IProjectStore>();
@@ -160,6 +163,15 @@ internal static class ApkCommand
             var nscPath = Path.Combine(resourcesDir, "res", "xml", "network_security_config.xml");
             var netSecurity = NetworkSecurityAnalyzer.ParseFile(nscPath);
 
+            // Network data flow tracing (optional)
+            var networkFlows = new List<NetworkDataFlow>();
+            if (traceDataflow)
+            {
+                Console.WriteLine("  Tracing network data flows...");
+                networkFlows.AddRange(NetworkDataFlowTracer.TraceFromDirectory(decompiledDir));
+                Console.WriteLine($"  Found {networkFlows.Count} network data flows");
+            }
+
             // Write knowledge
             var knowledgeDir = Path.Combine(projectDir, "knowledge");
             Directory.CreateDirectory(knowledgeDir);
@@ -207,12 +219,38 @@ internal static class ApkCommand
                 Path.Combine(knowledgeDir, "network-security.json"),
                 JsonSerializer.Serialize(nsObj, JsonOptions)).ConfigureAwait(false);
 
+            // network-data-flows.json (when --trace-dataflow is enabled)
+            if (traceDataflow && networkFlows.Count > 0)
+            {
+#pragma warning disable CA1308 // Confidence displayed lowercase in JSON for readability
+                var flowsObj = new
+                {
+                    flows = networkFlows.Select(f => new
+                    {
+                        sourceType = f.SourceType,
+                        sourceFile = f.SourceFile,
+                        responseHandler = f.ResponseHandler,
+                        parsing = f.ParsingDescription,
+                        targetVariable = f.TargetVariable,
+                        uiBinding = f.UiBinding,
+                        inferredPurpose = f.InferredPurpose,
+                        confidence = f.Confidence.ToString().ToLowerInvariant(),
+                    }).ToList(),
+                };
+#pragma warning restore CA1308
+                await File.WriteAllTextAsync(
+                    Path.Combine(knowledgeDir, "network-data-flows.json"),
+                    JsonSerializer.Serialize(flowsObj, JsonOptions)).ConfigureAwait(false);
+            }
+
             Console.WriteLine();
             Console.WriteLine("Analysis complete. Knowledge base updated.");
             Console.WriteLine($"  Endpoints:   {urls.Count}");
             Console.WriteLine($"  Auth:        {authEntries.Count}");
             Console.WriteLine($"  Permissions: {manifest.Permissions.Count}");
             Console.WriteLine($"  Pinned:      {netSecurity.PinnedDomains.Count} domains");
+            if (traceDataflow)
+                Console.WriteLine($"  Net flows:   {networkFlows.Count}");
         });
 
         return analyzeCmd;
@@ -257,9 +295,12 @@ internal static class ApkCommand
             Console.WriteLine($"  Services:        {result.Services.Count}");
             Console.WriteLine($"  Characteristics: {result.Characteristics.Count}");
 
+            IReadOnlyList<Iaet.Core.Models.BleDataFlow> bleFlows = [];
             if (traceDataflow)
             {
-                Console.WriteLine("  (Data flow tracing is not yet implemented.)");
+                Console.WriteLine("  Tracing BLE data flows...");
+                bleFlows = BleDataFlowTracer.TraceFromDirectory(decompiledDir);
+                Console.WriteLine($"  Found {bleFlows.Count} BLE data flows");
             }
 
             // Write knowledge/bluetooth.json
@@ -298,6 +339,30 @@ internal static class ApkCommand
             await File.WriteAllTextAsync(
                 outputPath,
                 JsonSerializer.Serialize(bleObj, JsonOptions)).ConfigureAwait(false);
+
+            if (traceDataflow && bleFlows.Count > 0)
+            {
+#pragma warning disable CA1308 // Confidence displayed lowercase in JSON for readability
+                var flowsObj = new
+                {
+                    flows = bleFlows.Select(f => new
+                    {
+                        characteristicUuid = f.CharacteristicUuid,
+                        callbackLocation = f.CallbackLocation,
+                        parsing = f.ParsingDescription,
+                        variable = f.VariableName,
+                        uiBinding = f.UiBinding,
+                        inferredMeaning = f.InferredMeaning,
+                        confidence = f.Confidence.ToString().ToLowerInvariant(),
+                    }).ToList(),
+                };
+#pragma warning restore CA1308
+                var flowsPath = Path.Combine(knowledgeDir, "ble-data-flows.json");
+                await File.WriteAllTextAsync(
+                    flowsPath,
+                    JsonSerializer.Serialize(flowsObj, JsonOptions)).ConfigureAwait(false);
+                Console.WriteLine($"BLE data flows written to: {flowsPath}");
+            }
 
             Console.WriteLine();
             Console.WriteLine($"BLE analysis written to: {outputPath}");
