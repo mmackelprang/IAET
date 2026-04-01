@@ -1,5 +1,9 @@
+// CA1303: CLI output strings are intentionally not localized.
+#pragma warning disable CA1303
+
 using System.CommandLine;
 using System.Globalization;
+using System.Text;
 using Iaet.Catalog;
 using Iaet.Core.Abstractions;
 using Iaet.Export;
@@ -61,6 +65,8 @@ internal static class ExportCommand
         exportCmd.Add(CreateSubcommand("client-prompt", "Generate AI client generation prompt",
             sessionIdOption, outputOption, projectOption, services,
             ctx => ClientPromptGenerator.Generate(ctx), "Client generation prompt"));
+
+        exportCmd.Add(CreateSmartClientPromptCmd(services));
 
         return exportCmd;
     }
@@ -143,5 +149,195 @@ internal static class ExportCommand
         {
             Console.Write(output);
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Smart client prompt — adapts to project type (web, BLE, or hybrid).
+    // Reads knowledge files from the project directory, includes all relevant
+    // protocol sections based on what data exists.
+    // ------------------------------------------------------------------
+
+    private static Command CreateSmartClientPromptCmd(IServiceProvider services)
+    {
+        var cmd = new Command("smart-client-prompt", "Generate adaptive client prompt from project knowledge (web, BLE, or hybrid)");
+        var projectOption = new Option<string>("--project") { Description = "Project name", Required = true };
+        var langOption = new Option<string>("--language") { Description = "Target language (e.g. C#, Python, Kotlin, TypeScript)", DefaultValueFactory = _ => "C#" };
+        cmd.Add(projectOption);
+        cmd.Add(langOption);
+
+        cmd.SetAction(async (parseResult) =>
+        {
+            var project = parseResult.GetRequiredValue(projectOption);
+            var language = parseResult.GetValue(langOption)!;
+
+            using var scope = services.CreateScope();
+            var projectStore = scope.ServiceProvider.GetRequiredService<IProjectStore>();
+            var config = await projectStore.LoadAsync(project).ConfigureAwait(false);
+            if (config is null)
+            {
+                Console.WriteLine($"Project '{project}' not found.");
+                return;
+            }
+
+            var projectDir = projectStore.GetProjectDirectory(project);
+            var knowledgeDir = Path.Combine(projectDir, "knowledge");
+            var outputDir = Path.Combine(projectDir, "output");
+            Directory.CreateDirectory(outputDir);
+
+            // Detect what knowledge is available
+            var hasBluetooth = File.Exists(Path.Combine(knowledgeDir, "bluetooth.json"));
+            var hasEndpoints = File.Exists(Path.Combine(knowledgeDir, "endpoints.json"));
+            var hasProtocols = File.Exists(Path.Combine(knowledgeDir, "protocols.json"));
+            var hasDependencies = File.Exists(Path.Combine(knowledgeDir, "dependencies.json"));
+            var hasResponseProto = File.Exists(Path.Combine(knowledgeDir, "response-protocol.json"));
+            var hasProtoSummary = File.Exists(Path.Combine(knowledgeDir, "protocol-summary.md"));
+            var hasNetworkAnalysis = File.Exists(Path.Combine(knowledgeDir, "network-analysis.json"));
+            var hasOpenApi = File.Exists(Path.Combine(outputDir, "api.yaml"));
+
+            if (!hasBluetooth && !hasEndpoints && !hasOpenApi)
+            {
+                Console.WriteLine("No knowledge found. Run analysis first (iaet apk analyze, iaet apk ble, or import captures).");
+                return;
+            }
+
+            // Determine project type
+            var isBle = hasBluetooth;
+            var isWeb = hasEndpoints || hasOpenApi;
+            var projectType = (isBle, isWeb) switch
+            {
+                (true, true) => "hybrid (REST API + BLE)",
+                (true, false) => "BLE device",
+                (false, true) => "REST API",
+                _ => "unknown",
+            };
+
+            var sb = new StringBuilder();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"# Client Generation Request — {config.DisplayName}");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"Generate a complete, production-ready **{language}** client for this {projectType}.");
+            sb.AppendLine();
+
+            // === BLE sections ===
+            if (hasBluetooth)
+            {
+                sb.AppendLine("## BLE Protocol");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "bluetooth.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+
+                if (hasResponseProto)
+                {
+                    sb.AppendLine("## BLE Response Protocol");
+                    sb.AppendLine();
+                    sb.AppendLine("```json");
+                    var protoContent = await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "response-protocol.json")).ConfigureAwait(false);
+                    const int maxLen = 10_000;
+                    sb.AppendLine(protoContent.Length > maxLen
+                        ? string.Concat(protoContent.AsSpan(0, maxLen), "\n... (truncated)")
+                        : protoContent);
+                    sb.AppendLine("```");
+                    sb.AppendLine();
+                }
+
+                if (hasProtoSummary)
+                {
+                    sb.AppendLine("## BLE Protocol Summary");
+                    sb.AppendLine();
+                    sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "protocol-summary.md")).ConfigureAwait(false));
+                    sb.AppendLine();
+                }
+            }
+
+            // === REST API sections ===
+            if (hasEndpoints)
+            {
+                sb.AppendLine("## API Endpoints");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "endpoints.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (hasOpenApi)
+            {
+                sb.AppendLine("## OpenAPI Specification");
+                sb.AppendLine();
+                sb.AppendLine("```yaml");
+                var yamlContent = await File.ReadAllTextAsync(Path.Combine(outputDir, "api.yaml")).ConfigureAwait(false);
+                const int maxYaml = 8_000;
+                sb.AppendLine(yamlContent.Length > maxYaml
+                    ? string.Concat(yamlContent.AsSpan(0, maxYaml), "\n... (truncated)")
+                    : yamlContent);
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (hasDependencies)
+            {
+                sb.AppendLine("## Auth Chains & Dependencies");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "dependencies.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (hasProtocols)
+            {
+                sb.AppendLine("## Streaming Protocols");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "protocols.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (hasNetworkAnalysis)
+            {
+                sb.AppendLine("## Network Architecture");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "network-analysis.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            // === Requirements ===
+            sb.AppendLine("## Client Requirements");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Language: **{language}**");
+            sb.AppendLine("- Async/await for all operations");
+            sb.AppendLine("- Strongly-typed methods for every discovered command/endpoint");
+            sb.AppendLine("- Event-driven architecture with typed callbacks for all response/notification types");
+
+            if (isBle)
+            {
+                sb.AppendLine("- BLE connection lifecycle: scan, connect, discover services, enable notifications, handshake");
+                sb.AppendLine("- Thread-safe BLE command queue (writes must be serialized)");
+                sb.AppendLine("- Reconnection logic with exponential backoff");
+            }
+
+            if (isWeb)
+            {
+                sb.AppendLine("- Configurable base URL and authentication (API key, OAuth, cookies)");
+                sb.AppendLine("- Retry logic with exponential backoff");
+                sb.AppendLine("- Typed request/response models for all endpoints");
+            }
+
+            sb.AppendLine("- Proper error handling with typed exceptions");
+            sb.AppendLine("- XML doc comments / docstrings on all public members");
+            sb.AppendLine("- Follow idiomatic patterns for the target language");
+            sb.AppendLine();
+            sb.AppendLine("Generate the complete client code now.");
+
+            var outputPath = Path.Combine(outputDir, "client-prompt.md");
+            await File.WriteAllTextAsync(outputPath, sb.ToString()).ConfigureAwait(false);
+            Console.WriteLine($"Client prompt written to {outputPath} ({projectType})");
+        });
+
+        return cmd;
     }
 }

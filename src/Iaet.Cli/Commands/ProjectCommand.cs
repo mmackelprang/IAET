@@ -18,6 +18,8 @@ internal static class ProjectCommand
         cmd.Add(CreateListCmd(services));
         cmd.Add(CreateStatusCmd(services));
         cmd.Add(CreateArchiveCmd(services));
+        cmd.Add(CreateCompleteCmd(services));
+        cmd.Add(CreateRerunCmd(services));
         return cmd;
     }
 
@@ -158,5 +160,55 @@ internal static class ProjectCommand
             }
         });
         return archiveCmd;
+    }
+
+    private static Command CreateCompleteCmd(IServiceProvider services)
+    {
+        var completeCmd = new Command("complete", "Mark a project as complete");
+        var nameOption = new Option<string>("--name") { Description = "Project name", Required = true };
+        completeCmd.Add(nameOption);
+
+        completeCmd.SetAction(async (parseResult) =>
+        {
+            var name = parseResult.GetRequiredValue(nameOption);
+            using var scope = services.CreateScope();
+            var store = scope.ServiceProvider.GetRequiredService<IProjectStore>();
+            var config = await store.LoadAsync(name).ConfigureAwait(false);
+            if (config is null)
+            {
+                Console.WriteLine($"Project '{name}' not found.");
+                return;
+            }
+
+            var updated = config with { Status = ProjectStatus.Complete, LastActivityAt = DateTimeOffset.UtcNow };
+            await store.SaveAsync(updated).ConfigureAwait(false);
+            Console.WriteLine($"Project '{name}' marked as complete.");
+        });
+        return completeCmd;
+    }
+
+    private static Command CreateRerunCmd(IServiceProvider services)
+    {
+        var rerunCmd = new Command("rerun", "Re-enable a project for further investigation");
+        var nameOption = new Option<string>("--name") { Description = "Project name", Required = true };
+        rerunCmd.Add(nameOption);
+
+        rerunCmd.SetAction(async (parseResult) =>
+        {
+            var name = parseResult.GetRequiredValue(nameOption);
+            using var scope = services.CreateScope();
+            var store = scope.ServiceProvider.GetRequiredService<IProjectStore>();
+            var config = await store.LoadAsync(name).ConfigureAwait(false);
+            if (config is null)
+            {
+                Console.WriteLine($"Project '{name}' not found.");
+                return;
+            }
+
+            var updated = config with { Status = ProjectStatus.Investigating, LastActivityAt = DateTimeOffset.UtcNow };
+            await store.SaveAsync(updated).ConfigureAwait(false);
+            Console.WriteLine($"Project '{name}' status set to Investigating.");
+        });
+        return rerunCmd;
     }
 }
