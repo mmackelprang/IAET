@@ -80,6 +80,31 @@ At each stage, ask only what you need:
 
 After each analysis round, automatically dispatch the API Expert Agent (`agents/api-expert.md`) to review findings and predict missing endpoints. Include its predictions in the Next Steps for the human to verify.
 
+### Opening the dashboard for review
+
+After completing any significant research step (capture import, analysis, BLE scan, correlation, export generation), **always open the dashboard** so the human can review findings:
+
+```bash
+iaet explore --db catalog.db --projects .iaet-projects
+```
+
+Then tell the human: "Dashboard is running at http://localhost:9200/dashboard — select the **{project}** project to review the findings."
+
+Open the dashboard at these milestones:
+- After importing a capture and running initial analysis
+- After each investigation round completes
+- After BLE analysis with HCI log import
+- After running cross-endpoint correlation
+- After generating the client prompt
+- Before recommending project completion
+
+The dashboard lets the human:
+- Browse all knowledge files, diagrams, and exports
+- Toggle between YAML source and Swagger UI for OpenAPI specs
+- View the client generation prompt
+- Change project status (Investigating → Complete)
+- See Next Steps for further investigation
+
 ## Available CLI Commands
 
 ### Project Management
