@@ -46,6 +46,11 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
         {
             var mergedProto = ProtojsonAnalyzer.Merge(protojsonSchemas);
             var description = ProtojsonAnalyzer.Describe(mergedProto);
+
+            // Run value-type inference for semantic field names
+            var protojsonBodies = jsonBodies.Where(ProtojsonAnalyzer.IsProtojson).ToList();
+            var inferredFields = ValueTypeInferrer.InferFromSamples(protojsonBodies);
+
             var warnings = new List<string>
             {
                 "Response uses protojson format (positional JSON arrays). Field names are unknown — positions inferred from structure.",
@@ -53,8 +58,8 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
 
             // Generate a positional JSON Schema
             var jsonSchema = GenerateProtojsonSchema(mergedProto);
-            // Generate a C# record with positional comments
-            var csharp = GenerateProtojsonCSharp(mergedProto);
+            // Generate a C# record with positional comments and inferred names
+            var csharp = GenerateProtojsonCSharp(mergedProto, inferredFields);
             // Generate valid OpenAPI YAML for protojson
             var openApi = GenerateProtojsonOpenApi(mergedProto);
 
@@ -101,12 +106,17 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
         return sb.ToString();
     }
 
-    private static string GenerateProtojsonCSharp(ProtojsonSchema schema)
+    private static string GenerateProtojsonCSharp(
+        ProtojsonSchema schema,
+        IReadOnlyList<InferredField>? inferredFields = null)
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("// Protojson positional schema — field names are inferred from position");
         sb.AppendLine("// Parse as JsonElement[] and access by index");
         sb.AppendLine("public sealed record InferredResponse(");
+
+        // Build a set of used names to avoid duplicates
+        var usedNames = new HashSet<string>(StringComparer.Ordinal);
 
         for (var i = 0; i < schema.Fields.Count; i++)
         {
@@ -121,17 +131,86 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
                 "object" => "JsonElement?",
                 _ => "JsonElement?",
             };
+
+            // Determine the property name from inferred fields or fall back to positional
+            var inferred = inferredFields is not null && i < inferredFields.Count
+                ? inferredFields[i]
+                : null;
+            var propertyName = GetUniquePropertyName(inferred, i, usedNames);
+            usedNames.Add(propertyName);
+
             var comma = i < schema.Fields.Count - 1 ? "," : "";
-            var nested = field.NestedArray is not null
-                ? $" // nested array with {field.NestedArray.Fields.Count} fields"
-                : "";
+
+            // Build comment with semantic info
+            var comment = BuildFieldComment(field, inferred);
+
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                $"    {csType} Field{i}{comma}{nested}");
+                $"    {csType} {propertyName}{comma}{comment}");
         }
 
         sb.AppendLine(");");
         return sb.ToString();
     }
+
+    private static string GetUniquePropertyName(
+        InferredField? inferred,
+        int position,
+        HashSet<string> usedNames)
+    {
+        if (inferred?.SuggestedName is null)
+            return $"Field{position}";
+
+        // Convert camelCase to PascalCase
+        var name = char.ToUpperInvariant(inferred.SuggestedName[0]) + inferred.SuggestedName[1..];
+
+        // Deduplicate
+        if (usedNames.Contains(name))
+        {
+            var suffix = 2;
+            while (usedNames.Contains($"{name}{suffix}"))
+                suffix++;
+            name = $"{name}{suffix}";
+        }
+
+        return name;
+    }
+
+    private static string BuildFieldComment(
+        ProtojsonField field,
+        InferredField? inferred)
+    {
+        if (field.NestedArray is not null)
+            return $" // nested array with {field.NestedArray.Fields.Count} fields";
+
+        if (inferred is null || inferred.SemanticType is "unknown" or "null")
+            return "";
+
+        var parts = new List<string>
+        {
+            $"{inferred.SemanticType} ({ConfidenceToString(inferred.Confidence)} confidence)",
+        };
+
+        if (inferred.SampleValues.Count > 0)
+        {
+            var sampleText = string.Join(", ", inferred.SampleValues);
+            // Truncate if very long
+            if (sampleText.Length > 80)
+                sampleText = sampleText[..77] + "...";
+            parts.Add(inferred.SampleValues.Count == 1
+                ? $"sample: \"{sampleText}\""
+                : $"values: {sampleText}");
+        }
+
+        return $" // {string.Join(" \u2014 ", parts)}";
+    }
+
+    private static string ConfidenceToString(ConfidenceLevel level) => level switch
+    {
+        ConfidenceLevel.High => "high",
+        ConfidenceLevel.Medium => "medium",
+        ConfidenceLevel.Low => "low",
+        _ => "unknown",
+    };
 
     private static string GenerateProtojsonOpenApi(ProtojsonSchema schema)
     {
