@@ -12,10 +12,18 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
 {
     /// <inheritdoc />
     public Task<SchemaResult> InferAsync(IReadOnlyList<string> jsonBodies, CancellationToken ct = default)
-        => InferAsync(jsonBodies, endpointPath: null, ct);
+        => InferAsync(jsonBodies, endpointPath: null, protoMappings: null, ct);
 
     /// <inheritdoc />
     public Task<SchemaResult> InferAsync(IReadOnlyList<string> jsonBodies, string? endpointPath, CancellationToken ct = default)
+        => InferAsync(jsonBodies, endpointPath, protoMappings: null, ct);
+
+    /// <inheritdoc />
+    public Task<SchemaResult> InferAsync(
+        IReadOnlyList<string> jsonBodies,
+        string? endpointPath,
+        IReadOnlyList<ProtoFieldMappingInfo>? protoMappings,
+        CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(jsonBodies);
 
@@ -65,7 +73,8 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
             // Generate a positional JSON Schema
             var jsonSchema = GenerateProtojsonSchema(mergedProto);
             // Generate a C# record with positional comments, inferred names, and nested types
-            var csharp = GenerateProtojsonCSharp(mergedProto, inferredFields, resolvedFields);
+            // Proto mappings (source-code evidence) take highest priority when available
+            var csharp = GenerateProtojsonCSharp(mergedProto, inferredFields, resolvedFields, protoMappings);
             // Generate valid OpenAPI YAML for protojson
             var openApi = GenerateProtojsonOpenApi(mergedProto);
 
@@ -115,8 +124,13 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
     private static string GenerateProtojsonCSharp(
         ProtojsonSchema schema,
         IReadOnlyList<InferredField>? inferredFields = null,
-        IReadOnlyList<ResolvedField>? resolvedFields = null)
+        IReadOnlyList<ResolvedField>? resolvedFields = null,
+        IReadOnlyList<ProtoFieldMappingInfo>? protoMappings = null)
     {
+        // Build a fast lookup: position -> highest-confidence proto mapping
+        // Priority order: field_constant > getter > position_access > descriptor
+        var protoByPosition = BuildProtoMappingLookup(protoMappings);
+
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("// Protojson positional schema — field names are inferred from position");
         sb.AppendLine("// Parse as JsonElement[] and access by index");
@@ -158,9 +172,22 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
                 nestedTypes.Add(GenerateNestedRecord(nestedTypeName, resolved.NestedFields));
             }
 
-            // Determine the property name: prefer resolved name over inferred
+            // Determine the property name using priority order:
+            // 1. ProtoFieldMapper (source code — highest confidence)
+            // 2. RecursiveProtojsonAnalyzer resolved name (endpoint context + value patterns)
+            // 3. ValueTypeInferrer suggested name (value pattern matching)
+            // 4. Fallback: Field{i}
             string propertyName;
-            if (resolved?.ResolvedName is not null)
+            string? protoSource = null;
+
+            if (protoByPosition.TryGetValue(i, out var protoMapping))
+            {
+                // Highest priority: source-code evidence from decompiled Java
+                var name = char.ToUpperInvariant(protoMapping.SuggestedName[0]) + protoMapping.SuggestedName[1..];
+                propertyName = EnsureUnique(name, usedNames);
+                protoSource = protoMapping.Source;
+            }
+            else if (resolved?.ResolvedName is not null)
             {
                 var name = char.ToUpperInvariant(resolved.ResolvedName[0]) + resolved.ResolvedName[1..];
                 propertyName = EnsureUnique(name, usedNames);
@@ -176,11 +203,13 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
 
             var comma = i < schema.Fields.Count - 1 ? "," : "";
 
-            // Build comment with semantic info
+            // Build comment: proto-sourced fields get a comment indicating origin
             var inferred2 = inferredFields is not null && i < inferredFields.Count
                 ? inferredFields[i]
                 : null;
-            var comment = BuildFieldComment(field, inferred2);
+            var comment = protoSource is not null
+                ? $" // proto:{protoSource} (high confidence)"
+                : BuildFieldComment(field, inferred2);
 
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
                 $"    {csType} {propertyName}{comma}{comment}");
@@ -197,6 +226,56 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
 
         return sb.ToString();
     }
+
+    /// <summary>
+    /// Builds a dictionary from position to the single best proto mapping for that position.
+    /// When multiple mappings exist for the same position, prefers higher-confidence evidence
+    /// and breaks ties by source category priority (field_constant > getter > position_access).
+    /// </summary>
+    private static Dictionary<int, ProtoFieldMappingInfo> BuildProtoMappingLookup(
+        IReadOnlyList<ProtoFieldMappingInfo>? protoMappings)
+    {
+        var result = new Dictionary<int, ProtoFieldMappingInfo>();
+        if (protoMappings is null || protoMappings.Count == 0)
+            return result;
+
+        foreach (var mapping in protoMappings)
+        {
+            // Descriptor entries (position == -1) apply to the message as a whole — skip
+            if (mapping.Position < 0)
+                continue;
+
+            if (!result.TryGetValue(mapping.Position, out var existing))
+            {
+                result[mapping.Position] = mapping;
+                continue;
+            }
+
+            // Replace if new mapping has higher confidence, or same confidence but higher source priority
+            if (IsHigherPriority(mapping, existing))
+                result[mapping.Position] = mapping;
+        }
+
+        return result;
+    }
+
+    private static bool IsHigherPriority(ProtoFieldMappingInfo candidate, ProtoFieldMappingInfo current)
+    {
+        if (candidate.Confidence < current.Confidence) // High=0 < Medium=1 < Low=2
+            return true;
+        if (candidate.Confidence > current.Confidence)
+            return false;
+        // Same confidence: prefer by source category
+        return SourcePriority(candidate.Source) < SourcePriority(current.Source);
+    }
+
+    private static int SourcePriority(string source) => source switch
+    {
+        "field_constant" => 0,
+        "getter"         => 1,
+        "position_access"=> 2,
+        _                => 3,
+    };
 
     private static string GenerateNestedRecord(
         string typeName,

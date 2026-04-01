@@ -63,7 +63,8 @@ var rootCommand = new RootCommand("IAET - Internal API Extraction Toolkit")
     RoundCommand.Create(host.Services),
     CookiesCommand.Create(host.Services),
     DashboardCommand.Create(host.Services),
-    ApkCommand.Create(host.Services)
+    ApkCommand.Create(host.Services),
+    AnalyzeCommand.Create(host.Services),
 };
 
 return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(false);

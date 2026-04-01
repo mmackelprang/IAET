@@ -322,6 +322,7 @@ internal static class ApkCommand
             // HCI log import and correlation
             HciLogResult? hciResult = null;
             BleCorrelationResult? correlation = null;
+            IReadOnlyList<L2capProtocolFrame> protocolFrames = [];
             if (hciLogFile is not null)
             {
                 Console.WriteLine($"  Importing HCI log: {hciLogFile.FullName}");
@@ -335,6 +336,23 @@ internal static class ApkCommand
                 else
                 {
                     Console.WriteLine($"  HCI packets: {hciResult.TotalPackets} total, {hciResult.AttPackets} ATT");
+
+                    // Report L2CAP channel statistics
+                    if (hciResult.L2capChannelCounts.Count > 0)
+                    {
+                        Console.WriteLine("  L2CAP channels observed:");
+                        foreach (var (channelId, pktCount) in hciResult.L2capChannelCounts.OrderBy(kv => kv.Key))
+                            Console.WriteLine($"    0x{channelId:X4}: {pktCount} packet(s)");
+                    }
+
+                    // Extract 0xAB-prefixed protocol frames from dynamic channels (e.g. Raddy Radio-C)
+                    if (hciResult.L2capData.Count > 0)
+                    {
+                        protocolFrames = L2capProtocolExtractor.ExtractFrames(hciResult.L2capData, headerByte: 0xAB);
+                        if (protocolFrames.Count > 0)
+                            Console.WriteLine($"  Protocol frames (0xAB): {protocolFrames.Count}");
+                    }
+
                     correlation = BleCorrelator.Correlate(result.Services, hciResult);
                     Console.WriteLine($"  Correlation: {correlation.StaticOnlyCount} static, {correlation.RuntimeOnlyCount} runtime handles");
                 }
@@ -381,6 +399,19 @@ internal static class ApkCommand
                             handle = $"0x{o.Handle:X4}",
                             direction = o.IsReceived ? "received" : "sent",
                             valueLength = o.ValueLength,
+                        }).ToList(),
+                        l2capChannels = hciResult.L2capChannelCounts
+                            .OrderBy(kv => kv.Key)
+                            .Select(kv => new { channelId = $"0x{kv.Key:X4}", packets = kv.Value })
+                            .ToList(),
+                        l2capDynamicPackets = hciResult.L2capData.Count,
+                        protocolFrames0xAB = protocolFrames.Select(f => new
+                        {
+                            channel = $"0x{f.SourceChannel:X4}",
+                            direction = f.IsReceived ? "received" : "sent",
+                            timestamp = f.Timestamp,
+                            payloadHex = Convert.ToHexString(f.Payload.AsSpan()),
+                            payloadLength = f.Payload.Length,
                         }).ToList(),
                     }
                     : null,
@@ -429,6 +460,10 @@ internal static class ApkCommand
             {
                 Console.WriteLine($"  HCI total:   {hciResult.TotalPackets} packets");
                 Console.WriteLine($"  HCI ATT:     {hciResult.AttPackets} operations");
+                if (hciResult.L2capData.Count > 0)
+                    Console.WriteLine($"  L2CAP dyn:   {hciResult.L2capData.Count} packet(s) on {hciResult.L2capChannelCounts.Keys.Count(id => id >= 0x0040)} channel(s)");
+                if (protocolFrames.Count > 0)
+                    Console.WriteLine($"  0xAB frames: {protocolFrames.Count}");
             }
             Console.WriteLine($"BLE analysis written to: {outputPath}");
         });

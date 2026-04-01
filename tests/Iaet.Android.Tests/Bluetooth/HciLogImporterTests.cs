@@ -136,6 +136,85 @@ public sealed class HciLogImporterTests
     }
 
     [Fact]
+    public void Parse_populates_L2capChannelCounts_for_att_packets()
+    {
+        var data = BuildBtSnoopWithAttPacket(0x1B, 0x0015, [0x64]);
+        var result = HciLogImporter.Parse(data);
+
+        result.L2capChannelCounts.Should().ContainKey(0x0004);
+        result.L2capChannelCounts[0x0004].Should().Be(1);
+    }
+
+    [Fact]
+    public void Parse_counts_all_channels_across_multiple_packets()
+    {
+        // Two ATT packets + one signaling packet
+        var pkt1 = BuildAttAclRecord(0x1B, 0x0015, [0x64], isReceived: true);
+        var pkt2 = BuildAttAclRecord(0x12, 0x0020, [0x01], isReceived: false);
+        var pkt3 = BuildNonAttAclRecord(); // channel 0x0001
+
+        var header = BuildBtSnoopHeader();
+        var data = Concat(header, pkt1, pkt2, pkt3);
+        var result = HciLogImporter.Parse(data);
+
+        result.L2capChannelCounts.Should().ContainKey(0x0004);
+        result.L2capChannelCounts[0x0004].Should().Be(2);
+        result.L2capChannelCounts.Should().ContainKey(0x0001);
+        result.L2capChannelCounts[0x0001].Should().Be(1);
+    }
+
+    [Fact]
+    public void Parse_extracts_dynamic_channel_payload()
+    {
+        // Build a packet on dynamic channel 0x0040 with payload [0xAB, 0x02, 0x11, 0x22]
+        var payload = new byte[] { 0xAB, 0x02, 0x11, 0x22 };
+        var record = BuildAclRecord(payload, channelId: 0x0040, isReceived: true);
+        var header = BuildBtSnoopHeader();
+        var data = Concat(header, record);
+
+        var result = HciLogImporter.Parse(data);
+
+        result.TotalPackets.Should().Be(1);
+        result.AttPackets.Should().Be(0);
+        result.L2capData.Should().ContainSingle();
+
+        var l2cap = result.L2capData[0];
+        l2cap.ChannelId.Should().Be(0x0040);
+        l2cap.IsReceived.Should().BeTrue();
+        l2cap.PayloadLength.Should().Be(4);
+        l2cap.Payload.AsSpan().ToArray().Should().Equal(0xAB, 0x02, 0x11, 0x22);
+    }
+
+    [Fact]
+    public void Parse_does_not_emit_L2capData_for_att_channel()
+    {
+        var data = BuildBtSnoopWithAttPacket(0x1B, 0x0015, [0x64]);
+        var result = HciLogImporter.Parse(data);
+
+        // ATT channel 0x0004 is below DynamicChannelMin (0x0040)
+        result.L2capData.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Parse_collects_multiple_dynamic_channel_packets()
+    {
+        var payload1 = new byte[] { 0x01, 0x02 };
+        var payload2 = new byte[] { 0x03, 0x04, 0x05 };
+        var pkt1 = BuildAclRecord(payload1, channelId: 0x0040, isReceived: true);
+        var pkt2 = BuildAclRecord(payload2, channelId: 0x0400, isReceived: false);
+
+        var header = BuildBtSnoopHeader();
+        var data = Concat(header, pkt1, pkt2);
+        var result = HciLogImporter.Parse(data);
+
+        result.L2capData.Should().HaveCount(2);
+        result.L2capData[0].ChannelId.Should().Be(0x0040);
+        result.L2capData[1].ChannelId.Should().Be(0x0400);
+        result.L2capChannelCounts.Should().ContainKey(0x0040);
+        result.L2capChannelCounts.Should().ContainKey(0x0400);
+    }
+
+    [Fact]
     public void Parse_handles_multiple_packets()
     {
         var pkt1 = BuildAttAclRecord(0x1B, 0x0015, [0x64], isReceived: true);
@@ -321,6 +400,30 @@ public sealed class HciLogImporterTests
         Array.Copy(header, file, header.Length);
         Array.Copy(record, 0, file, header.Length, record.Length);
         return file;
+    }
+
+    /// <summary>Single BTSnoop record on L2CAP signaling channel 0x0001 (non-ATT).</summary>
+    private static byte[] BuildNonAttAclRecord()
+    {
+        var payload = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+        return BuildAclRecord(payload, 0x0001, isReceived: true);
+    }
+
+    private static byte[] Concat(params byte[][] parts)
+    {
+        var totalLen = 0;
+        foreach (var part in parts)
+            totalLen += part.Length;
+
+        var result = new byte[totalLen];
+        var pos = 0;
+        foreach (var part in parts)
+        {
+            Array.Copy(part, 0, result, pos, part.Length);
+            pos += part.Length;
+        }
+
+        return result;
     }
 
     #endregion
