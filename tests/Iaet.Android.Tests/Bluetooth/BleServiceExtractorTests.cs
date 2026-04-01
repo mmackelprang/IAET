@@ -303,4 +303,60 @@ public sealed class BleServiceExtractorTests
         result.Services.Should().BeEmpty();
         result.Characteristics.Should().BeEmpty();
     }
+
+    [Fact]
+    public void Extract_excludes_AudioEffect_uuid_from_ble_results()
+    {
+        // AcousticEchoCanceler.EFFECT_TYPE is a UUID near an AudioEffect class reference
+        var java = """
+            import android.media.audiofx.AcousticEchoCanceler;
+            public class AudioManager {
+                private static final UUID AEC_UUID =
+                    UUID.fromString("bb392ec0-8d2d-11e0-a896-0002a5d5c51b");
+                if (AcousticEchoCanceler.isAvailable()) {
+                    AcousticEchoCanceler aec = AcousticEchoCanceler.create(sessionId);
+                }
+            }
+            """;
+
+        var result = BleServiceExtractor.Extract(java, "AudioManager.java");
+
+        result.AudioEffectUuids.Should().Contain("bb392ec0-8d2d-11e0-a896-0002a5d5c51b");
+        result.Services.Should().NotContain(s => s.Uuid == "bb392ec0-8d2d-11e0-a896-0002a5d5c51b");
+        result.Characteristics.Should().NotContain(c => c.Uuid == "bb392ec0-8d2d-11e0-a896-0002a5d5c51b");
+    }
+
+    [Fact]
+    public void Extract_keeps_uuid_near_BluetoothGattService_in_ble_results()
+    {
+        var java = """
+            public class HeartRateManager {
+                private static final UUID SERVICE_UUID =
+                    UUID.fromString("0000180d-0000-1000-8000-00805f9b34fb");
+                BluetoothGattService service = gatt.getService(SERVICE_UUID);
+            }
+            """;
+
+        var result = BleServiceExtractor.Extract(java, "HeartRateManager.java");
+
+        result.Services.Should().Contain(s => s.Uuid == "0000180d-0000-1000-8000-00805f9b34fb");
+        result.AudioEffectUuids.Should().NotContain("0000180d-0000-1000-8000-00805f9b34fb");
+    }
+
+    [Fact]
+    public void Extract_keeps_uuid_with_no_context_as_ble_characteristic()
+    {
+        // Conservative: if there's no AudioEffect context, assume it is BLE
+        var java = """
+            public class UnknownService {
+                private static final UUID SOME_UUID =
+                    UUID.fromString("12345678-abcd-ef01-2345-6789abcdef01");
+            }
+            """;
+
+        var result = BleServiceExtractor.Extract(java, "UnknownService.java");
+
+        result.Characteristics.Should().Contain(c => c.Uuid == "12345678-abcd-ef01-2345-6789abcdef01");
+        result.AudioEffectUuids.Should().NotContain("12345678-abcd-ef01-2345-6789abcdef01");
+    }
 }
