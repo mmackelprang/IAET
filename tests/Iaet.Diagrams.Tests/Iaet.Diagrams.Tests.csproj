@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Iaet.Android\Iaet.Android.csproj" />
     <ProjectReference Include="..\..\src\Iaet.Diagrams\Iaet.Diagrams.csproj" />
     <ProjectReference Include="..\..\src\Iaet.Core\Iaet.Core.csproj" />
   </ItemGroup>
