@@ -261,14 +261,17 @@ internal static class ApkCommand
         var bleCmd = new Command("ble", "Discover BLE services and characteristics from decompiled source");
         var projectOption = new Option<string>("--project") { Description = "Project name", Required = true };
         var traceDataflowOption = new Option<bool>("--trace-dataflow") { Description = "Trace BLE data flow through callbacks and UI bindings" };
+        var hciLogOption = new Option<FileInfo?>("--hci-log") { Description = "Path to btsnoop_hci.log for runtime correlation" };
 
         bleCmd.Add(projectOption);
         bleCmd.Add(traceDataflowOption);
+        bleCmd.Add(hciLogOption);
 
         bleCmd.SetAction(async (parseResult) =>
         {
             var project = parseResult.GetRequiredValue(projectOption);
             var traceDataflow = parseResult.GetValue(traceDataflowOption);
+            var hciLogFile = parseResult.GetValue(hciLogOption);
 
             using var scope = services.CreateScope();
             var projectStore = scope.ServiceProvider.GetRequiredService<IProjectStore>();
@@ -303,6 +306,27 @@ internal static class ApkCommand
                 Console.WriteLine($"  Found {bleFlows.Count} BLE data flows");
             }
 
+            // HCI log import and correlation
+            HciLogResult? hciResult = null;
+            BleCorrelationResult? correlation = null;
+            if (hciLogFile is not null)
+            {
+                Console.WriteLine($"  Importing HCI log: {hciLogFile.FullName}");
+                hciResult = HciLogImporter.ParseFile(hciLogFile.FullName);
+
+                if (hciResult.Errors.Count > 0)
+                {
+                    foreach (var error in hciResult.Errors)
+                        Console.WriteLine($"  HCI log error: {error}");
+                }
+                else
+                {
+                    Console.WriteLine($"  HCI packets: {hciResult.TotalPackets} total, {hciResult.AttPackets} ATT");
+                    correlation = BleCorrelator.Correlate(result.Services, hciResult);
+                    Console.WriteLine($"  Correlation: {correlation.StaticOnlyCount} static, {correlation.RuntimeOnlyCount} runtime handles");
+                }
+            }
+
             // Write knowledge/bluetooth.json
             var knowledgeDir = Path.Combine(projectDir, "knowledge");
             Directory.CreateDirectory(knowledgeDir);
@@ -332,6 +356,29 @@ internal static class ApkCommand
                     operations = c.Operations.Select(o => o.ToString().ToLowerInvariant()).ToList(),
                     source = c.SourceFile,
                 }).ToList(),
+                hciLog = hciResult is not null && hciResult.Errors.Count == 0
+                    ? new
+                    {
+                        totalPackets = hciResult.TotalPackets,
+                        attPackets = hciResult.AttPackets,
+                        operations = hciResult.Operations.Select(o => new
+                        {
+                            timestamp = o.Timestamp,
+                            type = o.Type.ToLowerInvariant(),
+                            handle = $"0x{o.Handle:X4}",
+                            direction = o.IsReceived ? "received" : "sent",
+                            valueLength = o.ValueLength,
+                        }).ToList(),
+                    }
+                    : null,
+                correlation = correlation is not null
+                    ? new
+                    {
+                        staticOnlyCount = correlation.StaticOnlyCount,
+                        runtimeOnlyCount = correlation.RuntimeOnlyCount,
+                        correlatedCount = correlation.CorrelatedCount,
+                    }
+                    : null,
             };
 #pragma warning restore CA1308
 
@@ -365,6 +412,11 @@ internal static class ApkCommand
             }
 
             Console.WriteLine();
+            if (hciResult is not null && hciResult.Errors.Count == 0)
+            {
+                Console.WriteLine($"  HCI total:   {hciResult.TotalPackets} packets");
+                Console.WriteLine($"  HCI ATT:     {hciResult.AttPackets} operations");
+            }
             Console.WriteLine($"BLE analysis written to: {outputPath}");
         });
 
