@@ -1,9 +1,11 @@
 using Iaet.Catalog;
 using Iaet.Explorer.Api;
+using Iaet.Projects;
 using Iaet.Replay;
 using Iaet.Schema;
 using Iaet.Export;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 
@@ -19,9 +21,10 @@ public static class ExplorerApp
     /// </summary>
     /// <param name="dbPath">Path to the SQLite catalog database file.</param>
     /// <param name="port">The port to listen on (default 9200).</param>
+    /// <param name="projectsRoot">Path to the projects directory (default ".iaet-projects").</param>
     /// <returns>A configured <see cref="WebApplication"/> ready to run.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:URI-like parameters should not be strings", Justification = "dbPath is a file path, not a URI")]
-    public static WebApplication Build(string dbPath, int port = 9200)
+    public static WebApplication Build(string dbPath, int port = 9200, string projectsRoot = ".iaet-projects")
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dbPath);
 
@@ -34,6 +37,7 @@ public static class ExplorerApp
         builder.Services.AddIaetSchema();
         builder.Services.AddIaetReplay();
         builder.Services.AddIaetExport();
+        builder.Services.AddIaetProjects(projectsRoot);
 
         var app = builder.Build();
 
@@ -47,6 +51,14 @@ public static class ExplorerApp
         SchemaApi.Map(app);
         ReplayApi.Map(app);
         ExportApi.Map(app);
+        ProjectsApi.Map(app);
+
+        // Serve dashboard SPA at /dashboard (without .html extension)
+        app.MapGet("/dashboard", (Microsoft.AspNetCore.Hosting.IWebHostEnvironment env) =>
+        {
+            var filePath = Path.Combine(env.WebRootPath, "dashboard.html");
+            return Results.File(filePath, "text/html");
+        });
 
         return app;
     }
