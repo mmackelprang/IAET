@@ -1,0 +1,63 @@
+{
+  "services": [],
+  "characteristics": [
+    {
+      "uuid": "0000fee9-0000-1000-8000-00805f9b34fb",
+      "name": null,
+      "operations": [],
+      "source": "sources\\cn\\com\\heaton\\blelibrary\\ble\\Options.java"
+    },
+    {
+      "uuid": "d44bc439-abfd-45a2-b575-925416129600",
+      "name": null,
+      "operations": [],
+      "source": "sources\\cn\\com\\heaton\\blelibrary\\ble\\Options.java"
+    },
+    {
+      "uuid": "d44bc439-abfd-45a2-b575-925416129601",
+      "name": null,
+      "operations": [],
+      "source": "sources\\cn\\com\\heaton\\blelibrary\\ble\\Options.java"
+    },
+    {
+      "uuid": "00002902-0000-1000-8000-00805f9b34fb",
+      "name": null,
+      "operations": [],
+      "source": "sources\\cn\\com\\heaton\\blelibrary\\ble\\Options.java"
+    },
+    {
+      "uuid": "0000fee8-0000-1000-8000-00805f9b34fb",
+      "name": null,
+      "operations": [],
+      "source": "sources\\cn\\com\\heaton\\blelibrary\\ble\\Options.java"
+    },
+    {
+      "uuid": "003784cf-f7e3-55b4-6c4c-9fd140100a16",
+      "name": null,
+      "operations": [],
+      "source": "sources\\cn\\com\\heaton\\blelibrary\\ble\\Options.java"
+    },
+    {
+      "uuid": "013784cf-f7e3-55b4-6c4c-9fd140100a16",
+      "name": null,
+      "operations": [],
+      "source": "sources\\cn\\com\\heaton\\blelibrary\\ble\\Options.java"
+    },
+    {
+      "uuid": "00000000-0000-1000-8000-00805F9B34FB",
+      "name": null,
+      "operations": [],
+      "source": "sources\\cn\\com\\heaton\\blelibrary\\ble\\model\\ScanRecord.java"
+    }
+  ],
+  "hciLog": {
+    "totalPackets": 1747,
+    "attPackets": 0,
+    "operations": []
+  },
+  "correlation": {
+    "staticOnlyCount": 0,
+    "runtimeOnlyCount": 0,
+    "correlatedCount": 0
+  }
+}

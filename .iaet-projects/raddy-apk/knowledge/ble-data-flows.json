@@ -1,0 +1,22 @@
+{
+  "flows": [
+    {
+      "characteristicUuid": "unknown",
+      "callbackLocation": "sources\\com\\myhomesmartlife\\bluetooth\\MainActivity.java:223145",
+      "parsing": ".getValue()",
+      "variable": "q",
+      "uiBinding": "q via setText",
+      "inferredMeaning": null,
+      "confidence": "high"
+    },
+    {
+      "characteristicUuid": "unknown",
+      "callbackLocation": "sources\\cn\\com\\heaton\\blelibrary\\ble\\BleRequestImpl.java:2099",
+      "parsing": ".getValue(); .getValue(); .getValue()",
+      "variable": "i",
+      "uiBinding": "i via field assignment",
+      "inferredMeaning": null,
+      "confidence": "high"
+    }
+  ]
+}

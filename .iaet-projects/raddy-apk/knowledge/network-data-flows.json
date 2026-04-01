@@ -1,0 +1,2054 @@
+{
+  "flows": [
+    {
+      "sourceType": "HTTP",
+      "sourceFile": "sources\\okhttp3\\a.java",
+      "responseHandler": "response.body()",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "HTTP",
+      "sourceFile": "sources\\okhttp3\\Cache.java",
+      "responseHandler": "response.body()",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Completable.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(E e) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\Single.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\AsyncOnSubscribe.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\AsyncOnSubscribe.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\AsyncOnSubscribe.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\AsyncOnSubscribe.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\BlockingObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\BlockingObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\BlockingObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\BlockingObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "messaging/SMS data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\BlockingObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\BlockingObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getIterator()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observables\\SyncOnSubscribe.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Observers.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Observers.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Observers.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Observers.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\SafeSubscriber.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\SerializedObserver.java",
+      "responseHandler": "onNext(T r10) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\SerializedSubscriber.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Subscribers.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Subscribers.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Subscribers.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Subscribers.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\Subscribers.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\TestObserver.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\TestObserver.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\TestSubscriber.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "messaging/SMS data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\observers\\TestSubscriber.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "messaging/SMS data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\AsyncSubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\BehaviorSubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\PublishSubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\ReplaySubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\ReplaySubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\SerializedSubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\SubjectSubscriptionManager.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\TestSubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\TestSubject.java",
+      "responseHandler": "onNext(final T t, long j) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\UnicastSubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\subjects\\UnicastSubject.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "HTTP",
+      "sourceFile": "sources\\okhttp3\\internal\\cache\\CacheInterceptor.java",
+      "responseHandler": "response.body()",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "HTTP",
+      "sourceFile": "sources\\okhttp3\\internal\\cache\\CacheInterceptor.java",
+      "responseHandler": "response.body()",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "messaging/SMS data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "HTTP",
+      "sourceFile": "sources\\okhttp3\\internal\\cache\\CacheInterceptor.java",
+      "responseHandler": "response.body()",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "Retrofit",
+      "sourceFile": "sources\\okhttp3\\internal\\ws\\RealWebSocket.java",
+      "responseHandler": "onResponse(okhttp3.Call call, okhttp3.Response response) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "messaging/SMS data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\a.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\a.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\BlockingOperatorLatest.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": ".getValue()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\BlockingOperatorMostRecent.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\BlockingOperatorNext.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\BlockingOperatorToFuture.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\BlockingOperatorToIterator.java",
+      "responseHandler": "onNext(rx.Notification\u003C? extends T\u003E notification) {",
+      "parsing": ".getValue()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\BufferUntilSubscriber.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\BufferUntilSubscriber.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\CachedObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\CachedObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\CompletableOnSubscribeConcat.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": ".getAndIncrement(); .getInstance(); .getErrorHandler()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\CompletableOnSubscribeMerge.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": ".getInstance(); .getErrorHandler(); .getAndIncrement()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeAmb.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeCombineLatest.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getExceptions()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeConcatMap.java",
+      "responseHandler": "onNext(R r) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeConcatMap.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeDelaySubscriptionOther.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": ".getInstance(); .getErrorHandler()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeDelaySubscriptionWithSelector.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeDetach.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeFlattenIterable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeGroupJoin.java",
+      "responseHandler": "onNext(D1 d1) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeGroupJoin.java",
+      "responseHandler": "onNext(T1 t1) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeGroupJoin.java",
+      "responseHandler": "onNext(D2 d2) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeGroupJoin.java",
+      "responseHandler": "onNext(T2 t2) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeGroupJoin.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeJoin.java",
+      "responseHandler": "onNext(TLeftDuration tleftduration) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeJoin.java",
+      "responseHandler": "onNext(TLeft tleft) {",
+      "parsing": ".getKey(); .getValue()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeJoin.java",
+      "responseHandler": "onNext(TRightDuration trightduration) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeJoin.java",
+      "responseHandler": "onNext(TRight tright) {",
+      "parsing": ".getKey()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribePublishMulticast.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribePublishMulticast.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeRedo.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeRedo.java",
+      "responseHandler": "onNext(java.lang.Object obj2) {",
+      "parsing": ".getThrowable()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeRedo.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeRefCount.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OnSubscribeSingle.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorAll.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorAny.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithSingleObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithSingleObservable.java",
+      "responseHandler": "onNext(TClosing tclosing) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithSize.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithSize.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithSize.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithStartEndObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithStartEndObservable.java",
+      "responseHandler": "onNext(TOpening topening) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithStartEndObservable.java",
+      "responseHandler": "onNext(TClosing tclosing) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithTime.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorBufferWithTime.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorCast.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDebounceWithSelector.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDebounceWithSelector.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDebounceWithTime.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDelay.java",
+      "responseHandler": "onNext(final T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDelayWithSelector.java",
+      "responseHandler": "onNext(final T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDematerialize.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": ".getKind(); .getValue(); .getThrowable()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDistinct.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDistinctUntilChanged.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDoAfterTerminate.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDoOnEach.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorDoOnRequest.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorEagerConcatMap.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorEagerConcatMap.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorElementAt.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorFilter.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorGroupBy.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getInstance(); .getErrorHandler(); .getAndIncrement()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorIgnoreElements.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorMap.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorMapNotification.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorMapPair.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorMaterialize.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getInstance(); .getErrorHandler()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorMerge.java",
+      "responseHandler": "onNext(T r9) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorMerge.java",
+      "responseHandler": "onNext(java.lang.Object r8) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorMulticast.java",
+      "responseHandler": "onNext(R r) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorObserveOn.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getInstance(); .getErrorHandler()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorOnBackpressureBuffer.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorOnBackpressureDrop.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorOnBackpressureLatest.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorOnBackpressureLatest.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorOnErrorResumeNextViaFunction.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getInstance(); .getErrorHandler()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorOnErrorResumeNextViaFunction.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorPublish.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorPublish.java",
+      "responseHandler": "onNext(R r) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorReplay.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorReplay.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorRetryWithPredicate.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorRetryWithPredicate.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSampleWithObservable.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSampleWithObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSampleWithTime.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorScan.java",
+      "responseHandler": "onNext(R r) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "notification data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorScan.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorScan.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSerialize.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSingle.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSkip.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSkipLast.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSkipLastTimed.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getValue()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSkipTimed.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSkipUntil.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSkipUntil.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSkipWhile.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSubscribeOn.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "messaging/SMS data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSwitch.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSwitch.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSwitchIfEmpty.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorSwitchIfEmpty.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTake.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTakeLast.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTakeLastOne.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTakeLastTimed.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTakeTimed.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTakeUntil.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTakeUntil.java",
+      "responseHandler": "onNext(E e) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTakeUntilPredicate.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTakeWhile.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorThrottleFirst.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTimeInterval.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTimeoutWithSelector.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTimeoutWithSelector.java",
+      "responseHandler": "onNext(V v) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorTimestamp.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorToMap.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorToMultimap.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorToObservableList.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorToObservableSortedList.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorUnsubscribeOn.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithObservable.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithObservableFactory.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithObservableFactory.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithSize.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getAndIncrement()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithSize.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getAndIncrement()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithSize.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": ".getAndIncrement()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithStartEndObservable.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithStartEndObservable.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithStartEndObservable.java",
+      "responseHandler": "onNext(V v) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithTime.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWindowWithTime.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWithLatestFrom.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorWithLatestFrom.java",
+      "responseHandler": "onNext(U u) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorZip.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": ".getSpmcInstance()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorZip.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\OperatorZipIterable.java",
+      "responseHandler": "onNext(T1 t1) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\operators\\SingleOnSubscribeDelaySubscriptionOther.java",
+      "responseHandler": "onNext(java.lang.Object obj) {",
+      "parsing": ".getInstance(); .getErrorHandler()",
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "medium"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\producers\\ProducerObserverArbiter.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\producers\\QueuedProducer.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\util\\ActionNotificationObserver.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\util\\ActionSubscriber.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\util\\ObserverSubscriber.java",
+      "responseHandler": "onNext(T t) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": null,
+      "confidence": "low"
+    },
+    {
+      "sourceType": "gRPC",
+      "sourceFile": "sources\\rx\\internal\\util\\ScalarSynchronousSingle.java",
+      "responseHandler": "onNext(R r) {",
+      "parsing": null,
+      "targetVariable": null,
+      "uiBinding": null,
+      "inferredPurpose": "call/VoIP data",
+      "confidence": "low"
+    }
+  ]
+}
