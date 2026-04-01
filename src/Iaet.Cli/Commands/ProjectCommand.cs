@@ -110,13 +110,16 @@ internal static class ProjectCommand
             var name = parseResult.GetRequiredValue(nameOption);
             using var scope = services.CreateScope();
             var store = scope.ServiceProvider.GetRequiredService<IProjectStore>();
-            var config = await store.LoadAsync(name).ConfigureAwait(false);
+            var loaded = await store.LoadAsync(name).ConfigureAwait(false);
 
-            if (config is null)
+            if (loaded is null)
             {
                 Console.WriteLine($"Project '{name}' not found.");
                 return;
             }
+
+            // Refresh status from actual project content before displaying
+            var config = await store.RefreshStatusAsync(name).ConfigureAwait(false);
 
             Console.WriteLine($"Project: {config.DisplayName}");
             Console.WriteLine($"  Name:      {config.Name}");

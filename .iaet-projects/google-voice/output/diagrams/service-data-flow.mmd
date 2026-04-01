@@ -1,0 +1,42 @@
+flowchart TD
+    %% Google Voice Service Data Flow Map
+    %% Derived from 310 captured HTTP requests + 3 streams
+
+    Browser([Browser / Web Client])
+
+    subgraph Google Voice Backend
+        VoiceAPI[clients6.google.com<br/>Voice REST API<br/>26 endpoints]
+        RingGroups[voice.clients6.google.com<br/>RingGroupsService gRPC]
+        SIPGateway[web.voice.telephony.goog<br/>SIP-over-WebSocket<br/>Call signaling]
+        MediaServer[74.125.39.x<br/>OGHP Media Gateway<br/>RTP/SRTP audio]
+    end
+
+    subgraph Google Shared Services
+        People[people*.clients6.google.com<br/>PeopleStack / Contacts<br/>Autocomplete + Groups]
+        WAA[waa-pa.clients6.google.com<br/>Web Activity Audit]
+        AsyncData[ogads-pa.clients6.google.com<br/>OneGoogle AsyncData]
+        Signaler[signaler-pa.clients6.google.com<br/>Punctual Push Server]
+    end
+
+    subgraph Infrastructure
+        STUN[stun.l.google.com:19302<br/>STUN Server]
+        ReCAPTCHA[www.google.com<br/>reCAPTCHA Enterprise]
+        Analytics[play.google.com<br/>Logging / Telemetry]
+    end
+
+    Browser -->|REST POST /voice/v1/*| VoiceAPI
+    Browser -->|gRPC /$rpc/google.voice.*| RingGroups
+    Browser -->|WebSocket SIP| SIPGateway
+    Browser -->|RTP/SRTP Opus| MediaServer
+    Browser -->|gRPC /$rpc/peoplestack.*| People
+    Browser -->|gRPC /$rpc/google.internal.waa.*| WAA
+    Browser -->|gRPC /$rpc/google.internal.onegoogle.*| AsyncData
+    Browser -->|REST /punctual/v1/*| Signaler
+    Browser -->|STUN Binding| STUN
+    Browser -->|POST /recaptcha/*| ReCAPTCHA
+    Browser -->|POST /log, /g/collect| Analytics
+
+    SIPGateway -.->|SDP offer/answer| MediaServer
+    STUN -.->|SRFLX candidate| MediaServer
+
+    %% Confidence: High — derived from 3 capture sessions (310 HTTP + 62 stream frames)
