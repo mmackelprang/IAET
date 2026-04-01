@@ -11,6 +11,7 @@ import os
 import sys
 import html
 import re
+from datetime import datetime, timezone
 
 
 def read(path):
@@ -23,6 +24,69 @@ def read_optional(path):
         return read(path)
     except FileNotFoundError:
         return None
+
+
+def load_cookies(project_dir, knowledge_dir):
+    """Load the most recent cookie snapshot for a project.
+
+    Looks in .iaet-projects/{name}/cookies/ for FileCookieStore snapshots first,
+    then falls back to knowledge/cookies.json. Cookie values are NEVER included
+    in the returned data — only names and metadata.
+    """
+    cookies_dir = os.path.join(project_dir, 'cookies')
+    result = {'cookies': [], 'snapshotTime': None, 'source': None}
+
+    # Try FileCookieStore snapshot directory first
+    if os.path.exists(cookies_dir):
+        snapshots = []
+        for f in os.listdir(cookies_dir):
+            if not f.endswith('.json'):
+                continue
+            try:
+                data = json.loads(read(os.path.join(cookies_dir, f)))
+                captured_at = data.get('capturedAt', '')
+                snapshots.append((captured_at, data))
+            except (json.JSONDecodeError, IOError):
+                continue
+
+        if snapshots:
+            # Sort by capturedAt descending, pick the most recent
+            snapshots.sort(key=lambda x: x[0], reverse=True)
+            _, latest = snapshots[0]
+            result['snapshotTime'] = latest.get('capturedAt')
+            result['source'] = latest.get('source', 'unknown')
+            result['cookies'] = _strip_cookie_values(latest.get('cookies', []))
+            return result
+
+    # Fallback: knowledge/cookies.json
+    cookies_knowledge = read_optional(os.path.join(knowledge_dir, 'cookies.json'))
+    if cookies_knowledge:
+        try:
+            data = json.loads(cookies_knowledge)
+            raw_cookies = data if isinstance(data, list) else data.get('cookies', [])
+            result['cookies'] = _strip_cookie_values(raw_cookies)
+            result['source'] = 'knowledge/cookies.json'
+        except json.JSONDecodeError:
+            pass
+
+    return result
+
+
+def _strip_cookie_values(cookies):
+    """Return cookie metadata only — NEVER include cookie values."""
+    stripped = []
+    for c in cookies:
+        stripped.append({
+            'name': c.get('name', ''),
+            'domain': c.get('domain', ''),
+            'path': c.get('path', '/'),
+            'httpOnly': c.get('httpOnly', False),
+            'secure': c.get('secure', False),
+            'sameSite': c.get('sameSite', ''),
+            'expires': c.get('expires'),
+            'size': c.get('size', 0),
+        })
+    return stripped
 
 
 def load_project(project_dir):
@@ -73,6 +137,9 @@ def load_project(project_dir):
                 size = os.path.getsize(os.path.join(captures_dir, f))
                 project['captures'].append({'name': f, 'size': size})
 
+    # Load cookie snapshots (for web projects)
+    project['cookies'] = load_cookies(project_dir, knowledge_dir)
+
     # Parse knowledge for stats
     endpoints_data = json.loads(project['knowledge'].get('endpoints.json', '{}'))
     protocols_data = json.loads(project['knowledge'].get('protocols.json', '{}'))
@@ -84,6 +151,7 @@ def load_project(project_dir):
         'diagrams': len(project['diagrams']),
         'authChains': len(deps_data.get('authChains', [])),
         'captures': len(project['captures']),
+        'cookies': len(project['cookies'].get('cookies', [])),
     }
 
     # Build next steps
@@ -197,11 +265,52 @@ def render_project_content(project):
     if current_cat:
         next_steps_html += "</div>\n"
 
+    # Cookies (web projects only)
+    cookies_html = ""
+    cookie_data = p.get('cookies', {})
+    cookie_list = cookie_data.get('cookies', [])
+    is_web = p.get('targetType', 'web') == 'web'
+
+    if is_web and cookie_list:
+        snapshot_time = cookie_data.get('snapshotTime', 'unknown')
+        source = cookie_data.get('source', '')
+        cookies_html += f'<div class="data-card"><h3>Cookie Snapshot</h3>'
+        cookies_html += f'<p style="color:var(--muted);font-size:13px;margin-bottom:12px;">'
+        cookies_html += f'{len(cookie_list)} cookies captured'
+        if snapshot_time:
+            cookies_html += f' &mdash; {html.escape(str(snapshot_time))}'
+        if source:
+            cookies_html += f' (source: {html.escape(source)})'
+        cookies_html += '</p>'
+        cookies_html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+        cookies_html += '<tr>'
+        for hdr in ['Name', 'Domain', 'Path', 'HttpOnly', 'Secure', 'SameSite', 'Expires']:
+            cookies_html += f'<th style="text-align:left;padding:6px;border-bottom:1px solid var(--border);color:var(--accent);font-size:12px;">{hdr}</th>'
+        cookies_html += '</tr>'
+        for c in cookie_list:
+            httponly_icon = 'Yes' if c.get('httpOnly') else 'No'
+            secure_icon = 'Yes' if c.get('secure') else 'No'
+            same_site = html.escape(str(c.get('sameSite', '') or ''))
+            expires = html.escape(str(c.get('expires', '') or 'Session'))
+            cookies_html += '<tr>'
+            cookies_html += f'<td style="padding:6px;border-bottom:1px solid #1e293b;font-family:monospace;font-size:12px;">{html.escape(c.get("name", ""))}</td>'
+            cookies_html += f'<td style="padding:6px;border-bottom:1px solid #1e293b;">{html.escape(c.get("domain", ""))}</td>'
+            cookies_html += f'<td style="padding:6px;border-bottom:1px solid #1e293b;">{html.escape(c.get("path", "/"))}</td>'
+            cookies_html += f'<td style="padding:6px;border-bottom:1px solid #1e293b;">{httponly_icon}</td>'
+            cookies_html += f'<td style="padding:6px;border-bottom:1px solid #1e293b;">{secure_icon}</td>'
+            cookies_html += f'<td style="padding:6px;border-bottom:1px solid #1e293b;">{same_site}</td>'
+            cookies_html += f'<td style="padding:6px;border-bottom:1px solid #1e293b;font-size:12px;">{expires}</td>'
+            cookies_html += '</tr>'
+        cookies_html += '</table></div>'
+    elif is_web:
+        cookies_html = '<p class="subtitle">No cookie snapshots captured yet.</p>'
+
     return {
         'diagrams': diagram_html or '<p class="subtitle">No diagrams generated yet.</p>',
         'narrative': json.dumps(p['narrative']),
         'knowledge': knowledge_html + captures_html or '<p class="subtitle">No knowledge base yet.</p>',
         'openapi': html.escape(p['openapi']) if p['openapi'] else 'No OpenAPI spec generated yet.',
+        'cookies': cookies_html,
         'nextsteps': next_steps_html or '<p class="subtitle">No next steps identified.</p>',
     }
 
@@ -262,6 +371,7 @@ def main():
     <div class="stat" onclick="showTab('diagrams')"><div class="stat-value">{s['diagrams']}</div><div class="stat-label">Diagrams</div></div>
     <div class="stat" onclick="showTab('knowledge')"><div class="stat-value">{s['authChains']}</div><div class="stat-label">Auth Chains</div></div>
     <div class="stat" onclick="showTab('knowledge')"><div class="stat-value">{s['captures']}</div><div class="stat-label">Captures</div></div>
+    <div class="stat" onclick="showTab('cookies')" style="{'display:block' if s.get('cookies', 0) > 0 or p.get('targetType') == 'web' else 'display:none'}"><div class="stat-value">{s.get('cookies', 0)}</div><div class="stat-label">Cookies</div></div>
     <div class="stat" onclick="showTab('nextsteps')"><div class="stat-value">{len(p['nextSteps'])}</div><div class="stat-label">Next Steps</div></div>
   </div>
   <div class="tabs">
@@ -269,6 +379,7 @@ def main():
     <div class="tab" data-tab="narrative" onclick="showTab('narrative')">Narrative</div>
     <div class="tab" data-tab="knowledge" onclick="showTab('knowledge')">Knowledge</div>
     <div class="tab" data-tab="openapi" onclick="showTab('openapi')">OpenAPI</div>
+    {"" if p.get('targetType') != 'web' else '<div class="tab" data-tab="cookies" onclick="showTab(\'cookies\')">Cookies</div>'}
     <div class="tab" data-tab="nextsteps" onclick="showTab('nextsteps')">Next Steps</div>
   </div>
   <div id="p{i}-diagrams" class="tab-content active">{content['diagrams']}</div>
@@ -282,6 +393,7 @@ def main():
     <div id="swagger-{i}" style="display:none;background:white;border-radius:8px;min-height:400px;"></div>
     <div id="yaml-{i}" class="openapi"><pre><code class="language-yaml">{content['openapi']}</code></pre></div>
   </div>
+  <div id="p{i}-cookies" class="tab-content">{content.get('cookies', '')}</div>
   <div id="p{i}-nextsteps" class="tab-content"><h2>Further Investigation / Next Steps</h2>{content['nextsteps']}</div>
 </div>
 '''
