@@ -174,17 +174,88 @@ Long strings (device name, labels) use 4-packet assembly:
 ### BLE Disconnect (code `ab0224`)
 - Radio requests disconnect — close GATT connection
 
+## Frequency Encoding/Decoding (VERIFIED)
+
+### Decoding frequency from `ab0901` response
+
+The frequency is encoded in Bytes 4-7 using **nibble extraction**:
+
+```csharp
+// Extract nibbles from bytes 4-7
+byte b4High = (byte)((byte4 >> 4) & 0x0F);
+byte b4Low  = (byte)(byte4 & 0x0F);
+byte b5High = (byte)((byte5 >> 4) & 0x0F);
+byte b5Low  = (byte)(byte5 & 0x0F);
+byte b6Low  = (byte)(byte6 & 0x0F);
+
+// Reassemble as hex string: B6L | B5H | B5L | B4H | B4L
+string freqHex = $"{b6Low:X}{b5High:X}{b5Low:X}{b4High:X}{b4Low:X}";
+uint freqRaw = Convert.ToUInt32(freqHex, 16);
+
+// Apply decimal places based on band
+int decimalPlaces = bandCode switch {
+    0x00 => 2,   // FM: 102.30 MHz (÷100)
+    0x01 => 0,   // MW: 1270 KHz (÷1)
+    _    => 3    // SW/AIR/VHF/WB: 119.345 MHz (÷1000)
+};
+double freq = freqRaw / Math.Pow(10, decimalPlaces);
+```
+
+### Band codes (Byte 3 of `ab0901`)
+
+| Code | Band | Unit | Decimal Places | Example |
+|------|------|------|----------------|---------|
+| 0x00 | FM | MHz | 2 | 102.30 |
+| 0x01 | MW | KHz | 0 | 1270 |
+| 0x02 | SW | MHz | 3 | 6.175 |
+| 0x03 | AIR | MHz | 3 | 119.345 |
+| 0x06 | WB | MHz | 3 | 162.550 |
+| 0x07 | VHF | MHz | 3 | 145.800 |
+
+### Byte 8: Unit indicator
+- `0x00` = MHz
+- `0x01` = KHz
+
+### Byte 9: Signal strength (nibble-packed)
+- High nibble (bits 7-4): Signal strength level (0-6)
+- Low nibble (bits 3-0): Signal bars/mode indicator
+
+### Sending a frequency (digit-by-digit)
+
+There is NO single "set frequency" command. Frequency entry works like a physical keypad:
+
+```
+1. Send sendButtonFreq (AB 02 0C 0D) → enter frequency input mode
+2. Send digits one by one:
+   - sendNumber1 (AB 02 0C 01) for "1"
+   - sendNumber0 (AB 02 0C 0A) for "0"
+   - sendNumber2 (AB 02 0C 02) for "2"
+   - sendButtonPoint (AB 02 0C 0C) for "."
+   - sendNumber3 (AB 02 0C 03) for "3"
+3. Send sendButtonFreq (AB 02 0C 0D) → confirm frequency
+```
+
+A higher-level `SetFrequency(double freq)` method should:
+1. Convert frequency to string
+2. Send freq_enter to start input mode
+3. Send each digit/decimal as individual commands with ~50ms delay between
+4. Send freq_enter to confirm
+
 ## Client Requirements
 
 - Language: **C#**
 - Use `Plugin.BLE` or `InTheHand.BluetoothLE` for cross-platform BLE
-- Implement all 73 commands with strongly-typed methods (e.g., `SetFrequency(double freq)`, `SetVolume(int level)`, `TuneUp()`, `PowerToggle()`)
+- Implement all 73 commands with strongly-typed methods
+- **High-level methods**: `SetFrequency(double freq)` (digit-by-digit), `SetBand(RadioBand band)`, `TuneUp()`, `TuneDown()`, `VolumeUp()`, `VolumeDown()`, `PowerToggle()`
 - Parse all 54 response types into strongly-typed events/callbacks
-- Include event-driven architecture: `OnFrequencyChanged`, `OnVolumeChanged`, `OnBatteryChanged`, `OnModeChanged`, `OnSignalStrengthChanged`
-- Handle connection lifecycle: scan → connect → discover → handshake → ready
+- **Frequency decoding**: Implement the nibble extraction formula above for parsing `ab0901` responses
+- Include event-driven architecture: `OnFrequencyChanged`, `OnVolumeChanged`, `OnBatteryChanged`, `OnModeChanged`, `OnSignalStrengthChanged`, `OnDemodulationChanged`, `OnPlaybackChanged`
+- **RadioState model**: Properties for Frequency, Band, Volume, Battery, SignalStrength, DemodMode, EqMode, DeviceMode, IsPlaying, SqLevel, SleepTimer
+- Handle connection lifecycle: scan → connect → discover services → enable notifications → handshake → ready
 - Handle multi-packet string assembly with GBK decoding
 - Include checksum calculation: `checksum = (sum of all bytes except checksum) & 0xFF`
-- Include reconnection logic
+- Include reconnection logic with exponential backoff
+- Thread-safe command queue (BLE write operations must be serialized)
 - XML doc comments on all public members
 
 Generate the complete client code now.
