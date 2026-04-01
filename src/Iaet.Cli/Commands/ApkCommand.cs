@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Iaet.Android.Bluetooth;
 using Iaet.Android.Decompilation;
 using Iaet.Android.Extractors;
 using Iaet.Core.Abstractions;
@@ -25,6 +26,7 @@ internal static class ApkCommand
         var cmd = new Command("apk", "Android APK analysis");
         cmd.Add(CreateDecompileCmd(services));
         cmd.Add(CreateAnalyzeCmd(services));
+        cmd.Add(CreateBleCmd(services));
         return cmd;
     }
 
@@ -214,5 +216,93 @@ internal static class ApkCommand
         });
 
         return analyzeCmd;
+    }
+
+    private static Command CreateBleCmd(IServiceProvider services)
+    {
+        var bleCmd = new Command("ble", "Discover BLE services and characteristics from decompiled source");
+        var projectOption = new Option<string>("--project") { Description = "Project name", Required = true };
+        var traceDataflowOption = new Option<bool>("--trace-dataflow") { Description = "Trace BLE data flow through callbacks and UI bindings" };
+
+        bleCmd.Add(projectOption);
+        bleCmd.Add(traceDataflowOption);
+
+        bleCmd.SetAction(async (parseResult) =>
+        {
+            var project = parseResult.GetRequiredValue(projectOption);
+            var traceDataflow = parseResult.GetValue(traceDataflowOption);
+
+            using var scope = services.CreateScope();
+            var projectStore = scope.ServiceProvider.GetRequiredService<IProjectStore>();
+            var config = await projectStore.LoadAsync(project).ConfigureAwait(false);
+
+            if (config is null)
+            {
+                Console.WriteLine($"Project '{project}' not found.");
+                return;
+            }
+
+            var projectDir = projectStore.GetProjectDirectory(project);
+            var decompiledDir = Path.Combine(projectDir, "apk", "decompiled");
+
+            if (!Directory.Exists(decompiledDir))
+            {
+                Console.WriteLine("No decompiled source found. Run 'iaet apk decompile' first.");
+                return;
+            }
+
+            Console.WriteLine("Scanning for BLE services...");
+            var result = BleServiceExtractor.ExtractFromDirectory(decompiledDir);
+
+            Console.WriteLine($"  Services:        {result.Services.Count}");
+            Console.WriteLine($"  Characteristics: {result.Characteristics.Count}");
+
+            if (traceDataflow)
+            {
+                Console.WriteLine("  (Data flow tracing is not yet implemented.)");
+            }
+
+            // Write knowledge/bluetooth.json
+            var knowledgeDir = Path.Combine(projectDir, "knowledge");
+            Directory.CreateDirectory(knowledgeDir);
+
+#pragma warning disable CA1308 // Confidence/operation names displayed lowercase in JSON for readability
+            var bleObj = new
+            {
+                services = result.Services.Select(s => new
+                {
+                    uuid = s.Uuid,
+                    name = s.Name,
+                    isStandard = s.IsStandardService,
+                    confidence = s.Confidence.ToString().ToLowerInvariant(),
+                    source = s.SourceFile,
+                    characteristics = s.Characteristics.Select(c => new
+                    {
+                        uuid = c.Uuid,
+                        name = c.Name,
+                        operations = c.Operations.Select(o => o.ToString().ToLowerInvariant()).ToList(),
+                        source = c.SourceFile,
+                    }).ToList(),
+                }).ToList(),
+                characteristics = result.Characteristics.Select(c => new
+                {
+                    uuid = c.Uuid,
+                    name = c.Name,
+                    operations = c.Operations.Select(o => o.ToString().ToLowerInvariant()).ToList(),
+                    source = c.SourceFile,
+                }).ToList(),
+            };
+#pragma warning restore CA1308
+
+            var outputPath = Path.Combine(knowledgeDir, "bluetooth.json");
+            await File.WriteAllTextAsync(
+                outputPath,
+                JsonSerializer.Serialize(bleObj, JsonOptions)).ConfigureAwait(false);
+
+            Console.WriteLine();
+            Console.WriteLine($"BLE analysis written to: {outputPath}");
+        });
+
+        return bleCmd;
     }
 }
