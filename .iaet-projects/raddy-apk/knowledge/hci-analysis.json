@@ -1,0 +1,43 @@
+{
+  "source": "bugreport_Full/btsnooz_hci.log",
+  "totalPackets": 1747,
+  "aclDataPackets": 1036,
+  "transport": "L2CAP dynamic channels (NOT standard GATT/ATT)",
+  "primaryChannel": "0x0400 (745 packets)",
+  "note": "Radio uses RFCOMM/SPP-like framing over L2CAP dynamic channels, not standard BLE GATT. The 0xAB protocol runs inside the L2CAP payload.",
+  "txFrames": {
+    "total": 115,
+    "uniqueCommands": 2,
+    "commands": {
+      "ab01ff": "Handshake (sendWoshou)",
+      "ab020c00": "Band button press (commandId=0)"
+    },
+    "note": "This capture only shows 2 commands — user was likely just connecting and pressing Band once"
+  },
+  "rxFrames": {
+    "total": 336,
+    "commandGroups": {
+      "0x00": { "count": 1, "purpose": "Handshake response / init acknowledgment" },
+      "0x01": { "count": 20, "purpose": "Status update type 1 — contains nested 0xAB frames" },
+      "0x05": { "count": 5, "purpose": "Unknown status type 5" },
+      "0x06": { "count": 1, "purpose": "Display control" },
+      "0x07": { "count": 7, "purpose": "Unknown status type 7" },
+      "0x08": { "count": 1, "purpose": "Unknown status type 8" },
+      "0x0F": { "count": 5, "purpose": "Config/settings response" },
+      "0x10": { "count": 44, "purpose": "Frequency display data — the current frequency digits", "patterns": ["001b0e (most common)", "4dff", "1300"] },
+      "0x15": { "count": 1, "purpose": "Unknown status type 0x15" },
+      "0x17": { "count": 1, "purpose": "UI state — button enable/disable (confirmed from source code)" },
+      "0x18": { "count": 1, "purpose": "Unknown status type 0x18" },
+      "0x19": { "count": 2, "purpose": "Extended status — contains multiple nested frames" },
+      "0x1C": { "count": 245, "purpose": "PRIMARY DATA STREAM — main radio status feed (signal strength, tuning, mode)", "uniquePatterns": 17 },
+      "0x20": { "count": 1, "purpose": "Display mode control" },
+      "0x21": { "count": 1, "purpose": "Extended display data" }
+    }
+  },
+  "protocolInsights": {
+    "nestedFrames": "Response group 0x01 and 0x19 contain nested 0xAB frames — the radio sends compound status updates with multiple sub-messages in one notification",
+    "primaryDataStream": "Group 0x1C accounts for 73% of all responses — this is the continuous radio status feed that drives the UI display",
+    "frequencyUpdates": "Group 0x10 with 44 frames shows frequency updates — this fires whenever the tuning changes",
+    "lowCommandCount": "Only 2 TX commands in this capture suggests the user connected and pressed Band once — a fuller capture with frequency entry, volume changes, and mode switching would reveal more command patterns"
+  }
+}
