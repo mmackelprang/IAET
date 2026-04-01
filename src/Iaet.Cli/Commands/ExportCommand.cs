@@ -66,7 +66,7 @@ internal static class ExportCommand
             sessionIdOption, outputOption, projectOption, services,
             ctx => ClientPromptGenerator.Generate(ctx), "Client generation prompt"));
 
-        exportCmd.Add(CreateBleClientPromptCmd(services));
+        exportCmd.Add(CreateSmartClientPromptCmd(services));
 
         return exportCmd;
     }
@@ -152,14 +152,16 @@ internal static class ExportCommand
     }
 
     // ------------------------------------------------------------------
-    // BLE client prompt — reads knowledge files, not session captures.
+    // Smart client prompt — adapts to project type (web, BLE, or hybrid).
+    // Reads knowledge files from the project directory, includes all relevant
+    // protocol sections based on what data exists.
     // ------------------------------------------------------------------
 
-    private static Command CreateBleClientPromptCmd(IServiceProvider services)
+    private static Command CreateSmartClientPromptCmd(IServiceProvider services)
     {
-        var cmd = new Command("ble-client-prompt", "Generate BLE client generation prompt from project knowledge");
+        var cmd = new Command("smart-client-prompt", "Generate adaptive client prompt from project knowledge (web, BLE, or hybrid)");
         var projectOption = new Option<string>("--project") { Description = "Project name", Required = true };
-        var langOption = new Option<string>("--language") { Description = "Target language (e.g. C#, Python, Kotlin)", DefaultValueFactory = _ => "C#" };
+        var langOption = new Option<string>("--language") { Description = "Target language (e.g. C#, Python, Kotlin, TypeScript)", DefaultValueFactory = _ => "C#" };
         cmd.Add(projectOption);
         cmd.Add(langOption);
 
@@ -182,70 +184,158 @@ internal static class ExportCommand
             var outputDir = Path.Combine(projectDir, "output");
             Directory.CreateDirectory(outputDir);
 
-            var btPath = Path.Combine(knowledgeDir, "bluetooth.json");
-            var protoPath = Path.Combine(knowledgeDir, "response-protocol.json");
-            var summaryPath = Path.Combine(knowledgeDir, "protocol-summary.md");
+            // Detect what knowledge is available
+            var hasBluetooth = File.Exists(Path.Combine(knowledgeDir, "bluetooth.json"));
+            var hasEndpoints = File.Exists(Path.Combine(knowledgeDir, "endpoints.json"));
+            var hasProtocols = File.Exists(Path.Combine(knowledgeDir, "protocols.json"));
+            var hasDependencies = File.Exists(Path.Combine(knowledgeDir, "dependencies.json"));
+            var hasResponseProto = File.Exists(Path.Combine(knowledgeDir, "response-protocol.json"));
+            var hasProtoSummary = File.Exists(Path.Combine(knowledgeDir, "protocol-summary.md"));
+            var hasNetworkAnalysis = File.Exists(Path.Combine(knowledgeDir, "network-analysis.json"));
+            var hasOpenApi = File.Exists(Path.Combine(outputDir, "api.yaml"));
 
-            if (!File.Exists(btPath))
+            if (!hasBluetooth && !hasEndpoints && !hasOpenApi)
             {
-                Console.WriteLine("No bluetooth.json found in project knowledge. Run 'iaet apk ble' first.");
+                Console.WriteLine("No knowledge found. Run analysis first (iaet apk analyze, iaet apk ble, or import captures).");
                 return;
             }
 
-            var sb = new StringBuilder();
-            sb.AppendLine(CultureInfo.InvariantCulture, $"# BLE Client Generation Request — {config.DisplayName}");
-            sb.AppendLine();
-            sb.AppendLine(CultureInfo.InvariantCulture, $"Generate a complete, production-ready **{language}** BLE client for this device.");
-            sb.AppendLine();
-
-            // BLE protocol knowledge
-            sb.AppendLine("## BLE Protocol Knowledge");
-            sb.AppendLine();
-            sb.AppendLine("```json");
-            sb.AppendLine(await File.ReadAllTextAsync(btPath).ConfigureAwait(false));
-            sb.AppendLine("```");
-            sb.AppendLine();
-
-            // Response protocol (optional)
-            if (File.Exists(protoPath))
+            // Determine project type
+            var isBle = hasBluetooth;
+            var isWeb = hasEndpoints || hasOpenApi;
+            var projectType = (isBle, isWeb) switch
             {
-                sb.AppendLine("## Response Protocol");
+                (true, true) => "hybrid (REST API + BLE)",
+                (true, false) => "BLE device",
+                (false, true) => "REST API",
+                _ => "unknown",
+            };
+
+            var sb = new StringBuilder();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"# Client Generation Request — {config.DisplayName}");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"Generate a complete, production-ready **{language}** client for this {projectType}.");
+            sb.AppendLine();
+
+            // === BLE sections ===
+            if (hasBluetooth)
+            {
+                sb.AppendLine("## BLE Protocol");
                 sb.AppendLine();
                 sb.AppendLine("```json");
-                var protoContent = await File.ReadAllTextAsync(protoPath).ConfigureAwait(false);
-                const int maxProtoLength = 10_000;
-                sb.AppendLine(protoContent.Length > maxProtoLength
-                    ? string.Concat(protoContent.AsSpan(0, maxProtoLength), "\n... (truncated)")
-                    : protoContent);
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "bluetooth.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+
+                if (hasResponseProto)
+                {
+                    sb.AppendLine("## BLE Response Protocol");
+                    sb.AppendLine();
+                    sb.AppendLine("```json");
+                    var protoContent = await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "response-protocol.json")).ConfigureAwait(false);
+                    const int maxLen = 10_000;
+                    sb.AppendLine(protoContent.Length > maxLen
+                        ? string.Concat(protoContent.AsSpan(0, maxLen), "\n... (truncated)")
+                        : protoContent);
+                    sb.AppendLine("```");
+                    sb.AppendLine();
+                }
+
+                if (hasProtoSummary)
+                {
+                    sb.AppendLine("## BLE Protocol Summary");
+                    sb.AppendLine();
+                    sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "protocol-summary.md")).ConfigureAwait(false));
+                    sb.AppendLine();
+                }
+            }
+
+            // === REST API sections ===
+            if (hasEndpoints)
+            {
+                sb.AppendLine("## API Endpoints");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "endpoints.json")).ConfigureAwait(false));
                 sb.AppendLine("```");
                 sb.AppendLine();
             }
 
-            // Protocol summary (optional)
-            if (File.Exists(summaryPath))
+            if (hasOpenApi)
             {
-                sb.AppendLine("## Protocol Summary");
+                sb.AppendLine("## OpenAPI Specification");
                 sb.AppendLine();
-                sb.AppendLine(await File.ReadAllTextAsync(summaryPath).ConfigureAwait(false));
+                sb.AppendLine("```yaml");
+                var yamlContent = await File.ReadAllTextAsync(Path.Combine(outputDir, "api.yaml")).ConfigureAwait(false);
+                const int maxYaml = 8_000;
+                sb.AppendLine(yamlContent.Length > maxYaml
+                    ? string.Concat(yamlContent.AsSpan(0, maxYaml), "\n... (truncated)")
+                    : yamlContent);
+                sb.AppendLine("```");
                 sb.AppendLine();
             }
 
-            // Requirements
+            if (hasDependencies)
+            {
+                sb.AppendLine("## Auth Chains & Dependencies");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "dependencies.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (hasProtocols)
+            {
+                sb.AppendLine("## Streaming Protocols");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "protocols.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (hasNetworkAnalysis)
+            {
+                sb.AppendLine("## Network Architecture");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                sb.AppendLine(await File.ReadAllTextAsync(Path.Combine(knowledgeDir, "network-analysis.json")).ConfigureAwait(false));
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            // === Requirements ===
             sb.AppendLine("## Client Requirements");
             sb.AppendLine();
             sb.AppendLine(CultureInfo.InvariantCulture, $"- Language: **{language}**");
-            sb.AppendLine("- Event-driven architecture with typed callbacks for all response types");
-            sb.AppendLine("- Strongly-typed command methods for every discovered command");
-            sb.AppendLine("- Handle connection lifecycle: scan, connect, discover services, enable notifications, handshake");
-            sb.AppendLine("- Thread-safe command queue");
-            sb.AppendLine("- Reconnection logic with exponential backoff");
-            sb.AppendLine("- XML doc comments on all public members");
+            sb.AppendLine("- Async/await for all operations");
+            sb.AppendLine("- Strongly-typed methods for every discovered command/endpoint");
+            sb.AppendLine("- Event-driven architecture with typed callbacks for all response/notification types");
+
+            if (isBle)
+            {
+                sb.AppendLine("- BLE connection lifecycle: scan, connect, discover services, enable notifications, handshake");
+                sb.AppendLine("- Thread-safe BLE command queue (writes must be serialized)");
+                sb.AppendLine("- Reconnection logic with exponential backoff");
+            }
+
+            if (isWeb)
+            {
+                sb.AppendLine("- Configurable base URL and authentication (API key, OAuth, cookies)");
+                sb.AppendLine("- Retry logic with exponential backoff");
+                sb.AppendLine("- Typed request/response models for all endpoints");
+            }
+
+            sb.AppendLine("- Proper error handling with typed exceptions");
+            sb.AppendLine("- XML doc comments / docstrings on all public members");
+            sb.AppendLine("- Follow idiomatic patterns for the target language");
             sb.AppendLine();
             sb.AppendLine("Generate the complete client code now.");
 
             var outputPath = Path.Combine(outputDir, "client-prompt.md");
             await File.WriteAllTextAsync(outputPath, sb.ToString()).ConfigureAwait(false);
-            Console.WriteLine($"BLE client prompt written to {outputPath}");
+            Console.WriteLine($"Client prompt written to {outputPath} ({projectType})");
         });
 
         return cmd;
