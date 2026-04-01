@@ -113,6 +113,7 @@ def load_project(project_dir):
     # Load outputs
     project['narrative'] = read_optional(os.path.join(output_dir, 'narrative.md')) or ''
     project['openapi'] = read_optional(os.path.join(output_dir, 'api.yaml')) or ''
+    project['clientPrompt'] = read_optional(os.path.join(output_dir, 'client-prompt.md')) or ''
 
     # Load diagrams
     project['diagrams'] = {}
@@ -152,6 +153,7 @@ def load_project(project_dir):
         'authChains': len(deps_data.get('authChains', [])),
         'captures': len(project['captures']),
         'cookies': len(project['cookies'].get('cookies', [])),
+        'prompt': 1 if project['clientPrompt'] else 0,
     }
 
     # Build next steps
@@ -310,13 +312,38 @@ def render_project_content(project):
     elif is_web:
         cookies_html = '<p class="subtitle">No cookie snapshots captured yet.</p>'
 
+    # Client prompt
+    prompt_html = ""
+    if p.get('clientPrompt'):
+        prompt_html = f'<div class="narrative" id="prompt-content-{html.escape(p["name"])}"></div>'
+    else:
+        prompt_html = '<p class="subtitle">No client prompt generated yet. Run <code>iaet export ble-client-prompt --project {name}</code> to generate.</p>'.format(name=html.escape(p['name']))
+
+    # Status bar
+    status = p.get('status', 'unknown')
+    status_class = {
+        'new': 'status-new',
+        'investigating': 'status-investigating',
+        'complete': 'status-complete',
+        'archived': 'status-archived',
+    }.get(status, 'status-new')
+    status_bar = f'''<div class="status-bar">
+      <span class="status-badge {status_class}">{html.escape(status.title())}</span>
+      <span class="status-actions">Mark as:
+        <code>iaet project complete --name {html.escape(p['name'])}</code> |
+        <code>iaet project rerun --name {html.escape(p['name'])}</code>
+      </span>
+    </div>'''
+
     return {
         'diagrams': diagram_html or '<p class="subtitle">No diagrams generated yet.</p>',
         'narrative': json.dumps(p['narrative']),
         'knowledge': knowledge_html + captures_html or '<p class="subtitle">No knowledge base yet.</p>',
         'openapi': html.escape(p['openapi']) if p['openapi'] else 'No OpenAPI spec generated yet.',
         'cookies': cookies_html,
+        'prompt': prompt_html,
         'nextsteps': next_steps_html or '<p class="subtitle">No next steps identified.</p>',
+        'statusBar': status_bar,
     }
 
 
@@ -367,8 +394,12 @@ def main():
     for i, (p, content) in enumerate(zip(projects, all_content)):
         display = 'block' if i == 0 else 'none'
         s = p['stats']
+        has_prompt = s.get('prompt', 0) > 0
+        prompt_tab = '<div class="tab" data-tab="prompt" onclick="showTab(\'prompt\')">Prompt</div>' if has_prompt else ''
+        prompt_stat = f'<div class="stat" onclick="showTab(\'prompt\')"><div class="stat-value">{s.get("prompt", 0)}</div><div class="stat-label">Prompt</div></div>' if has_prompt else ''
         project_divs += f'''
 <div class="project-content" id="project-{i}" style="display:{display}">
+  {content['statusBar']}
   <p class="subtitle">{html.escape(p['displayName'])} — {html.escape(p['url'])}</p>
   <div class="stats">
     <div class="stat" onclick="showTab('diagrams')"><div class="stat-value">{s['endpoints']}</div><div class="stat-label">Endpoints</div></div>
@@ -377,6 +408,7 @@ def main():
     <div class="stat" onclick="showTab('knowledge')"><div class="stat-value">{s['authChains']}</div><div class="stat-label">Auth Chains</div></div>
     <div class="stat" onclick="showTab('knowledge')"><div class="stat-value">{s['captures']}</div><div class="stat-label">Captures</div></div>
     <div class="stat" onclick="showTab('cookies')" style="{'display:block' if s.get('cookies', 0) > 0 or p.get('targetType') == 'web' else 'display:none'}"><div class="stat-value">{s.get('cookies', 0)}</div><div class="stat-label">Cookies</div></div>
+    {prompt_stat}
     <div class="stat" onclick="showTab('nextsteps')"><div class="stat-value">{len(p['nextSteps'])}</div><div class="stat-label">Next Steps</div></div>
   </div>
   <div class="tabs">
@@ -385,6 +417,7 @@ def main():
     <div class="tab" data-tab="knowledge" onclick="showTab('knowledge')">Knowledge</div>
     <div class="tab" data-tab="openapi" onclick="showTab('openapi')">OpenAPI</div>
     {"" if p.get('targetType') != 'web' else '<div class="tab" data-tab="cookies" onclick="showTab(\'cookies\')">Cookies</div>'}
+    {prompt_tab}
     <div class="tab" data-tab="nextsteps" onclick="showTab('nextsteps')">Next Steps</div>
   </div>
   <div id="p{i}-diagrams" class="tab-content active">{content['diagrams']}</div>
@@ -399,12 +432,14 @@ def main():
     <div id="yaml-{i}" class="openapi"><pre><code class="language-yaml">{content['openapi']}</code></pre></div>
   </div>
   <div id="p{i}-cookies" class="tab-content">{content.get('cookies', '')}</div>
+  <div id="p{i}-prompt" class="tab-content">{content.get('prompt', '')}</div>
   <div id="p{i}-nextsteps" class="tab-content"><h2>Further Investigation / Next Steps</h2>{content['nextsteps']}</div>
 </div>
 '''
 
-    # Narrative data for JS
+    # Narrative + prompt data for JS
     narrative_data = json.dumps({i: p['narrative'] for i, p in enumerate(projects)})
+    prompt_data = json.dumps({i: p['clientPrompt'] for i, p in enumerate(projects) if p['clientPrompt']})
 
     page = f'''<!DOCTYPE html>
 <html lang="en">
@@ -462,6 +497,15 @@ def main():
   .badge-human{{background:var(--amber);color:#1e293b;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px}}
   .swagger-btn{{border:1px solid var(--border);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;background:var(--card);color:var(--muted)}}
   .swagger-btn.active-btn{{background:var(--accent);color:white;border:none}}
+  .status-bar{{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:10px 16px;background:var(--card);border-radius:8px;border:1px solid var(--border)}}
+  .status-badge{{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}}
+  .status-new{{background:#334155;color:#94a3b8}}
+  .status-investigating{{background:#1e3a5f;color:#60a5fa}}
+  .status-complete{{background:#14532d;color:#4ade80}}
+  .status-archived{{background:#3f3f46;color:#a1a1aa}}
+  .status-actions{{font-size:12px;color:var(--muted)}}
+  .status-actions code{{background:#0d1117;padding:2px 6px;border-radius:3px;font-size:11px;color:var(--text);cursor:pointer}}
+  .status-actions code:hover{{background:var(--accent);color:white}}
 </style>
 </head>
 <body>
@@ -475,11 +519,17 @@ def main():
   // Render diagrams for the initially visible project only
   mermaid.run({{nodes:document.querySelectorAll('#project-0 pre.mermaid')}});
   const narrativeData = {narrative_data};
+  const promptData = {prompt_data};
   let currentProject = 0;
 
   // Render narratives
   for (const [idx, md] of Object.entries(narrativeData)) {{
     const el = document.getElementById('narrative-' + idx);
+    if (el && md) el.innerHTML = marked.parse(md);
+  }}
+  // Render client prompts
+  for (const [idx, md] of Object.entries(promptData)) {{
+    const el = document.querySelector('#p' + idx + '-prompt .narrative');
     if (el && md) el.innerHTML = marked.parse(md);
   }}
   hljs.highlightAll();
@@ -505,6 +555,18 @@ def main():
     container.querySelector('.tab[data-tab="' + name + '"]')?.classList.add('active');
     if (name === 'diagrams') renderMermaid(currentProject);
   }}
+
+  // Copy CLI commands to clipboard on click
+  document.querySelectorAll('.status-actions code').forEach(el => {{
+    el.title = 'Click to copy';
+    el.addEventListener('click', () => {{
+      navigator.clipboard.writeText(el.textContent).then(() => {{
+        const orig = el.textContent;
+        el.textContent = 'Copied!';
+        setTimeout(() => {{ el.textContent = orig; }}, 1200);
+      }});
+    }});
+  }});
 
   const swaggerInited = {{}};
   function toggleSwagger(mode, idx) {{
