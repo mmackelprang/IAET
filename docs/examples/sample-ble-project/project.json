@@ -1,0 +1,13 @@
+{
+  "name": "sample-ble-project",
+  "displayName": "Sample BLE Device Investigation",
+  "targetType": "android",
+  "entryPoints": [
+    { "url": "ble://sample-device", "label": "BLE Device" }
+  ],
+  "authRequired": false,
+  "currentRound": 1,
+  "status": "investigating",
+  "createdAt": "2026-04-01T10:00:00Z",
+  "lastActivityAt": "2026-04-01T14:00:00Z"
+}

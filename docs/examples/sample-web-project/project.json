@@ -1,0 +1,15 @@
+{
+  "name": "sample-web-project",
+  "displayName": "Sample Web API Investigation",
+  "targetType": "web",
+  "entryPoints": [
+    { "url": "https://api.example.com", "label": "Main API" }
+  ],
+  "authRequired": true,
+  "authMethod": "browser-login",
+  "focusAreas": ["rest-api", "websocket"],
+  "currentRound": 2,
+  "status": "complete",
+  "createdAt": "2026-03-31T10:00:00Z",
+  "lastActivityAt": "2026-03-31T16:00:00Z"
+}
