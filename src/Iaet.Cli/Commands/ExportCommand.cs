@@ -1,5 +1,9 @@
+// CA1303: CLI output strings are intentionally not localized.
+#pragma warning disable CA1303
+
 using System.CommandLine;
 using System.Globalization;
+using System.Text;
 using Iaet.Catalog;
 using Iaet.Core.Abstractions;
 using Iaet.Export;
@@ -61,6 +65,8 @@ internal static class ExportCommand
         exportCmd.Add(CreateSubcommand("client-prompt", "Generate AI client generation prompt",
             sessionIdOption, outputOption, projectOption, services,
             ctx => ClientPromptGenerator.Generate(ctx), "Client generation prompt"));
+
+        exportCmd.Add(CreateBleClientPromptCmd(services));
 
         return exportCmd;
     }
@@ -143,5 +149,105 @@ internal static class ExportCommand
         {
             Console.Write(output);
         }
+    }
+
+    // ------------------------------------------------------------------
+    // BLE client prompt — reads knowledge files, not session captures.
+    // ------------------------------------------------------------------
+
+    private static Command CreateBleClientPromptCmd(IServiceProvider services)
+    {
+        var cmd = new Command("ble-client-prompt", "Generate BLE client generation prompt from project knowledge");
+        var projectOption = new Option<string>("--project") { Description = "Project name", Required = true };
+        var langOption = new Option<string>("--language") { Description = "Target language (e.g. C#, Python, Kotlin)", DefaultValueFactory = _ => "C#" };
+        cmd.Add(projectOption);
+        cmd.Add(langOption);
+
+        cmd.SetAction(async (parseResult) =>
+        {
+            var project = parseResult.GetRequiredValue(projectOption);
+            var language = parseResult.GetValue(langOption)!;
+
+            using var scope = services.CreateScope();
+            var projectStore = scope.ServiceProvider.GetRequiredService<IProjectStore>();
+            var config = await projectStore.LoadAsync(project).ConfigureAwait(false);
+            if (config is null)
+            {
+                Console.WriteLine($"Project '{project}' not found.");
+                return;
+            }
+
+            var projectDir = projectStore.GetProjectDirectory(project);
+            var knowledgeDir = Path.Combine(projectDir, "knowledge");
+            var outputDir = Path.Combine(projectDir, "output");
+            Directory.CreateDirectory(outputDir);
+
+            var btPath = Path.Combine(knowledgeDir, "bluetooth.json");
+            var protoPath = Path.Combine(knowledgeDir, "response-protocol.json");
+            var summaryPath = Path.Combine(knowledgeDir, "protocol-summary.md");
+
+            if (!File.Exists(btPath))
+            {
+                Console.WriteLine("No bluetooth.json found in project knowledge. Run 'iaet apk ble' first.");
+                return;
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"# BLE Client Generation Request — {config.DisplayName}");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"Generate a complete, production-ready **{language}** BLE client for this device.");
+            sb.AppendLine();
+
+            // BLE protocol knowledge
+            sb.AppendLine("## BLE Protocol Knowledge");
+            sb.AppendLine();
+            sb.AppendLine("```json");
+            sb.AppendLine(await File.ReadAllTextAsync(btPath).ConfigureAwait(false));
+            sb.AppendLine("```");
+            sb.AppendLine();
+
+            // Response protocol (optional)
+            if (File.Exists(protoPath))
+            {
+                sb.AppendLine("## Response Protocol");
+                sb.AppendLine();
+                sb.AppendLine("```json");
+                var protoContent = await File.ReadAllTextAsync(protoPath).ConfigureAwait(false);
+                const int maxProtoLength = 10_000;
+                sb.AppendLine(protoContent.Length > maxProtoLength
+                    ? string.Concat(protoContent.AsSpan(0, maxProtoLength), "\n... (truncated)")
+                    : protoContent);
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            // Protocol summary (optional)
+            if (File.Exists(summaryPath))
+            {
+                sb.AppendLine("## Protocol Summary");
+                sb.AppendLine();
+                sb.AppendLine(await File.ReadAllTextAsync(summaryPath).ConfigureAwait(false));
+                sb.AppendLine();
+            }
+
+            // Requirements
+            sb.AppendLine("## Client Requirements");
+            sb.AppendLine();
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Language: **{language}**");
+            sb.AppendLine("- Event-driven architecture with typed callbacks for all response types");
+            sb.AppendLine("- Strongly-typed command methods for every discovered command");
+            sb.AppendLine("- Handle connection lifecycle: scan, connect, discover services, enable notifications, handshake");
+            sb.AppendLine("- Thread-safe command queue");
+            sb.AppendLine("- Reconnection logic with exponential backoff");
+            sb.AppendLine("- XML doc comments on all public members");
+            sb.AppendLine();
+            sb.AppendLine("Generate the complete client code now.");
+
+            var outputPath = Path.Combine(outputDir, "client-prompt.md");
+            await File.WriteAllTextAsync(outputPath, sb.ToString()).ConfigureAwait(false);
+            Console.WriteLine($"BLE client prompt written to {outputPath}");
+        });
+
+        return cmd;
     }
 }
