@@ -12,6 +12,10 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
 {
     /// <inheritdoc />
     public Task<SchemaResult> InferAsync(IReadOnlyList<string> jsonBodies, CancellationToken ct = default)
+        => InferAsync(jsonBodies, endpointPath: null, ct);
+
+    /// <inheritdoc />
+    public Task<SchemaResult> InferAsync(IReadOnlyList<string> jsonBodies, string? endpointPath, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(jsonBodies);
 
@@ -45,11 +49,13 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
         if (protojsonSchemas.Count > 0)
         {
             var mergedProto = ProtojsonAnalyzer.Merge(protojsonSchemas);
-            var description = ProtojsonAnalyzer.Describe(mergedProto);
 
             // Run value-type inference for semantic field names
             var protojsonBodies = jsonBodies.Where(ProtojsonAnalyzer.IsProtojson).ToList();
             var inferredFields = ValueTypeInferrer.InferFromSamples(protojsonBodies);
+
+            // Run recursive analyzer for deeper field resolution with endpoint context
+            var resolvedFields = RecursiveProtojsonAnalyzer.AnalyzeMultiple(protojsonBodies, endpointPath);
 
             var warnings = new List<string>
             {
@@ -58,8 +64,8 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
 
             // Generate a positional JSON Schema
             var jsonSchema = GenerateProtojsonSchema(mergedProto);
-            // Generate a C# record with positional comments and inferred names
-            var csharp = GenerateProtojsonCSharp(mergedProto, inferredFields);
+            // Generate a C# record with positional comments, inferred names, and nested types
+            var csharp = GenerateProtojsonCSharp(mergedProto, inferredFields, resolvedFields);
             // Generate valid OpenAPI YAML for protojson
             var openApi = GenerateProtojsonOpenApi(mergedProto);
 
@@ -108,7 +114,8 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
 
     private static string GenerateProtojsonCSharp(
         ProtojsonSchema schema,
-        IReadOnlyList<InferredField>? inferredFields = null)
+        IReadOnlyList<InferredField>? inferredFields = null,
+        IReadOnlyList<ResolvedField>? resolvedFields = null)
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("// Protojson positional schema — field names are inferred from position");
@@ -118,9 +125,16 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
         // Build a set of used names to avoid duplicates
         var usedNames = new HashSet<string>(StringComparer.Ordinal);
 
+        // Collect nested type definitions to append after the main record
+        var nestedTypes = new List<string>();
+
         for (var i = 0; i < schema.Fields.Count; i++)
         {
             var field = schema.Fields[i];
+            var resolved = resolvedFields is not null && i < resolvedFields.Count
+                ? resolvedFields[i]
+                : null;
+
             var csType = field.InferredType switch
             {
                 "string" => "string?",
@@ -132,24 +146,109 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
                 _ => "JsonElement?",
             };
 
-            // Determine the property name from inferred fields or fall back to positional
-            var inferred = inferredFields is not null && i < inferredFields.Count
-                ? inferredFields[i]
-                : null;
-            var propertyName = GetUniquePropertyName(inferred, i, usedNames);
+            // If the resolved field has nested fields, generate a nested type
+            if (resolved?.NestedFields is { Count: > 0 })
+            {
+                var nestedTypeName = resolved.IsRepeatedEntity && resolved.EntityTypeName is not null
+                    ? resolved.EntityTypeName
+                    : $"Field{i}Item";
+                csType = resolved.IsRepeatedEntity
+                    ? $"{nestedTypeName}[]?"
+                    : $"{nestedTypeName}?";
+                nestedTypes.Add(GenerateNestedRecord(nestedTypeName, resolved.NestedFields));
+            }
+
+            // Determine the property name: prefer resolved name over inferred
+            string propertyName;
+            if (resolved?.ResolvedName is not null)
+            {
+                var name = char.ToUpperInvariant(resolved.ResolvedName[0]) + resolved.ResolvedName[1..];
+                propertyName = EnsureUnique(name, usedNames);
+            }
+            else
+            {
+                var inferred = inferredFields is not null && i < inferredFields.Count
+                    ? inferredFields[i]
+                    : null;
+                propertyName = GetUniquePropertyName(inferred, i, usedNames);
+            }
             usedNames.Add(propertyName);
 
             var comma = i < schema.Fields.Count - 1 ? "," : "";
 
             // Build comment with semantic info
-            var comment = BuildFieldComment(field, inferred);
+            var inferred2 = inferredFields is not null && i < inferredFields.Count
+                ? inferredFields[i]
+                : null;
+            var comment = BuildFieldComment(field, inferred2);
 
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
                 $"    {csType} {propertyName}{comma}{comment}");
         }
 
         sb.AppendLine(");");
+
+        // Append nested type definitions
+        foreach (var nested in nestedTypes)
+        {
+            sb.AppendLine();
+            sb.Append(nested);
+        }
+
         return sb.ToString();
+    }
+
+    private static string GenerateNestedRecord(
+        string typeName,
+        IReadOnlyList<ResolvedField> fields)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+            $"public sealed record {typeName}(");
+
+        var usedNames = new HashSet<string>(StringComparer.Ordinal);
+
+        for (var i = 0; i < fields.Count; i++)
+        {
+            var f = fields[i];
+            var csType = f.DataType switch
+            {
+                "string" => "string?",
+                "integer" => "long?",
+                "number" => "double?",
+                "boolean" => "bool?",
+                "array" => "JsonElement[]?",
+                "object" => "JsonElement?",
+                "null" => "JsonElement?",
+                _ => "JsonElement?",
+            };
+
+            var name = f.ResolvedName is not null
+                ? char.ToUpperInvariant(f.ResolvedName[0]) + f.ResolvedName[1..]
+                : $"Field{i}";
+            name = EnsureUnique(name, usedNames);
+            usedNames.Add(name);
+
+            var comma = i < fields.Count - 1 ? "," : "";
+            var comment = f.SemanticType is not null ? $" // {f.SemanticType}" : "";
+
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"    {csType} {name}{comma}{comment}");
+        }
+
+        sb.AppendLine(");");
+        return sb.ToString();
+    }
+
+    private static string EnsureUnique(string name, HashSet<string> usedNames)
+    {
+        if (!usedNames.Contains(name))
+            return name;
+
+        var suffix = 2;
+        while (usedNames.Contains($"{name}{suffix}"))
+            suffix++;
+        return $"{name}{suffix}";
     }
 
     private static string GetUniquePropertyName(
