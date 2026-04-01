@@ -91,6 +91,40 @@ public sealed class ProjectStore : IProjectStore
         await SaveAsync(archived, ct).ConfigureAwait(false);
     }
 
+    public async Task<ProjectConfig> RefreshStatusAsync(string projectName, CancellationToken ct = default)
+    {
+        var config = await LoadAsync(projectName, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException($"Project '{projectName}' not found.");
+
+        if (config.Status == ProjectStatus.Archived || config.Status == ProjectStatus.Complete)
+            return config;
+
+        var dir = GetProjectDirectory(projectName);
+        var knowledgeDir = Path.Combine(dir, "knowledge");
+        var capturesDir = Path.Combine(dir, "captures");
+        var roundsDir = Path.Combine(dir, "rounds");
+        var outputDir = Path.Combine(dir, "output");
+
+        var hasKnowledge = Directory.Exists(knowledgeDir) && Directory.EnumerateFiles(knowledgeDir, "*.json").Any();
+        var hasCaptures = Directory.Exists(capturesDir) && Directory.EnumerateFiles(capturesDir).Any();
+        var hasRounds = Directory.Exists(roundsDir) && Directory.EnumerateDirectories(roundsDir).Any();
+        var hasOutput = Directory.Exists(outputDir) && Directory.EnumerateFiles(outputDir).Any();
+        var hasDecompiled = Directory.Exists(Path.Combine(dir, "apk", "decompiled"));
+
+        var newStatus = config.Status;
+        if (hasKnowledge || hasCaptures || hasRounds || hasOutput || hasDecompiled)
+            newStatus = ProjectStatus.Investigating;
+
+        if (newStatus != config.Status)
+        {
+            var updated = config with { Status = newStatus, LastActivityAt = DateTimeOffset.UtcNow };
+            await SaveAsync(updated, ct).ConfigureAwait(false);
+            return updated;
+        }
+
+        return config;
+    }
+
     private static async Task WriteJsonAsync<T>(string path, T value, CancellationToken ct)
     {
         var stream = File.Open(path, FileMode.Create, FileAccess.Write, FileShare.None);

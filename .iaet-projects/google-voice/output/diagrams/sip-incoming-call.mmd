@@ -1,0 +1,36 @@
+sequenceDiagram
+    title Google Voice — Incoming Call Flow
+    participant Browser
+    participant GV_WSS as voice.telephony.goog (SIP WebSocket)
+    participant OGHP as OGHP Gateway (74.125.39.x)
+
+    Note over Browser,GV_WSS: Incoming INVITE (server-initiated)
+    GV_WSS->>Browser: INVITE sip:v5ad2hhq@local (SDP offer from Google)
+    Browser-->>GV_WSS: 100 Trying
+    Browser-->>GV_WSS: 180 Ringing
+
+    Note over Browser,OGHP: WebRTC Setup
+    Browser->>Browser: setRemoteDescription(offer)
+    Browser->>Browser: createAnswer → setLocalDescription(answer)
+    Browser->>OGHP: ICE candidates (host + SRFLX)
+
+    Note over Browser,GV_WSS: Call Answered
+    Browser-->>GV_WSS: 183 Session Progress (SDP answer)
+    Browser-->>GV_WSS: 200 OK
+    GV_WSS->>Browser: ACK
+
+    Note over Browser,OGHP: Codec Renegotiation (3 rounds)
+    Browser->>GV_WSS: re-INVITE (updated SDP)
+    GV_WSS-->>Browser: 200 OK (updated SDP answer)
+    Browser->>GV_WSS: ACK
+
+    Note over Browser,OGHP: Bidirectional Audio
+    Browser->>OGHP: RTP/SRTP (Opus)
+    OGHP-->>Browser: RTP/SRTP (Opus)
+
+    Note over Browser,GV_WSS: Call Terminated
+    Browser->>GV_WSS: BYE
+    GV_WSS-->>Browser: 200 OK
+
+    %% Confidence: High — 19 RTC events + SIP frames from live incoming call
+    %% Source: IAET browser extension capture, session 098a8b26

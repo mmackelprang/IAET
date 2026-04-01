@@ -93,6 +93,68 @@ public sealed class ProjectStoreTests : IDisposable
         loaded!.Status.Should().Be(ProjectStatus.Archived);
     }
 
+    [Fact]
+    public async Task RefreshStatus_new_project_with_no_content_stays_new()
+    {
+        await _store.CreateAsync(MakeConfig("empty-project"));
+        var result = await _store.RefreshStatusAsync("empty-project");
+        result.Status.Should().Be(ProjectStatus.New);
+    }
+
+    [Fact]
+    public async Task RefreshStatus_project_with_knowledge_files_becomes_investigating()
+    {
+        await _store.CreateAsync(MakeConfig("active-project"));
+        var knowledgeDir = Path.Combine(_store.GetProjectDirectory("active-project"), "knowledge");
+        Directory.CreateDirectory(knowledgeDir);
+        await File.WriteAllTextAsync(Path.Combine(knowledgeDir, "endpoints.json"), "{}");
+
+        var result = await _store.RefreshStatusAsync("active-project");
+        result.Status.Should().Be(ProjectStatus.Investigating);
+    }
+
+    [Fact]
+    public async Task RefreshStatus_archived_project_stays_archived_even_with_content()
+    {
+        await _store.CreateAsync(MakeConfig("archived-project"));
+        await _store.ArchiveAsync("archived-project");
+
+        // Add content that would normally trigger Investigating
+        var knowledgeDir = Path.Combine(_store.GetProjectDirectory("archived-project"), "knowledge");
+        Directory.CreateDirectory(knowledgeDir);
+        await File.WriteAllTextAsync(Path.Combine(knowledgeDir, "endpoints.json"), "{}");
+
+        var result = await _store.RefreshStatusAsync("archived-project");
+        result.Status.Should().Be(ProjectStatus.Archived);
+    }
+
+    [Fact]
+    public async Task RefreshStatus_project_with_captures_becomes_investigating()
+    {
+        await _store.CreateAsync(MakeConfig("capture-project"));
+        var capturesDir = Path.Combine(_store.GetProjectDirectory("capture-project"), "captures");
+        Directory.CreateDirectory(capturesDir);
+        await File.WriteAllTextAsync(Path.Combine(capturesDir, "test.iaet.json.gz"), "dummy");
+
+        var result = await _store.RefreshStatusAsync("capture-project");
+        result.Status.Should().Be(ProjectStatus.Investigating);
+    }
+
+    [Fact]
+    public async Task RefreshStatus_complete_project_stays_complete()
+    {
+        var config = MakeConfig("complete-project");
+        await _store.CreateAsync(config);
+        var updated = config with { Status = ProjectStatus.Complete };
+        await _store.SaveAsync(updated);
+
+        var knowledgeDir = Path.Combine(_store.GetProjectDirectory("complete-project"), "knowledge");
+        await File.WriteAllTextAsync(Path.Combine(knowledgeDir, "endpoints.json"), "{}");
+
+        var result = await _store.RefreshStatusAsync("complete-project");
+        result.Status.Should().Be(ProjectStatus.Complete);
+    }
+
     private static ProjectConfig MakeConfig(string name) => new()
     {
         Name = name,
