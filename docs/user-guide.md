@@ -33,13 +33,41 @@ Requires .NET 9 SDK or later. Verify the install:
 iaet --version
 ```
 
-**Prerequisites for specific features:**
+**Prerequisites:**
 
-| Feature | Prerequisite |
-|---------|-------------|
-| APK analysis | **jadx** on PATH — [download](https://github.com/skylot/jadx/releases) or `brew install jadx` / `scoop install jadx` |
-| Playwright capture | `npx playwright install chromium` |
-| HCI snoop log import | Android device with Developer Options enabled |
+| Requirement | Purpose | Install |
+|-------------|---------|---------|
+| **.NET 10 SDK** | Core runtime for IAET | [dot.net/download](https://dot.net/download) |
+| **Python 3.10+** | Dashboard generator script | [python.org](https://python.org) |
+
+**External tools for specific analysis types:**
+
+| Analysis Type | Tool | Version | Purpose | Install |
+|---------------|------|---------|---------|---------|
+| **Web capture (Playwright)** | Chromium | Latest | Browser automation for `iaet capture` | `npx playwright install chromium` |
+| **Web capture (Extension)** | Chrome | Latest | Manual capture via IAET browser extension | Load `extensions/iaet-capture/dist` in Chrome |
+| **Android APK decompile** | **jadx** | 1.5+ | Decompile DEX → Java source | [github.com/skylot/jadx/releases](https://github.com/skylot/jadx/releases) or `brew install jadx` / `scoop install jadx` / `choco install jadx` |
+| **Android APK resources** | **apktool** | 2.9+ | Decode AndroidManifest.xml, resources | [apktool.org](https://apktool.org) or `brew install apktool` / `choco install apktool` |
+| **Android HCI log** | Android device | — | Bluetooth HCI snoop log capture | Enable in Developer Options → "Enable Bluetooth HCI snoop log" |
+| **Java runtime** (for jadx) | **JDK 11+** | 11+ | Required by jadx | `brew install openjdk@11` / download from [adoptium.net](https://adoptium.net) |
+
+> **Note:** jadx and apktool require Java 11+. If your default `java` is older, set `JAVA_HOME` before running:
+> ```bash
+> export JAVA_HOME="/path/to/jdk-11"
+> iaet apk decompile --project my-app --apk app.apk --jadx-path /path/to/jadx
+> ```
+
+**Future analysis types (not yet implemented):**
+
+| Analysis Type | Tools Needed | Status |
+|---------------|-------------|--------|
+| .NET EXE/DLL | ILSpy CLI, dnSpy | Planned (Phase 6) |
+| Windows native (PE) | API Monitor, Fiddler | Planned |
+| Linux native (ELF) | Ghidra, ltrace, strace | Planned |
+| iOS IPA | class-dump, otool (requires Mac) | Planned |
+| Electron apps | asar extract, Node.js | Planned |
+
+This table will be updated as new analysis capabilities are added.
 
 ### Creating Your First Project
 
