@@ -317,7 +317,7 @@ def render_project_content(project):
     if p.get('clientPrompt'):
         prompt_html = f'<div class="narrative" id="prompt-content-{html.escape(p["name"])}"></div>'
     else:
-        prompt_html = '<p class="subtitle">No client prompt generated yet. Run <code>iaet export ble-client-prompt --project {name}</code> to generate.</p>'.format(name=html.escape(p['name']))
+        prompt_html = '<p class="subtitle">No client prompt generated yet. Run <code>iaet export smart-client-prompt --project {name}</code> to generate.</p>'.format(name=html.escape(p['name']))
 
     # Status bar
     status = p.get('status', 'unknown')

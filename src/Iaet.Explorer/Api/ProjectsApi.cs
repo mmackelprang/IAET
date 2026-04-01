@@ -32,6 +32,7 @@ internal static class ProjectsApi
         // Get single project details
         app.MapGet("/api/projects/{name}", async (string name, IProjectStore store) =>
         {
+            if (!IsValidFileName(name)) return Results.BadRequest("Invalid project name");
             var config = await store.LoadAsync(name).ConfigureAwait(false);
             return config is null ? Results.NotFound() : Results.Ok(config);
         });
@@ -39,6 +40,7 @@ internal static class ProjectsApi
         // List available files for a project
         app.MapGet("/api/projects/{name}/files", (string name, IProjectStore store) =>
         {
+            if (!IsValidFileName(name)) return Results.BadRequest("Invalid project name");
             var dir = store.GetProjectDirectory(name);
             if (!Directory.Exists(dir))
                 return Results.NotFound();
@@ -61,6 +63,7 @@ internal static class ProjectsApi
         // Get project knowledge file
         app.MapGet("/api/projects/{name}/knowledge/{file}", async (string name, string file, IProjectStore store) =>
         {
+            if (!IsValidFileName(name)) return Results.BadRequest("Invalid project name");
             if (!IsValidFileName(file))
                 return Results.BadRequest("Invalid file name.");
 
@@ -76,6 +79,7 @@ internal static class ProjectsApi
         // Get project output file (narrative.md, api.yaml, client-prompt.md, etc.)
         app.MapGet("/api/projects/{name}/output/{file}", async (string name, string file, IProjectStore store) =>
         {
+            if (!IsValidFileName(name)) return Results.BadRequest("Invalid project name");
             if (!IsValidFileName(file))
                 return Results.BadRequest("Invalid file name.");
 
@@ -87,7 +91,7 @@ internal static class ProjectsApi
             var content = await File.ReadAllTextAsync(path).ConfigureAwait(false);
             var contentType = file.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ? "application/json"
                 : file.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) ? "text/yaml"
-                : file.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ? "text/html"
+                : file.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ? "text/plain"
                 : "text/plain";
             return Results.Content(content, contentType);
         });
@@ -95,6 +99,7 @@ internal static class ProjectsApi
         // Get diagram file
         app.MapGet("/api/projects/{name}/diagrams/{file}", async (string name, string file, IProjectStore store) =>
         {
+            if (!IsValidFileName(name)) return Results.BadRequest("Invalid project name");
             if (!IsValidFileName(file))
                 return Results.BadRequest("Invalid file name.");
 
@@ -110,6 +115,7 @@ internal static class ProjectsApi
         // Update project status
         app.MapPost("/api/projects/{name}/status", async (string name, StatusUpdate update, IProjectStore store) =>
         {
+            if (!IsValidFileName(name)) return Results.BadRequest("Invalid project name");
             var config = await store.LoadAsync(name).ConfigureAwait(false);
             if (config is null)
                 return Results.NotFound();

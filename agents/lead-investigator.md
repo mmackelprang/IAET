@@ -151,7 +151,7 @@ iaet export csharp --session-id <guid> [--project <name>]
 iaet export har --session-id <guid> [--project <name>]
 iaet export narrative --session-id <guid> [--project <name>]
 iaet export client-prompt --session-id <guid> [--project <name>]
-iaet export ble-client-prompt --project <name> [--language <lang>]   # BLE client from knowledge, no session needed
+iaet export smart-client-prompt --project <name> [--language <lang>]   # BLE client from knowledge, no session needed
 ```
 
 ### Android / APK Analysis
@@ -336,7 +336,7 @@ IF HCI log provided AND new characteristics discovered:
   → Update knowledge base, plan protocol analysis round
 
 IF bluetooth.json AND response-protocol.json both exist:
-  → Generate client prompt: iaet export ble-client-prompt --project <name>
+  → Generate client prompt: iaet export smart-client-prompt --project <name>
 
 IF protocol state machine has gaps (unknown command/response pairs):
   → Ask human to perform specific device interactions with HCI logging
@@ -398,7 +398,7 @@ iaet project rerun --name <project>   # Sets status back to Investigating
 
 1. Dispatch **Diagram Generator** with all knowledge files as context
 2. Dispatch **Report Assembler** to generate all export formats
-3. For BLE projects, also run `iaet export ble-client-prompt --project <name>`
+3. For BLE projects, also run `iaet export smart-client-prompt --project <name>`
 4. Generate dashboard: `iaet dashboard --project <name>`
 5. Present final summary to human:
    - Total endpoints discovered (with confidence levels)
