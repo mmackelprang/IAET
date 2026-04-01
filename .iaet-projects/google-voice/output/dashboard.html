@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IAET Investigation Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/languages/json.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/languages/yaml.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+<style>
+  :root { --bg:#0f172a;--card:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--accent:#6366f1;--green:#22c55e;--amber:#f59e0b; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+  .container{max-width:1200px;margin:0 auto;padding:24px}
+  h1{color:white;font-size:28px;margin-bottom:8px}
+  h2{color:var(--accent);font-size:20px;margin:24px 0 16px;border-bottom:1px solid var(--border);padding-bottom:8px}
+  h3{color:white;font-size:16px;margin:16px 0 12px}
+  .subtitle{color:var(--muted);margin-bottom:16px}
+  .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px;flex-wrap:wrap}
+  .tab{padding:10px 20px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;font-size:14px;user-select:none}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab:hover{color:white}
+  .tab-content{display:none}.tab-content.active{display:block}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+  .stat{background:var(--card);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s;border:1px solid transparent}
+  .stat:hover{border-color:var(--accent)}
+  .stat-value{font-size:28px;font-weight:bold;color:var(--accent)}.stat-label{font-size:12px;color:var(--muted)}
+  .diagram-card,.data-card{background:var(--card);border-radius:8px;padding:20px;margin-bottom:16px;overflow-x:auto}
+  .diagram-card .mermaid{background:white;border-radius:6px;padding:16px;margin:12px 0}
+  details{margin-top:8px} summary{cursor:pointer;color:var(--muted);font-size:13px}
+  pre{background:#0d1117;border-radius:6px;padding:16px;overflow-x:auto;font-size:13px;margin-top:8px}
+  code{font-family:"Cascadia Code","Fira Code",monospace}
+  .narrative{background:var(--card);border-radius:8px;padding:24px}
+  .narrative h1,.narrative h2,.narrative h3{color:white;margin-top:20px}
+  .narrative table{width:100%;border-collapse:collapse;margin:12px 0}
+  .narrative th,.narrative td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}
+  .narrative th{background:var(--card);color:var(--accent)}
+  .narrative code{background:#0d1117;padding:2px 6px;border-radius:3px;font-size:12px}
+  .narrative blockquote{border-left:3px solid var(--accent);padding-left:12px;color:var(--muted);margin:12px 0}
+  .openapi{background:var(--card);border-radius:8px;padding:20px}
+  .steps-group{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+  .step-card{background:var(--card);border-radius:8px;padding:14px 18px;border-left:3px solid var(--amber)}
+  .step-header{font-size:14px;margin-bottom:6px}
+  .step-header code{background:#0d1117;padding:2px 6px;border-radius:3px;font-size:12px}
+  .step-detail{font-size:13px;color:var(--muted)}
+  .step-detail code{background:#0d1117;padding:2px 6px;border-radius:3px;font-size:12px;color:var(--text)}
+  .badge-tooling{background:var(--accent);color:white;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px}
+  .badge-human{background:var(--amber);color:#1e293b;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px}
+  .swagger-btn{border:1px solid var(--border);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;background:var(--card);color:var(--muted)}
+  .swagger-btn.active-btn{background:var(--accent);color:white;border:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>IAET Investigation Dashboard</h1>
+  
+  
+<div class="project-content" id="project-0" style="display:block">
+  <p class="subtitle">google-voice — https://voice.google.com</p>
+  <div class="stats">
+    <div class="stat" onclick="showTab('diagrams')"><div class="stat-value">21</div><div class="stat-label">Endpoints</div></div>
+    <div class="stat" onclick="showTab('knowledge')"><div class="stat-value">2</div><div class="stat-label">Streams</div></div>
+    <div class="stat" onclick="showTab('diagrams')"><div class="stat-value">5</div><div class="stat-label">Diagrams</div></div>
+    <div class="stat" onclick="showTab('knowledge')"><div class="stat-value">2</div><div class="stat-label">Auth Chains</div></div>
+    <div class="stat" onclick="showTab('knowledge')"><div class="stat-value">1</div><div class="stat-label">Captures</div></div>
+    <div class="stat" onclick="showTab('nextsteps')"><div class="stat-value">6</div><div class="stat-label">Next Steps</div></div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="diagrams" onclick="showTab('diagrams')">Diagrams</div>
+    <div class="tab" data-tab="narrative" onclick="showTab('narrative')">Narrative</div>
+    <div class="tab" data-tab="knowledge" onclick="showTab('knowledge')">Knowledge</div>
+    <div class="tab" data-tab="openapi" onclick="showTab('openapi')">OpenAPI</div>
+    <div class="tab" data-tab="nextsteps" onclick="showTab('nextsteps')">Next Steps</div>
+  </div>
+  <div id="p0-diagrams" class="tab-content active"><div class="diagram-card"><h3>Api Dependencies</h3>
+      <div class="mermaid">flowchart TD
+    %% Google Voice API Dependency Graph
+    %% Auth chain and call setup ordering
+
+    subgraph Auth Bootstrap
+        Login[Google OAuth Login&lt;br/&gt;Browser cookie auth]
+        SIPCreds[sipregisterinfo/get&lt;br/&gt;Retrieves SIP digest credentials]
+        AccountGet[account/get&lt;br/&gt;Phone numbers, devices, config]
+    end
+
+    subgraph Session Setup
+        ChooseServer[punctual/v1/chooseServer&lt;br/&gt;Push notification server]
+        WaaCreate[Waa/Create&lt;br/&gt;Activity audit session]
+        ContactGroups[InternalPeopleService&lt;br/&gt;GetContactGroups]
+        RingGroupsList[RingGroupsService&lt;br/&gt;ListRingGroups]
+        InboundRules[inboundcallrule/list&lt;br/&gt;Call routing config]
+    end
+
+    subgraph Call Flow
+        SIPRegister[SIP REGISTER&lt;br/&gt;wss://web.voice.telephony.goog]
+        SIPInvite[SIP INVITE&lt;br/&gt;Outgoing call initiation]
+        RTCOffer[RTCPeerConnection&lt;br/&gt;SDP offer + ICE]
+        RTCAnswer[SDP Answer&lt;br/&gt;from 183 Session Progress]
+        AudioStream[RTP/SRTP Audio&lt;br/&gt;Opus 48kHz]
+    end
+
+    subgraph Messaging
+        ThreadList[api2thread/list&lt;br/&gt;Message threads]
+        ThreadSearch[api2thread/search]
+        SendSMS[api2thread/sendsms]
+        ThreadInfo[threadinginfo/get]
+    end
+
+    Login --&gt;|OAuth cookies| AccountGet
+    Login --&gt;|OAuth cookies| SIPCreds
+    AccountGet --&gt;|phone numbers| SIPRegister
+    SIPCreds --&gt;|digest auth| SIPRegister
+    SIPRegister --&gt;|200 OK registered| SIPInvite
+    SIPInvite --&gt;|183 SDP answer| RTCAnswer
+    RTCOffer --&gt;|ICE candidates| AudioStream
+    RTCAnswer --&gt;|SRTP keys| AudioStream
+
+    Login --&gt;|OAuth cookies| ThreadList
+    Login --&gt;|OAuth cookies| SendSMS
+    Login --&gt;|API key| ChooseServer
+    Login --&gt;|API key| WaaCreate
+
+    ContactGroups --&gt;|group IDs| InboundRules
+
+    %% Confidence: High (auth chain), Medium (exact ordering of session setup calls)
+</div>
+      <details><summary>View Source (.mmd)</summary><pre><code>flowchart TD
+    %% Google Voice API Dependency Graph
+    %% Auth chain and call setup ordering
+
+    subgraph Auth Bootstrap
+        Login[Google OAuth Login&lt;br/&gt;Browser cookie auth]
+        SIPCreds[sipregisterinfo/get&lt;br/&gt;Retrieves SIP digest credentials]
+        AccountGet[account/get&lt;br/&gt;Phone numbers, devices, config]
+    end
+
+    subgraph Session Setup
+        ChooseServer[punctual/v1/chooseServer&lt;br/&gt;Push notification server]
+        WaaCreate[Waa/Create&lt;br/&gt;Activity audit session]
+        ContactGroups[InternalPeopleService&lt;br/&gt;GetContactGroups]
+        RingGroupsList[RingGroupsService&lt;br/&gt;ListRingGroups]
+        InboundRules[inboundcallrule/list&lt;br/&gt;Call routing config]
+    end
+
+    subgraph Call Flow
+        SIPRegister[SIP REGISTER&lt;br/&gt;wss://web.voice.telephony.goog]
+        SIPInvite[SIP INVITE&lt;br/&gt;Outgoing call initiation]
+        RTCOffer[RTCPeerConnection&lt;br/&gt;SDP offer + ICE]
+        RTCAnswer[SDP Answer&lt;br/&gt;from 183 Session Progress]
+        AudioStream[RTP/SRTP Audio&lt;br/&gt;Opus 48kHz]
+    end
+
+    subgraph Messaging
+        ThreadList[api2thread/list&lt;br/&gt;Message threads]
+        ThreadSearch[api2thread/search]
+        SendSMS[api2thread/sendsms]
+        ThreadInfo[threadinginfo/get]
+    end
+
+    Login --&gt;|OAuth cookies| AccountGet
+    Login --&gt;|OAuth cookies| SIPCreds
+    AccountGet --&gt;|phone numbers| SIPRegister
+    SIPCreds --&gt;|digest auth| SIPRegister
+    SIPRegister --&gt;|200 OK registered| SIPInvite
+    SIPInvite --&gt;|183 SDP answer| RTCAnswer
+    RTCOffer --&gt;|ICE candidates| AudioStream
+    RTCAnswer --&gt;|SRTP keys| AudioStream
+
+    Login --&gt;|OAuth cookies| ThreadList
+    Login --&gt;|OAuth cookies| SendSMS
+    Login --&gt;|API key| ChooseServer
+    Login --&gt;|API key| WaaCreate
+
+    ContactGroups --&gt;|group IDs| InboundRules
+
+    %% Confidence: High (auth chain), Medium (exact ordering of session setup calls)
+</code></pre></details></div>
+<div class="diagram-card"><h3>Service Data Flow</h3>
+      <div class="mermaid">flowchart TD
+    %% Google Voice Service Data Flow Map
+    %% Derived from 310 captured HTTP requests + 3 streams
+
+    Browser([Browser / Web Client])
+
+    subgraph Google Voice Backend
+        VoiceAPI[clients6.google.com&lt;br/&gt;Voice REST API&lt;br/&gt;26 endpoints]
+        RingGroups[voice.clients6.google.com&lt;br/&gt;RingGroupsService gRPC]
+        SIPGateway[web.voice.telephony.goog&lt;br/&gt;SIP-over-WebSocket&lt;br/&gt;Call signaling]
+        MediaServer[74.125.39.x&lt;br/&gt;OGHP Media Gateway&lt;br/&gt;RTP/SRTP audio]
+    end
+
+    subgraph Google Shared Services
+        People[people*.clients6.google.com&lt;br/&gt;PeopleStack / Contacts&lt;br/&gt;Autocomplete + Groups]
+        WAA[waa-pa.clients6.google.com&lt;br/&gt;Web Activity Audit]
+        AsyncData[ogads-pa.clients6.google.com&lt;br/&gt;OneGoogle AsyncData]
+        Signaler[signaler-pa.clients6.google.com&lt;br/&gt;Punctual Push Server]
+    end
+
+    subgraph Infrastructure
+        STUN[stun.l.google.com:19302&lt;br/&gt;STUN Server]
+        ReCAPTCHA[www.google.com&lt;br/&gt;reCAPTCHA Enterprise]
+        Analytics[play.google.com&lt;br/&gt;Logging / Telemetry]
+    end
+
+    Browser --&gt;|REST POST /voice/v1/*| VoiceAPI
+    Browser --&gt;|gRPC /$rpc/google.voice.*| RingGroups
+    Browser --&gt;|WebSocket SIP| SIPGateway
+    Browser --&gt;|RTP/SRTP Opus| MediaServer
+    Browser --&gt;|gRPC /$rpc/peoplestack.*| People
+    Browser --&gt;|gRPC /$rpc/google.internal.waa.*| WAA
+    Browser --&gt;|gRPC /$rpc/google.internal.onegoogle.*| AsyncData
+    Browser --&gt;|REST /punctual/v1/*| Signaler
+    Browser --&gt;|STUN Binding| STUN
+    Browser --&gt;|POST /recaptcha/*| ReCAPTCHA
+    Browser --&gt;|POST /log, /g/collect| Analytics
+
+    SIPGateway -.-&gt;|SDP offer/answer| MediaServer
+    STUN -.-&gt;|SRFLX candidate| MediaServer
+
+    %% Confidence: High — derived from 3 capture sessions (310 HTTP + 62 stream frames)
+</div>
+      <details><summary>View Source (.mmd)</summary><pre><code>flowchart TD
+    %% Google Voice Service Data Flow Map
+    %% Derived from 310 captured HTTP requests + 3 streams
+
+    Browser([Browser / Web Client])
+
+    subgraph Google Voice Backend
+        VoiceAPI[clients6.google.com&lt;br/&gt;Voice REST API&lt;br/&gt;26 endpoints]
+        RingGroups[voice.clients6.google.com&lt;br/&gt;RingGroupsService gRPC]
+        SIPGateway[web.voice.telephony.goog&lt;br/&gt;SIP-over-WebSocket&lt;br/&gt;Call signaling]
+        MediaServer[74.125.39.x&lt;br/&gt;OGHP Media Gateway&lt;br/&gt;RTP/SRTP audio]
+    end
+
+    subgraph Google Shared Services
+        People[people*.clients6.google.com&lt;br/&gt;PeopleStack / Contacts&lt;br/&gt;Autocomplete + Groups]
+        WAA[waa-pa.clients6.google.com&lt;br/&gt;Web Activity Audit]
+        AsyncData[ogads-pa.clients6.google.com&lt;br/&gt;OneGoogle AsyncData]
+        Signaler[signaler-pa.clients6.google.com&lt;br/&gt;Punctual Push Server]
+    end
+
+    subgraph Infrastructure
+        STUN[stun.l.google.com:19302&lt;br/&gt;STUN Server]
+        ReCAPTCHA[www.google.com&lt;br/&gt;reCAPTCHA Enterprise]
+        Analytics[play.google.com&lt;br/&gt;Logging / Telemetry]
+    end
+
+    Browser --&gt;|REST POST /voice/v1/*| VoiceAPI
+    Browser --&gt;|gRPC /$rpc/google.voice.*| RingGroups
+    Browser --&gt;|WebSocket SIP| SIPGateway
+    Browser --&gt;|RTP/SRTP Opus| MediaServer
+    Browser --&gt;|gRPC /$rpc/peoplestack.*| People
+    Browser --&gt;|gRPC /$rpc/google.internal.waa.*| WAA
+    Browser --&gt;|gRPC /$rpc/google.internal.onegoogle.*| AsyncData
+    Browser --&gt;|REST /punctual/v1/*| Signaler
+    Browser --&gt;|STUN Binding| STUN
+    Browser --&gt;|POST /recaptcha/*| ReCAPTCHA
+    Browser --&gt;|POST /log, /g/collect| Analytics
+
+    SIPGateway -.-&gt;|SDP offer/answer| MediaServer
+    STUN -.-&gt;|SRFLX candidate| MediaServer
+
+    %% Confidence: High — derived from 3 capture sessions (310 HTTP + 62 stream frames)
+</code></pre></details></div>
+<div class="diagram-card"><h3>Sip Incoming Call</h3>
+      <div class="mermaid">sequenceDiagram
+    title Google Voice — Incoming Call Flow
+    participant Browser
+    participant GV_WSS as voice.telephony.goog&lt;br/&gt;(SIP WebSocket)
+    participant OGHP as OGHP Gateway&lt;br/&gt;(74.125.39.x)
+
+    Note over Browser,GV_WSS: Incoming INVITE (server-initiated)
+    GV_WSS-&gt;&gt;Browser: INVITE sip:v5ad2hhq@local (SDP offer from Google)
+    Browser--&gt;&gt;GV_WSS: 100 Trying
+    Browser--&gt;&gt;GV_WSS: 180 Ringing
+
+    Note over Browser,OGHP: WebRTC Setup
+    Browser-&gt;&gt;Browser: setRemoteDescription(offer)
+    Browser-&gt;&gt;Browser: createAnswer → setLocalDescription(answer)
+    Browser-&gt;&gt;OGHP: ICE candidates (host + SRFLX)
+
+    Note over Browser,GV_WSS: Call Answered
+    Browser--&gt;&gt;GV_WSS: 183 Session Progress (SDP answer)
+    Browser--&gt;&gt;GV_WSS: 200 OK
+    GV_WSS-&gt;&gt;Browser: ACK
+
+    Note over Browser,OGHP: Codec Renegotiation (3 rounds)
+    Browser-&gt;&gt;GV_WSS: re-INVITE (updated SDP)
+    GV_WSS--&gt;&gt;Browser: 200 OK (updated SDP answer)
+    Browser-&gt;&gt;GV_WSS: ACK
+
+    Note over Browser,OGHP: Bidirectional Audio
+    Browser-&gt;&gt;OGHP: RTP/SRTP (Opus)
+    OGHP--&gt;&gt;Browser: RTP/SRTP (Opus)
+
+    Note over Browser,GV_WSS: Call Terminated
+    Browser-&gt;&gt;GV_WSS: BYE
+    GV_WSS--&gt;&gt;Browser: 200 OK
+
+    %% Confidence: High — 19 RTC events + SIP frames from live incoming call
+    %% Source: IAET browser extension capture, session 098a8b26
+</div>
+      <details><summary>View Source (.mmd)</summary><pre><code>sequenceDiagram
+    title Google Voice — Incoming Call Flow
+    participant Browser
+    participant GV_WSS as voice.telephony.goog&lt;br/&gt;(SIP WebSocket)
+    participant OGHP as OGHP Gateway&lt;br/&gt;(74.125.39.x)
+
+    Note over Browser,GV_WSS: Incoming INVITE (server-initiated)
+    GV_WSS-&gt;&gt;Browser: INVITE sip:v5ad2hhq@local (SDP offer from Google)
+    Browser--&gt;&gt;GV_WSS: 100 Trying
+    Browser--&gt;&gt;GV_WSS: 180 Ringing
+
+    Note over Browser,OGHP: WebRTC Setup
+    Browser-&gt;&gt;Browser: setRemoteDescription(offer)
+    Browser-&gt;&gt;Browser: createAnswer → setLocalDescription(answer)
+    Browser-&gt;&gt;OGHP: ICE candidates (host + SRFLX)
+
+    Note over Browser,GV_WSS: Call Answered
+    Browser--&gt;&gt;GV_WSS: 183 Session Progress (SDP answer)
+    Browser--&gt;&gt;GV_WSS: 200 OK
+    GV_WSS-&gt;&gt;Browser: ACK
+
+    Note over Browser,OGHP: Codec Renegotiation (3 rounds)
+    Browser-&gt;&gt;GV_WSS: re-INVITE (updated SDP)
+    GV_WSS--&gt;&gt;Browser: 200 OK (updated SDP answer)
+    Browser-&gt;&gt;GV_WSS: ACK
+
+    Note over Browser,OGHP: Bidirectional Audio
+    Browser-&gt;&gt;OGHP: RTP/SRTP (Opus)
+    OGHP--&gt;&gt;Browser: RTP/SRTP (Opus)
+
+    Note over Browser,GV_WSS: Call Terminated
+    Browser-&gt;&gt;GV_WSS: BYE
+    GV_WSS--&gt;&gt;Browser: 200 OK
+
+    %% Confidence: High — 19 RTC events + SIP frames from live incoming call
+    %% Source: IAET browser extension capture, session 098a8b26
+</code></pre></details></div>
+<div class="diagram-card"><h3>Sip Outgoing Call</h3>
+      <div class="mermaid">sequenceDiagram
+    title Google Voice — Outgoing Call Flow
+    participant Browser
+    participant GV_WSS as voice.telephony.goog&lt;br/&gt;(SIP WebSocket)
+    participant OGHP as OGHP Gateway&lt;br/&gt;(74.125.39.x)
+    participant STUN as stun.l.google.com
+
+    Note over Browser,GV_WSS: SIP Registration
+    Browser-&gt;&gt;GV_WSS: REGISTER sip:web.c.pbx.voice.sip.google.com
+    GV_WSS--&gt;&gt;Browser: 401 Unauthorized (Digest challenge)
+    Browser-&gt;&gt;GV_WSS: REGISTER (with auth credentials)
+    GV_WSS--&gt;&gt;Browser: 200 OK (registered)
+
+    Note over Browser,OGHP: Call Setup (INVITE)
+    Browser-&gt;&gt;GV_WSS: INVITE sip:+19193718044 (SDP offer: Opus/48kHz)
+    GV_WSS--&gt;&gt;Browser: 100 Trying
+    GV_WSS--&gt;&gt;Browser: 183 Session Progress (SDP answer)
+
+    Note over Browser,OGHP: Provisional Response Acknowledgment
+    Browser-&gt;&gt;GV_WSS: PRACK
+    GV_WSS--&gt;&gt;Browser: 200 OK
+    GV_WSS--&gt;&gt;Browser: 180 Ringing
+    Browser-&gt;&gt;GV_WSS: PRACK
+    GV_WSS--&gt;&gt;Browser: 200 OK
+
+    Note over Browser,STUN: ICE + DTLS Negotiation
+    Browser-&gt;&gt;STUN: STUN Binding Request (get SRFLX candidate)
+    STUN--&gt;&gt;Browser: SRFLX 75.189.129.182:53408
+    Browser-&gt;&gt;OGHP: ICE connectivity check
+    OGHP--&gt;&gt;Browser: ICE success
+    Note over Browser,OGHP: DTLS handshake → SRTP keys derived
+
+    Note over Browser,OGHP: Call Connected
+    GV_WSS--&gt;&gt;Browser: 200 OK (final)
+    Browser-&gt;&gt;GV_WSS: ACK
+
+    Note over Browser,OGHP: Bidirectional Audio (RTP/SRTP/Opus)
+    Browser-&gt;&gt;OGHP: RTP (Opus 48kHz, SRTP encrypted)
+    OGHP--&gt;&gt;Browser: RTP (Opus 48kHz, SRTP encrypted)
+
+    Note over Browser,GV_WSS: Call Terminated
+    GV_WSS--&gt;&gt;Browser: BYE
+    Browser-&gt;&gt;GV_WSS: 200 OK
+
+    %% Confidence: High — 30 SIP frames + 13 RTC events captured from live call
+    %% Source: IAET browser extension capture, session 098a8b26
+</div>
+      <details><summary>View Source (.mmd)</summary><pre><code>sequenceDiagram
+    title Google Voice — Outgoing Call Flow
+    participant Browser
+    participant GV_WSS as voice.telephony.goog&lt;br/&gt;(SIP WebSocket)
+    participant OGHP as OGHP Gateway&lt;br/&gt;(74.125.39.x)
+    participant STUN as stun.l.google.com
+
+    Note over Browser,GV_WSS: SIP Registration
+    Browser-&gt;&gt;GV_WSS: REGISTER sip:web.c.pbx.voice.sip.google.com
+    GV_WSS--&gt;&gt;Browser: 401 Unauthorized (Digest challenge)
+    Browser-&gt;&gt;GV_WSS: REGISTER (with auth credentials)
+    GV_WSS--&gt;&gt;Browser: 200 OK (registered)
+
+    Note over Browser,OGHP: Call Setup (INVITE)
+    Browser-&gt;&gt;GV_WSS: INVITE sip:+19193718044 (SDP offer: Opus/48kHz)
+    GV_WSS--&gt;&gt;Browser: 100 Trying
+    GV_WSS--&gt;&gt;Browser: 183 Session Progress (SDP answer)
+
+    Note over Browser,OGHP: Provisional Response Acknowledgment
+    Browser-&gt;&gt;GV_WSS: PRACK
+    GV_WSS--&gt;&gt;Browser: 200 OK
+    GV_WSS--&gt;&gt;Browser: 180 Ringing
+    Browser-&gt;&gt;GV_WSS: PRACK
+    GV_WSS--&gt;&gt;Browser: 200 OK
+
+    Note over Browser,STUN: ICE + DTLS Negotiation
+    Browser-&gt;&gt;STUN: STUN Binding Request (get SRFLX candidate)
+    STUN--&gt;&gt;Browser: SRFLX 75.189.129.182:53408
+    Browser-&gt;&gt;OGHP: ICE connectivity check
+    OGHP--&gt;&gt;Browser: ICE success
+    Note over Browser,OGHP: DTLS handshake → SRTP keys derived
+
+    Note over Browser,OGHP: Call Connected
+    GV_WSS--&gt;&gt;Browser: 200 OK (final)
+    Browser-&gt;&gt;GV_WSS: ACK
+
+    Note over Browser,OGHP: Bidirectional Audio (RTP/SRTP/Opus)
+    Browser-&gt;&gt;OGHP: RTP (Opus 48kHz, SRTP encrypted)
+    OGHP--&gt;&gt;Browser: RTP (Opus 48kHz, SRTP encrypted)
+
+    Note over Browser,GV_WSS: Call Terminated
+    GV_WSS--&gt;&gt;Browser: BYE
+    Browser-&gt;&gt;GV_WSS: 200 OK
+
+    %% Confidence: High — 30 SIP frames + 13 RTC events captured from live call
+    %% Source: IAET browser extension capture, session 098a8b26
+</code></pre></details></div>
+<div class="diagram-card"><h3>Webrtc State Machine</h3>
+      <div class="mermaid">stateDiagram-v2
+    %% Google Voice WebRTC Connection Lifecycle
+    %% Observed from RTCPeerConnection interception
+
+    [*] --&gt; new : RTCPeerConnection created
+    new --&gt; have_local_offer : createOffer + setLocalDescription
+    have_local_offer --&gt; gathering : ICE candidate gathering
+    gathering --&gt; gathering : onicecandidate (host, srflx, tcp)
+    gathering --&gt; stable : setRemoteDescription(answer)
+    new --&gt; have_remote_offer : setRemoteDescription(offer) [incoming]
+    have_remote_offer --&gt; stable : createAnswer + setLocalDescription
+    stable --&gt; connecting : ICE connectivity checks
+    connecting --&gt; connected : ICE + DTLS complete
+    connected --&gt; connected : re-INVITE / renegotiation
+    connected --&gt; closed : BYE / hangup
+
+    note right of gathering
+        ICE candidates observed:
+        - UDP host (192.168.x.x)
+        - TCP host (passive)
+        - SRFLX via stun.l.google.com:19302
+        - IPv6 link-local (fd15:...)
+    end note
+
+    note right of connected
+        Media: Opus/48kHz stereo
+        Transport: SRTP (AES-128-GCM via DTLS)
+        STUN: stun.l.google.com:19302
+        Media server: 74.125.39.x (Google)
+    end note
+
+    %% Confidence: High — 2 complete call sessions captured (outgoing + incoming)
+</div>
+      <details><summary>View Source (.mmd)</summary><pre><code>stateDiagram-v2
+    %% Google Voice WebRTC Connection Lifecycle
+    %% Observed from RTCPeerConnection interception
+
+    [*] --&gt; new : RTCPeerConnection created
+    new --&gt; have_local_offer : createOffer + setLocalDescription
+    have_local_offer --&gt; gathering : ICE candidate gathering
+    gathering --&gt; gathering : onicecandidate (host, srflx, tcp)
+    gathering --&gt; stable : setRemoteDescription(answer)
+    new --&gt; have_remote_offer : setRemoteDescription(offer) [incoming]
+    have_remote_offer --&gt; stable : createAnswer + setLocalDescription
+    stable --&gt; connecting : ICE connectivity checks
+    connecting --&gt; connected : ICE + DTLS complete
+    connected --&gt; connected : re-INVITE / renegotiation
+    connected --&gt; closed : BYE / hangup
+
+    note right of gathering
+        ICE candidates observed:
+        - UDP host (192.168.x.x)
+        - TCP host (passive)
+        - SRFLX via stun.l.google.com:19302
+        - IPv6 link-local (fd15:...)
+    end note
+
+    note right of connected
+        Media: Opus/48kHz stereo
+        Transport: SRTP (AES-128-GCM via DTLS)
+        STUN: stun.l.google.com:19302
+        Media server: 74.125.39.x (Google)
+    end note
+
+    %% Confidence: High — 2 complete call sessions captured (outgoing + incoming)
+</code></pre></details></div>
+</div>
+  <div id="p0-narrative" class="tab-content"><div class="narrative" id="narrative-0"></div></div>
+  <div id="p0-knowledge" class="tab-content"><div class="data-card"><h3>Dependencies</h3>
+      <pre><code class="language-json">{
+  &quot;dependencies&quot;: [
+    { &quot;from&quot;: &quot;Google OAuth Login&quot;, &quot;to&quot;: &quot;POST /voice/v1/voiceclient/account/get&quot;, &quot;reason&quot;: &quot;OAuth cookies required&quot; },
+    { &quot;from&quot;: &quot;Google OAuth Login&quot;, &quot;to&quot;: &quot;POST /voice/v1/voiceclient/sipregisterinfo/get&quot;, &quot;reason&quot;: &quot;OAuth cookies required&quot; },
+    { &quot;from&quot;: &quot;POST /voice/v1/voiceclient/sipregisterinfo/get&quot;, &quot;to&quot;: &quot;SIP REGISTER&quot;, &quot;reason&quot;: &quot;Provides SIP digest credentials&quot; },
+    { &quot;from&quot;: &quot;SIP REGISTER (200 OK)&quot;, &quot;to&quot;: &quot;SIP INVITE&quot;, &quot;reason&quot;: &quot;Must be registered before initiating calls&quot; },
+    { &quot;from&quot;: &quot;SIP INVITE&quot;, &quot;to&quot;: &quot;RTCPeerConnection (SDP offer)&quot;, &quot;reason&quot;: &quot;SDP exchanged via SIP signaling&quot; },
+    { &quot;from&quot;: &quot;SIP 183 Session Progress&quot;, &quot;to&quot;: &quot;setRemoteDescription (SDP answer)&quot;, &quot;reason&quot;: &quot;Remote SDP triggers ICE/DTLS&quot; },
+    { &quot;from&quot;: &quot;ICE + DTLS&quot;, &quot;to&quot;: &quot;RTP/SRTP Audio&quot;, &quot;reason&quot;: &quot;SRTP keys derived from DTLS handshake&quot; }
+  ],
+  &quot;authChains&quot;: [
+    {
+      &quot;name&quot;: &quot;Google Voice Session&quot;,
+      &quot;steps&quot;: [
+        &quot;Google OAuth → browser cookies (SID, HSID, etc.)&quot;,
+        &quot;Cookies → API key (AIzaSyDTYc1N4xiODyrQYK0Kl6g_y279LjYkrBg) in requests&quot;,
+        &quot;Cookies + API key → all /voice/v1/* and /$rpc/* endpoints&quot;
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;SIP Call Authentication&quot;,
+      &quot;steps&quot;: [
+        &quot;OAuth cookies → sipregisterinfo/get → SIP digest credentials&quot;,
+        &quot;SIP digest → REGISTER with Digest auth → 200 OK&quot;,
+        &quot;Registered SIP UA → INVITE/PRACK/ACK/BYE&quot;
+      ]
+    }
+  ]
+}
+</code></pre></div>
+<div class="data-card"><h3>Endpoints</h3>
+      <pre><code class="language-json">{
+  &quot;endpoints&quot;: [
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/api2thread/list&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 26, &quot;category&quot;: &quot;messaging&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/threadinginfo/get&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 18, &quot;category&quot;: &quot;messaging&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/account/get&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 8, &quot;category&quot;: &quot;account&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/account/update&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;account&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/numbertransfer/list&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 8, &quot;category&quot;: &quot;account&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/thread/batchupdateattributes&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 8, &quot;category&quot;: &quot;messaging&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/thread/markallread&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;messaging&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/api2thread/search&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;messaging&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/api2thread/sendsms&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;messaging&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/inboundcallrule/list&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;call-routing&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/sipregisterinfo/get&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;signaling&quot; },
+    { &quot;signature&quot;: &quot;POST /voice/v1/voiceclient/getnumberportinfo&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;account&quot; },
+    { &quot;signature&quot;: &quot;POST /$rpc/google.voice.ringgroups.v1.RingGroupsService/ListRingGroups&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;call-routing&quot; },
+    { &quot;signature&quot;: &quot;POST /$rpc/peoplestack.PeopleStackAutocompleteService/Lookup&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 20, &quot;category&quot;: &quot;contacts&quot; },
+    { &quot;signature&quot;: &quot;POST /$rpc/peoplestack.PeopleStackAutocompleteService/Autocomplete&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;contacts&quot; },
+    { &quot;signature&quot;: &quot;POST /$rpc/google.internal.people.v2.InternalPeopleService/GetContactGroups&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 4, &quot;category&quot;: &quot;contacts&quot; },
+    { &quot;signature&quot;: &quot;POST /$rpc/google.internal.people.v2.InternalPeopleService/ListContactGroups&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;contacts&quot; },
+    { &quot;signature&quot;: &quot;POST /$rpc/google.internal.waa.v1.Waa/Create&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 6, &quot;category&quot;: &quot;infrastructure&quot; },
+    { &quot;signature&quot;: &quot;POST /$rpc/google.internal.waa.v1.Waa/Ping&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;infrastructure&quot; },
+    { &quot;signature&quot;: &quot;POST /$rpc/google.internal.onegoogle.asyncdata.v1.AsyncDataService/GetAsyncData&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;infrastructure&quot; },
+    { &quot;signature&quot;: &quot;POST /punctual/v1/chooseServer&quot;, &quot;confidence&quot;: &quot;high&quot;, &quot;observationCount&quot;: 2, &quot;category&quot;: &quot;infrastructure&quot; }
+  ]
+}
+</code></pre></div>
+<div class="data-card"><h3>Protocols</h3>
+      <pre><code class="language-json">{
+  &quot;streams&quot;: [
+    {
+      &quot;protocol&quot;: &quot;WebSocket&quot;,
+      &quot;url&quot;: &quot;wss://web.voice.telephony.goog:443/websocket&quot;,
+      &quot;subProtocol&quot;: &quot;sip&quot;,
+      &quot;messageTypes&quot;: [&quot;REGISTER&quot;, &quot;INVITE&quot;, &quot;PRACK&quot;, &quot;ACK&quot;, &quot;BYE&quot;, &quot;100 Trying&quot;, &quot;180 Ringing&quot;, &quot;183 Session Progress&quot;, &quot;200 OK&quot;, &quot;401 Unauthorized&quot;],
+      &quot;hasStateMachine&quot;: true,
+      &quot;confidence&quot;: &quot;high&quot;,
+      &quot;notes&quot;: &quot;SIP-over-WebSocket signaling for voice calls. Binary frames decode as UTF-8 SIP text.&quot;
+    },
+    {
+      &quot;protocol&quot;: &quot;WebRTC&quot;,
+      &quot;url&quot;: &quot;rtc://peer-connection&quot;,
+      &quot;sdpCodecs&quot;: [&quot;opus/48000/2&quot;, &quot;G722/8000&quot;, &quot;PCMU/8000&quot;, &quot;PCMA/8000&quot;],
+      &quot;iceServers&quot;: [&quot;stun:stun.l.google.com:19302&quot;],
+      &quot;mediaServer&quot;: &quot;74.125.39.x&quot;,
+      &quot;dtls&quot;: &quot;SRTP (AES-128-GCM)&quot;,
+      &quot;confidence&quot;: &quot;high&quot;,
+      &quot;notes&quot;: &quot;Two complete call sessions captured (outgoing + incoming). Re-INVITE renegotiation observed.&quot;
+    }
+  ]
+}
+</code></pre></div>
+<div class="data-card"><h3>Archived Captures</h3><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border);">File</th><th style="text-align:right;padding:6px;border-bottom:1px solid var(--border);">Size</th></tr><tr><td style="padding:6px;border-bottom:1px solid #1e293b;">20260331-190108-capture.iaet.iaet.json.gz</td><td style="text-align:right;padding:6px;border-bottom:1px solid #1e293b;">261 KB</td></tr></table></div></div>
+  <div id="p0-openapi" class="tab-content">
+    <div style="margin-bottom:16px;display:flex;gap:8px;">
+      <button onclick="toggleSwagger('yaml',0)" id="btn-yaml-0" class="swagger-btn active-btn">YAML Source</button>
+      <button onclick="toggleSwagger('swagger',0)" id="btn-swagger-0" class="swagger-btn">Swagger UI</button>
+    </div>
+    <div id="swagger-0" style="display:none;background:white;border-radius:8px;min-height:400px;"></div>
+    <div id="yaml-0" class="openapi"><pre><code class="language-yaml">openapi: &#x27;3.1.0&#x27;
+info:
+  title: &#x27;unknown API&#x27;
+  version: &#x27;1.0.0&#x27;
+servers:
+  - url: &#x27;https://ogads-pa.clients6.google.com&#x27;
+paths:
+  &#x27;/log&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTLog&#x27;
+  &#x27;/voice/v1/voiceclient/api2thread/list&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientApi2threadList&#x27;
+  &#x27;/$rpc/peoplestack.PeopleStackAutocompleteService/Lookup&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcPeoplestack.PeopleStackAutocompleteServiceLookup&#x27;
+  &#x27;/voice/v1/voiceclient/account/get&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientAccountGet&#x27;
+  &#x27;/voice/v1/voiceclient/threadinginfo/get&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientThreadinginfoGet&#x27;
+  &#x27;/g/collect&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+  &#x27;/voice/v1/voiceclient/numbertransfer/list&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientNumbertransferList&#x27;
+  &#x27;/$rpc/google.internal.waa.v1.Waa/Create&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcGoogle.internal.waa.v1.WaaCreate&#x27;
+  &#x27;/$rpc/google.internal.people.v2.InternalPeopleService/GetContactGroups&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcGoogle.internal.people.v2.InternalPeopleServiceGetContactGroups&#x27;
+  &#x27;/$rpc/peoplestack.PeopleStackAutocompleteService/Warmup&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcPeoplestack.PeopleStackAutocompleteServiceWarmup&#x27;
+  &#x27;/recaptcha/enterprise/clr&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+  &#x27;/recaptcha/enterprise/reload&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTRecaptchaEnterpriseReload&#x27;
+  &#x27;/voice/v1/voiceclient/account/update&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientAccountUpdate&#x27;
+  &#x27;/js/gen_204&#x27;:
+    get:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+  &#x27;/$rpc/google.internal.onegoogle.asyncdata.v1.AsyncDataService/GetAsyncData&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcGoogle.internal.onegoogle.asyncdata.v1.AsyncDataServiceGetAsyncData&#x27;
+  &#x27;/$rpc/google.internal.people.v2.InternalPeopleService/ListContactGroups&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcGoogle.internal.people.v2.InternalPeopleServiceListContactGroups&#x27;
+  &#x27;/$rpc/google.internal.waa.v1.Waa/Ping&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcGoogle.internal.waa.v1.WaaPing&#x27;
+  &#x27;/$rpc/google.voice.ringgroups.v1.RingGroupsService/ListRingGroups&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcGoogle.voice.ringgroups.v1.RingGroupsServiceListRingGroups&#x27;
+  &#x27;/$rpc/peoplestack.PeopleStackAutocompleteService/Autocomplete&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POST$rpcPeoplestack.PeopleStackAutocompleteServiceAutocomplete&#x27;
+  &#x27;/punctual/v1/chooseServer&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTPunctualV1ChooseServer&#x27;
+  &#x27;/voice/v1/voiceclient/api2thread/sendsms&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientApi2threadSendsms&#x27;
+  &#x27;/voice/v1/voiceclient/getnumberportinfo&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientGetnumberportinfo&#x27;
+  &#x27;/voice/v1/voiceclient/inboundcallrule/list&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientInboundcallruleList&#x27;
+  &#x27;/voice/v1/voiceclient/sipregisterinfo/get&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientSipregisterinfoGet&#x27;
+  &#x27;/voice/v1/voiceclient/thread/markallread&#x27;:
+    post:
+      summary: &#x27;&#x27;
+      responses:
+        &#x27;200&#x27;:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: &#x27;#/components/schemas/POSTVoiceV1VoiceclientThreadMarkallread&#x27;
+components:
+  schemas:
+    POSTLog:
+    POSTVoiceV1VoiceclientApi2threadList:
+    POST$rpcPeoplestack.PeopleStackAutocompleteServiceLookup:
+    POSTVoiceV1VoiceclientAccountGet:
+    POSTVoiceV1VoiceclientThreadinginfoGet:
+    POSTVoiceV1VoiceclientNumbertransferList:
+    POST$rpcGoogle.internal.waa.v1.WaaCreate:
+    POST$rpcGoogle.internal.people.v2.InternalPeopleServiceGetContactGroups:
+    POST$rpcPeoplestack.PeopleStackAutocompleteServiceWarmup:
+    POSTRecaptchaEnterpriseReload:
+    POSTVoiceV1VoiceclientAccountUpdate:
+    POST$rpcGoogle.internal.onegoogle.asyncdata.v1.AsyncDataServiceGetAsyncData:
+    POST$rpcGoogle.internal.people.v2.InternalPeopleServiceListContactGroups:
+    POST$rpcGoogle.internal.waa.v1.WaaPing:
+    POST$rpcGoogle.voice.ringgroups.v1.RingGroupsServiceListRingGroups:
+    POST$rpcPeoplestack.PeopleStackAutocompleteServiceAutocomplete:
+    POSTPunctualV1ChooseServer:
+    POSTVoiceV1VoiceclientApi2threadSendsms:
+    POSTVoiceV1VoiceclientGetnumberportinfo:
+    POSTVoiceV1VoiceclientInboundcallruleList:
+    POSTVoiceV1VoiceclientSipregisterinfoGet:
+    POSTVoiceV1VoiceclientThreadMarkallread:
+</code></pre></div>
+  </div>
+  <div id="p0-nextsteps" class="tab-content"><h2>Further Investigation / Next Steps</h2><h3>Protocol Decoding</h3>
+<div class="steps-group">
+<div class="step-card">
+      <div class="step-header">Add protobuf/protojson decoder to schema inferrer <span class="badge-tooling">Tooling</span></div>
+      <div class="step-detail">Positional JSON arrays need a protojson-aware inferrer to map array positions to field names.</div></div>
+<div class="step-card">
+      <div class="step-header">Try <code>?alt=json</code> query parameter on API requests <span class="badge-human">Human</span></div>
+      <div class="step-detail">Some Google APIs support standard JSON output which the existing schema inferrer can parse.</div></div>
+</div>
+<h3>API Completeness</h3>
+<div class="steps-group">
+<div class="step-card">
+      <div class="step-header">Predicted: single-item GET endpoints for discovered list endpoints <span class="badge-human">Human</span></div>
+      <div class="step-detail">List endpoints exist but no corresponding single-item GET. Navigate to specific items to discover.</div></div>
+</div>
+<h3>Tooling Improvements</h3>
+<div class="steps-group">
+<div class="step-card">
+      <div class="step-header">Automatic reverse DNS for IP addresses in captures <span class="badge-tooling">Tooling</span></div>
+      <div class="step-detail">Resolve IPs found in SDP, ICE candidates, and API responses to hostnames automatically.</div></div>
+</div>
+<h3>Output Generation</h3>
+<div class="steps-group">
+<div class="step-card">
+      <div class="step-header">Generate API client prompt for AI code generation <span class="badge-tooling">Tooling</span></div>
+      <div class="step-detail">Package OpenAPI spec, auth chains, and protocol details into a prompt for AI-assisted client generation.</div></div>
+<div class="step-card">
+      <div class="step-header">API Expert Agent — predict undiscovered endpoints <span class="badge-tooling">Tooling</span></div>
+      <div class="step-detail">Add an agent that reviews output as an expert API designer, identifying gaps and feeding them back.</div></div>
+</div>
+</div>
+</div>
+
+</div>
+<script>
+  mermaid.initialize({startOnLoad:true,theme:'default',securityLevel:'loose'});
+  const narrativeData = {"0": "# Investigation Report\n\n**Target:** unknown\n**Session:** capture\n**Started:** 2026-03-31 18:19:54Z\n**Requests:** 92\n**Endpoints:** 25\n**Streams:** 3\n\n---\n\n## Endpoints Discovered\n\n| Endpoint | Observations | First Seen |\n|----------|-------------|------------|\n| `POST /log` | 28 | 2026-03-31 18:19:58Z |\n| `POST /voice/v1/voiceclient/api2thread/list` | 14 | 2026-03-31 18:19:58Z |\n| `POST /$rpc/peoplestack.PeopleStackAutocompleteService/Lookup` | 6 | 2026-03-31 18:19:58Z |\n| `POST /voice/v1/voiceclient/account/get` | 6 | 2026-03-31 18:19:58Z |\n| `POST /voice/v1/voiceclient/threadinginfo/get` | 5 | 2026-03-31 18:19:58Z |\n| `POST /g/collect` | 4 | 2026-03-31 18:19:58Z |\n| `POST /voice/v1/voiceclient/numbertransfer/list` | 4 | 2026-03-31 18:19:58Z |\n| `POST /$rpc/google.internal.waa.v1.Waa/Create` | 3 | 2026-03-31 18:19:58Z |\n| `POST /$rpc/google.internal.people.v2.InternalPeopleService/GetContactGroups` | 2 | 2026-03-31 18:19:58Z |\n| `POST /$rpc/peoplestack.PeopleStackAutocompleteService/Warmup` | 2 | 2026-03-31 18:19:59Z |\n| `POST /recaptcha/enterprise/clr` | 2 | 2026-03-31 18:20:18Z |\n| `POST /recaptcha/enterprise/reload` | 2 | 2026-03-31 18:20:18Z |\n| `POST /voice/v1/voiceclient/account/update` | 2 | 2026-03-31 18:20:09Z |\n| `GET /js/gen_204` | 1 | 2026-03-31 18:20:13Z |\n| `POST /$rpc/google.internal.onegoogle.asyncdata.v1.AsyncDataService/GetAsyncData` | 1 | 2026-03-31 18:19:58Z |\n| `POST /$rpc/google.internal.people.v2.InternalPeopleService/ListContactGroups` | 1 | 2026-03-31 18:19:58Z |\n| `POST /$rpc/google.internal.waa.v1.Waa/Ping` | 1 | 2026-03-31 18:19:58Z |\n| `POST /$rpc/google.voice.ringgroups.v1.RingGroupsService/ListRingGroups` | 1 | 2026-03-31 18:19:58Z |\n| `POST /$rpc/peoplestack.PeopleStackAutocompleteService/Autocomplete` | 1 | 2026-03-31 18:19:58Z |\n| `POST /punctual/v1/chooseServer` | 1 | 2026-03-31 18:19:58Z |\n| `POST /voice/v1/voiceclient/api2thread/sendsms` | 1 | 2026-03-31 18:21:21Z |\n| `POST /voice/v1/voiceclient/getnumberportinfo` | 1 | 2026-03-31 18:19:58Z |\n| `POST /voice/v1/voiceclient/inboundcallrule/list` | 1 | 2026-03-31 18:20:00Z |\n| `POST /voice/v1/voiceclient/sipregisterinfo/get` | 1 | 2026-03-31 18:19:58Z |\n| `POST /voice/v1/voiceclient/thread/markallread` | 1 | 2026-03-31 18:21:15Z |\n\n## Streams Captured\n\n| Protocol | URL | Started |\n|----------|-----|---------|\n| WebSocket | `wss://web.voice.telephony.goog:443/websocket` | 2026-03-31 18:19:59Z |\n| WebRtc | `rtc://inject-1774981218404-negvrjphw1` | 2026-03-31 18:20:18Z |\n| WebRtc | `rtc://inject-1774981250925-ff54w76ktnj` | 2026-03-31 18:20:50Z |\n\n## Schema Inference Results\n\n### `POST /log`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/api2thread/list`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/peoplestack.PeopleStackAutocompleteService/Lookup`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/account/get`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/threadinginfo/get`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/numbertransfer/list`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/google.internal.waa.v1.Waa/Create`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/google.internal.people.v2.InternalPeopleService/GetContactGroups`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/peoplestack.PeopleStackAutocompleteService/Warmup`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /recaptcha/enterprise/reload`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/account/update`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/google.internal.onegoogle.asyncdata.v1.AsyncDataService/GetAsyncData`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/google.internal.people.v2.InternalPeopleService/ListContactGroups`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/google.internal.waa.v1.Waa/Ping`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/google.voice.ringgroups.v1.RingGroupsService/ListRingGroups`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /$rpc/peoplestack.PeopleStackAutocompleteService/Autocomplete`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /punctual/v1/chooseServer`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/api2thread/sendsms`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/getnumberportinfo`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/inboundcallrule/list`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/sipregisterinfo/get`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n### `POST /voice/v1/voiceclient/thread/markallread`\n\n```csharp\n\n```\n\n> Warning: No valid JSON response bodies found \u2014 bodies may be HTML, protobuf, or otherwise non-JSON.\n\n"};
+  let currentProject = 0;
+
+  // Render narratives
+  for (const [idx, md] of Object.entries(narrativeData)) {
+    const el = document.getElementById('narrative-' + idx);
+    if (el && md) el.innerHTML = marked.parse(md);
+  }
+  hljs.highlightAll();
+
+  function switchProject(idx) {
+    document.querySelectorAll('.project-content').forEach(el => el.style.display = 'none');
+    document.getElementById('project-' + idx).style.display = 'block';
+    currentProject = parseInt(idx);
+    mermaid.run();
+  }
+
+  function showTab(name) {
+    const container = document.getElementById('project-' + currentProject);
+    container.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    container.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    const tabContent = document.getElementById('p' + currentProject + '-' + name);
+    if (tabContent) tabContent.classList.add('active');
+    container.querySelector('.tab[data-tab="' + name + '"]')?.classList.add('active');
+    if (name === 'diagrams') mermaid.run();
+  }
+
+  const swaggerInited = {};
+  function toggleSwagger(mode, idx) {
+    const yamlC = document.getElementById('yaml-' + idx);
+    const swagC = document.getElementById('swagger-' + idx);
+    const btnY = document.getElementById('btn-yaml-' + idx);
+    const btnS = document.getElementById('btn-swagger-' + idx);
+    if (mode === 'swagger') {
+      yamlC.style.display='none'; swagC.style.display='block';
+      btnY.classList.remove('active-btn'); btnS.classList.add('active-btn');
+      if (!swaggerInited[idx]) {
+        const yamlText = yamlC.querySelector('code').textContent;
+        try {
+          SwaggerUIBundle({spec:jsyaml.load(yamlText),domNode:swagC,presets:[SwaggerUIBundle.presets.apis],layout:"BaseLayout",defaultModelsExpandDepth:1,docExpansion:"list"});
+        } catch(e) { swagC.innerHTML = '<p style="padding:20px;color:red;">Failed to parse OpenAPI spec: ' + e.message + '</p>'; }
+        swaggerInited[idx] = true;
+      }
+    } else {
+      yamlC.style.display='block'; swagC.style.display='none';
+      btnS.classList.remove('active-btn'); btnY.classList.add('active-btn');
+    }
+  }
+</script>
+</body>
+</html>

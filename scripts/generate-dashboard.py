@@ -227,8 +227,13 @@ def render_project_content(project):
     diagram_html = ""
     for name, content in p['diagrams'].items():
         title = name.replace('.mmd', '').replace('-', ' ').title()
+        # Use <pre class="mermaid"> with html.escape().  Mermaid.js reads
+        # textContent of <pre> elements, which auto-unescapes HTML entities
+        # back to the original characters.  This is the officially recommended
+        # approach — it prevents the browser from interpreting <br/> or other
+        # HTML-like syntax in Mermaid source as real HTML tags.
         diagram_html += f'''<div class="diagram-card"><h3>{html.escape(title)}</h3>
-      <div class="mermaid">{html.escape(content)}</div>
+      <pre class="mermaid">{html.escape(content)}</pre>
       <details><summary>View Source (.mmd)</summary><pre><code>{html.escape(content)}</code></pre></details></div>\n'''
 
     # Knowledge
@@ -435,7 +440,7 @@ def main():
   .stat:hover{{border-color:var(--accent)}}
   .stat-value{{font-size:28px;font-weight:bold;color:var(--accent)}}.stat-label{{font-size:12px;color:var(--muted)}}
   .diagram-card,.data-card{{background:var(--card);border-radius:8px;padding:20px;margin-bottom:16px;overflow-x:auto}}
-  .diagram-card .mermaid{{background:white;border-radius:6px;padding:16px;margin:12px 0}}
+  pre.mermaid {{ background: white; border-radius: 6px; padding: 16px; margin: 12px 0; color: #333; }}
   details{{margin-top:8px}} summary{{cursor:pointer;color:var(--muted);font-size:13px}}
   pre{{background:#0d1117;border-radius:6px;padding:16px;overflow-x:auto;font-size:13px;margin-top:8px}}
   code{{font-family:"Cascadia Code","Fira Code",monospace}}
@@ -466,7 +471,9 @@ def main():
   {project_divs}
 </div>
 <script>
-  mermaid.initialize({{startOnLoad:true,theme:'default',securityLevel:'loose'}});
+  mermaid.initialize({{startOnLoad:false,theme:'default',securityLevel:'loose'}});
+  // Render diagrams for the initially visible project only
+  mermaid.run({{nodes:document.querySelectorAll('#project-0 pre.mermaid')}});
   const narrativeData = {narrative_data};
   let currentProject = 0;
 
@@ -477,11 +484,16 @@ def main():
   }}
   hljs.highlightAll();
 
+  function renderMermaid(projectIdx) {{
+    const nodes = document.querySelectorAll('#project-' + projectIdx + ' pre.mermaid:not([data-processed])');
+    if (nodes.length) mermaid.run({{nodes}});
+  }}
+
   function switchProject(idx) {{
     document.querySelectorAll('.project-content').forEach(el => el.style.display = 'none');
     document.getElementById('project-' + idx).style.display = 'block';
     currentProject = parseInt(idx);
-    mermaid.run();
+    renderMermaid(idx);
   }}
 
   function showTab(name) {{
@@ -491,7 +503,7 @@ def main():
     const tabContent = document.getElementById('p' + currentProject + '-' + name);
     if (tabContent) tabContent.classList.add('active');
     container.querySelector('.tab[data-tab="' + name + '"]')?.classList.add('active');
-    if (name === 'diagrams') mermaid.run();
+    if (name === 'diagrams') renderMermaid(currentProject);
   }}
 
   const swaggerInited = {{}};
