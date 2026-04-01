@@ -55,8 +55,8 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
             var jsonSchema = GenerateProtojsonSchema(mergedProto);
             // Generate a C# record with positional comments
             var csharp = GenerateProtojsonCSharp(mergedProto);
-            // Use the description as the OpenAPI fragment
-            var openApi = description;
+            // Generate valid OpenAPI YAML for protojson
+            var openApi = GenerateProtojsonOpenApi(mergedProto);
 
             return Task.FromResult(new SchemaResult(jsonSchema, csharp, openApi, warnings));
         }
@@ -130,6 +130,38 @@ public sealed class JsonSchemaInferrer : ISchemaInferrer
         }
 
         sb.AppendLine(");");
+        return sb.ToString();
+    }
+
+    private static string GenerateProtojsonOpenApi(ProtojsonSchema schema)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("type: array");
+        sb.AppendLine("description: Protojson positional array — field names unknown, types inferred by position");
+        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+            $"minItems: {schema.Fields.Count}");
+        sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+            $"maxItems: {schema.Fields.Count}");
+        sb.AppendLine("items:");
+        sb.AppendLine("  oneOf:");
+
+        var types = schema.Fields.Select(f => f.InferredType).Distinct().OrderBy(t => t, StringComparer.Ordinal);
+        foreach (var type in types)
+        {
+            var yamlType = type switch
+            {
+                "string" => "string",
+                "integer" => "integer",
+                "number" => "number",
+                "boolean" => "boolean",
+                "array" => "array",
+                "object" => "object",
+                _ => "string",
+            };
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"    - type: {yamlType}");
+        }
+
         return sb.ToString();
     }
 }
