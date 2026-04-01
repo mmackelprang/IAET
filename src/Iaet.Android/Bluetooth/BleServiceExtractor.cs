@@ -13,6 +13,18 @@ namespace Iaet.Android.Bluetooth;
 /// </summary>
 public static partial class BleServiceExtractor
 {
+    private static readonly string[] AudioEffectKeywords =
+    [
+        "AudioEffect",
+        "AcousticEchoCanceler",
+        "NoiseSuppressor",
+        "Visualizer",
+        "Equalizer",
+        "BassBoost",
+        "PresetReverb",
+        "LoudnessEnhancer",
+    ];
+
     /// <summary>
     /// Extract BLE service information from a single Java source file.
     /// </summary>
@@ -23,6 +35,7 @@ public static partial class BleServiceExtractor
 
         var services = new Dictionary<string, BleServiceBuilder>(StringComparer.OrdinalIgnoreCase);
         var characteristics = new Dictionary<string, BleCharacteristicBuilder>(StringComparer.OrdinalIgnoreCase);
+        var audioEffectUuids = new List<string>();
         var lines = javaSource.Split('\n');
 
         // Pass 1: Find all UUIDs
@@ -33,7 +46,15 @@ public static partial class BleServiceExtractor
             foreach (Match match in UuidFromStringPattern().Matches(line))
             {
                 var uuid = match.Groups[1].Value;
-                ClassifyUuid(uuid, sourceFile, lineIdx + 1, line, services, characteristics);
+                if (IsAudioEffectContext(lines, lineIdx))
+                {
+                    if (!audioEffectUuids.Contains(uuid, StringComparer.OrdinalIgnoreCase))
+                        audioEffectUuids.Add(uuid);
+                }
+                else
+                {
+                    ClassifyUuid(uuid, sourceFile, lineIdx + 1, line, services, characteristics);
+                }
             }
 
             foreach (Match match in ShortUuidPattern().Matches(line))
@@ -44,7 +65,15 @@ public static partial class BleServiceExtractor
 
                 var shortHex = match.Groups[1].Value.ToUpperInvariant();
                 var fullUuid = $"0000{shortHex}-0000-1000-8000-00805f9b34fb";
-                ClassifyUuid(fullUuid, sourceFile, lineIdx + 1, line, services, characteristics);
+                if (IsAudioEffectContext(lines, lineIdx))
+                {
+                    if (!audioEffectUuids.Contains(fullUuid, StringComparer.OrdinalIgnoreCase))
+                        audioEffectUuids.Add(fullUuid);
+                }
+                else
+                {
+                    ClassifyUuid(fullUuid, sourceFile, lineIdx + 1, line, services, characteristics);
+                }
             }
         }
 
@@ -76,7 +105,7 @@ public static partial class BleServiceExtractor
         }
 
         // Build results
-        return BuildResult(services, characteristics);
+        return BuildResult(services, characteristics, audioEffectUuids);
     }
 
     /// <summary>
@@ -91,6 +120,7 @@ public static partial class BleServiceExtractor
 
         var allServices = new Dictionary<string, BleServiceBuilder>(StringComparer.OrdinalIgnoreCase);
         var allCharacteristics = new Dictionary<string, BleCharacteristicBuilder>(StringComparer.OrdinalIgnoreCase);
+        var allAudioEffectUuids = new List<string>();
 
         foreach (var file in Directory.EnumerateFiles(decompiledDir, "*.java", SearchOption.AllDirectories))
         {
@@ -100,10 +130,10 @@ public static partial class BleServiceExtractor
             var relativePath = Path.GetRelativePath(decompiledDir, file);
             var result = Extract(source, relativePath);
 
-            MergeResults(result, allServices, allCharacteristics);
+            MergeResults(result, allServices, allCharacteristics, allAudioEffectUuids);
         }
 
-        return BuildResult(allServices, allCharacteristics);
+        return BuildResult(allServices, allCharacteristics, allAudioEffectUuids);
     }
 
     private static void ClassifyUuid(
@@ -157,6 +187,24 @@ public static partial class BleServiceExtractor
         return line.Contains("getCharacteristic", StringComparison.OrdinalIgnoreCase)
             || line.Contains("CHARACTERISTIC", StringComparison.Ordinal)
             || line.Contains("BluetoothGattCharacteristic", StringComparison.Ordinal);
+    }
+
+    private static bool IsAudioEffectContext(string[] lines, int lineIdx)
+    {
+        // Check surrounding lines (within 10 lines) for AudioEffect-related class references
+        var start = Math.Max(0, lineIdx - 10);
+        var end = Math.Min(lines.Length - 1, lineIdx + 10);
+
+        for (var i = start; i <= end; i++)
+        {
+            foreach (var keyword in AudioEffectKeywords)
+            {
+                if (lines[i].Contains(keyword, StringComparison.Ordinal))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool HasBleContext(string[] lines, int lineIdx)
@@ -265,7 +313,8 @@ public static partial class BleServiceExtractor
 
     private static BleExtractionResult BuildResult(
         Dictionary<string, BleServiceBuilder> services,
-        Dictionary<string, BleCharacteristicBuilder> characteristics)
+        Dictionary<string, BleCharacteristicBuilder> characteristics,
+        List<string> audioEffectUuids)
     {
         var builtServices = services.Values.Select(s => new BleService
         {
@@ -298,13 +347,15 @@ public static partial class BleServiceExtractor
         {
             Services = builtServices,
             Characteristics = builtCharacteristics,
+            AudioEffectUuids = audioEffectUuids.AsReadOnly(),
         };
     }
 
     private static void MergeResults(
         BleExtractionResult result,
         Dictionary<string, BleServiceBuilder> allServices,
-        Dictionary<string, BleCharacteristicBuilder> allCharacteristics)
+        Dictionary<string, BleCharacteristicBuilder> allCharacteristics,
+        List<string> allAudioEffectUuids)
     {
         foreach (var service in result.Services)
         {
@@ -342,6 +393,12 @@ public static partial class BleServiceExtractor
                     builder.Operations.Add(op);
                 allCharacteristics[characteristic.Uuid] = builder;
             }
+        }
+
+        foreach (var uuid in result.AudioEffectUuids)
+        {
+            if (!allAudioEffectUuids.Contains(uuid, StringComparer.OrdinalIgnoreCase))
+                allAudioEffectUuids.Add(uuid);
         }
     }
 
@@ -388,6 +445,13 @@ public sealed record BleExtractionResult
 {
     public IReadOnlyList<BleService> Services { get; init; } = [];
     public IReadOnlyList<BleCharacteristic> Characteristics { get; init; } = [];
+
+    /// <summary>
+    /// UUIDs identified as Android AudioEffect identifiers (e.g. AcousticEchoCanceler,
+    /// NoiseSuppressor) rather than Bluetooth GATT UUIDs. These are excluded from
+    /// <see cref="Services"/> and <see cref="Characteristics"/>.
+    /// </summary>
+    public IReadOnlyList<string> AudioEffectUuids { get; init; } = [];
 
     internal static BleExtractionResult Empty { get; } = new();
 }

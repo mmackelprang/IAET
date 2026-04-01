@@ -153,6 +153,11 @@ internal static class ApkCommand
 
             // Manifest analysis
             var manifestPath = Path.Combine(resourcesDir, "AndroidManifest.xml");
+            if (!File.Exists(manifestPath))
+            {
+                // Fallback: jadx puts decoded manifest in decompiled/resources/
+                manifestPath = Path.Combine(decompiledDir, "resources", "AndroidManifest.xml");
+            }
             var manifest = ManifestAnalyzer.ParseFile(manifestPath);
             if (manifest.PackageName != "unknown")
             {
@@ -162,6 +167,11 @@ internal static class ApkCommand
 
             // Network security
             var nscPath = Path.Combine(resourcesDir, "res", "xml", "network_security_config.xml");
+            if (!File.Exists(nscPath))
+            {
+                // Fallback: jadx puts decoded resources in decompiled/resources/
+                nscPath = Path.Combine(decompiledDir, "resources", "res", "xml", "network_security_config.xml");
+            }
             var netSecurity = NetworkSecurityAnalyzer.ParseFile(nscPath);
 
             // Network data flow tracing (optional)

@@ -8,7 +8,7 @@ namespace Iaet.Android.Extractors;
 /// </summary>
 public sealed record NetworkDataFlow
 {
-    public required string SourceType { get; init; }  // "gRPC", "Retrofit", "OkHttp", "HTTP"
+    public required string SourceType { get; init; }  // "gRPC", "Retrofit", "OkHttp", "HTTP", "Cronet"
     public required string SourceFile { get; init; }
     public string? ResponseHandler { get; init; }
     public string? ParsingDescription { get; init; }
@@ -22,6 +22,8 @@ public sealed record NetworkDataFlow
 /// Traces network response data through parsing code to UI components.
 /// Works with gRPC callbacks, Retrofit response handlers, OkHttp interceptors.
 /// Obfuscation-aware: matches by framework types, not variable names.
+/// Also detects Cronet UrlRequest.Callback implementations by class inheritance,
+/// catching delegate/wrapper classes used in obfuscated Google apps.
 /// </summary>
 public static partial class NetworkDataFlowTracer
 {
@@ -33,6 +35,27 @@ public static partial class NetworkDataFlowTracer
             return [];
 
         var results = new List<NetworkDataFlow>();
+
+        // Cronet class inheritance (catches delegate/wrapper classes)
+        if (javaSource.Contains("extends org.chromium.net.UrlRequest.Callback", StringComparison.Ordinal) ||
+            javaSource.Contains("extends android.net.http.UrlRequest.Callback", StringComparison.Ordinal))
+        {
+            // This file is a Cronet callback implementation
+            if (!results.Exists(r => r.SourceFile == sourceFile && r.SourceType == "Cronet"))
+            {
+                results.Add(new NetworkDataFlow
+                {
+                    SourceType = "Cronet",
+                    SourceFile = sourceFile,
+                    ResponseHandler = "UrlRequest.Callback implementation",
+                    ParsingDescription = FindParsingInContext(javaSource),
+                    TargetVariable = FindTargetVariable(javaSource),
+                    UiBinding = FindUiBinding(javaSource),
+                    InferredPurpose = InferPurpose(sourceFile, javaSource),
+                    Confidence = ConfidenceLevel.Medium,
+                });
+            }
+        }
 
         // gRPC StreamObserver.onNext callbacks
         foreach (Match match in GrpcOnNextPattern().Matches(javaSource))
@@ -95,7 +118,9 @@ public static partial class NetworkDataFlowTracer
                 !source.Contains("onResponseStarted", StringComparison.Ordinal) &&
                 !source.Contains("onReadCompleted", StringComparison.Ordinal) &&
                 !source.Contains("Response.body", StringComparison.Ordinal) &&
-                !source.Contains("response.body", StringComparison.Ordinal))
+                !source.Contains("response.body", StringComparison.Ordinal) &&
+                !source.Contains("extends org.chromium.net.UrlRequest.Callback", StringComparison.Ordinal) &&
+                !source.Contains("extends android.net.http.UrlRequest.Callback", StringComparison.Ordinal))
                 continue;
 
             var relativePath = Path.GetRelativePath(decompiledDir, file);
@@ -104,6 +129,50 @@ public static partial class NetworkDataFlowTracer
 
         return allFlows;
     }
+
+    // ── Helper methods used by both match-based and inheritance-based flows ───
+
+    /// <summary>Scans the full source for parsing patterns and returns a joined description.</summary>
+    private static string? FindParsingInContext(string source)
+    {
+        var parsing = new List<string>();
+        foreach (Match p in JsonParsePattern().Matches(source))
+            parsing.Add(p.Value);
+        foreach (Match p in ProtoParsePattern().Matches(source))
+            parsing.Add(p.Value);
+        foreach (Match p in GetterPattern().Matches(source))
+            parsing.Add(p.Value);
+
+        return parsing.Count > 0 ? string.Join("; ", parsing.Distinct().Take(5)) : null;
+    }
+
+    /// <summary>Scans the full source for UI binding patterns and returns the first target variable.</summary>
+    private static string? FindTargetVariable(string source)
+    {
+        var uiBindings = CollectUiBindings(source);
+        return uiBindings.Count > 0 ? uiBindings[0].Split('.')[0] : null;
+    }
+
+    /// <summary>Scans the full source for UI binding patterns and returns a joined description.</summary>
+    private static string? FindUiBinding(string source)
+    {
+        var uiBindings = CollectUiBindings(source);
+        return uiBindings.Count > 0 ? string.Join(", ", uiBindings) : null;
+    }
+
+    private static List<string> CollectUiBindings(string source)
+    {
+        var uiBindings = new List<string>();
+        foreach (Match u in LiveDataPattern().Matches(source))
+            uiBindings.Add($"{u.Groups[1].Value}.postValue()");
+        foreach (Match u in SetTextPatternNet().Matches(source))
+            uiBindings.Add($"{u.Groups[1].Value}.setText()");
+        foreach (Match u in NotifyPattern().Matches(source))
+            uiBindings.Add("notifyDataSetChanged()");
+        return uiBindings;
+    }
+
+    // ── Match-based flow builder ──────────────────────────────────────────────
 
     private static NetworkDataFlow BuildFlow(string sourceType, string sourceFile, Match match, string fullSource)
     {

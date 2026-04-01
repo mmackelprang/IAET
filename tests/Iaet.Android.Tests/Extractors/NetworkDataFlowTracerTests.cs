@@ -304,4 +304,136 @@ public sealed class NetworkDataFlowTracerTests
         results.Should().NotBeEmpty();
         results[0].ResponseHandler!.Length.Should().BeLessThanOrEqualTo(80);
     }
+
+    // ── Cronet class-inheritance detection ────────────────────────────────────
+
+    [Fact]
+    public void Trace_detects_Cronet_by_chromium_class_inheritance()
+    {
+        var java = """
+            public class wld extends org.chromium.net.UrlRequest.Callback {
+                private final org.chromium.net.UrlRequest.Callback delegate;
+
+                public wld(org.chromium.net.UrlRequest.Callback inner) {
+                    this.delegate = inner;
+                }
+
+                @Override
+                public void onResponseStarted(UrlRequest request, UrlResponseInfo info) {
+                    delegate.onResponseStarted(request, info);
+                }
+
+                @Override
+                public void onReadCompleted(UrlRequest request, UrlResponseInfo info, ByteBuffer buffer) {
+                    delegate.onReadCompleted(request, info, buffer);
+                }
+            }
+            """;
+
+        var results = NetworkDataFlowTracer.Trace(java, "wld.java");
+
+        results.Should().NotBeEmpty();
+        results.Should().Contain(r => r.SourceType == "Cronet");
+        var cronet = results.First(r => r.SourceType == "Cronet");
+        cronet.ResponseHandler.Should().Be("UrlRequest.Callback implementation");
+    }
+
+    [Fact]
+    public void Trace_detects_Cronet_by_android_net_http_class_inheritance()
+    {
+        var java = """
+            public class HttpCallbackWrapper extends android.net.http.UrlRequest.Callback {
+                private final android.net.http.UrlRequest.Callback inner;
+
+                public HttpCallbackWrapper(android.net.http.UrlRequest.Callback cb) {
+                    this.inner = cb;
+                }
+
+                @Override
+                public void onResponseStarted(UrlRequest req, UrlResponseInfo info) {
+                    inner.onResponseStarted(req, info);
+                }
+            }
+            """;
+
+        var results = NetworkDataFlowTracer.Trace(java, "HttpCallbackWrapper.java");
+
+        results.Should().NotBeEmpty();
+        results.Should().Contain(r => r.SourceType == "Cronet");
+    }
+
+    [Fact]
+    public void Trace_detects_Cronet_delegate_pattern_with_no_direct_callback_methods()
+    {
+        // Obfuscated delegate class: extends Callback but methods only forward to inner
+        var java = """
+            public class a extends org.chromium.net.UrlRequest.Callback {
+                final org.chromium.net.UrlRequest.Callback b;
+                a(org.chromium.net.UrlRequest.Callback c) { this.b = c; }
+                public void onSucceeded(UrlRequest r, UrlResponseInfo i) { b.onSucceeded(r, i); }
+                public void onFailed(UrlRequest r, UrlResponseInfo i, CronetException e) { b.onFailed(r, i, e); }
+            }
+            """;
+
+        var results = NetworkDataFlowTracer.Trace(java, "a.java");
+
+        // Should be detected via inheritance even though no matching onResponseStarted/onReadCompleted
+        results.Should().Contain(r => r.SourceType == "Cronet");
+    }
+
+    [Fact]
+    public void Trace_does_not_duplicate_Cronet_entry_when_both_inheritance_and_method_match()
+    {
+        // File extends the callback AND has matching method patterns
+        var java = """
+            public class CronetHandler extends org.chromium.net.UrlRequest.Callback {
+                @Override
+                public void onResponseStarted(UrlRequest request, UrlResponseInfo urlResponseInfo) {
+                    String data = new String(buffer.array());
+                    resultLiveData.postValue(data);
+                }
+            }
+            """;
+
+        var results = NetworkDataFlowTracer.Trace(java, "CronetHandler.java");
+
+        // Should have Cronet entries but the inheritance-based one should not duplicate the method-based one
+        results.Should().NotBeEmpty();
+        results.Should().Contain(r => r.SourceType == "Cronet");
+        // Inheritance-based entry appears first with "UrlRequest.Callback implementation" handler
+        var inheritanceEntry = results.FirstOrDefault(r =>
+            r.SourceType == "Cronet" && r.ResponseHandler == "UrlRequest.Callback implementation");
+        inheritanceEntry.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void TraceFromDirectory_scans_Cronet_inheritance_files()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "iaet-cronet-test-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDir, "wld.java"), """
+                public class wld extends org.chromium.net.UrlRequest.Callback {
+                    private final org.chromium.net.UrlRequest.Callback cb;
+                    public wld(org.chromium.net.UrlRequest.Callback c) { this.cb = c; }
+                    public void onSucceeded(UrlRequest r, UrlResponseInfo i) { cb.onSucceeded(r, i); }
+                }
+                """);
+            File.WriteAllText(Path.Combine(tempDir, "Unrelated.java"), """
+                public class Unrelated {
+                    public void doWork() { }
+                }
+                """);
+
+            var results = NetworkDataFlowTracer.TraceFromDirectory(tempDir);
+
+            results.Should().ContainSingle();
+            results[0].SourceType.Should().Be("Cronet");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }
