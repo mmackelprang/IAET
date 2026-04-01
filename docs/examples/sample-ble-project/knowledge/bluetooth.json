@@ -1,0 +1,29 @@
+{
+  "services": [
+    {
+      "uuid": "0000fee9-0000-1000-8000-00805f9b34fb",
+      "name": "Device Primary Service"
+    }
+  ],
+  "characteristics": [
+    {
+      "uuid": "d44bc439-abfd-45a2-b575-925416129600",
+      "name": "Write Characteristic",
+      "operations": ["Write"]
+    },
+    {
+      "uuid": "d44bc439-abfd-45a2-b575-925416129601",
+      "name": "Notify Characteristic",
+      "operations": ["Notify"]
+    }
+  ],
+  "commandProtocol": {
+    "format": "AB LL CC ID CS — header(AB) length(LL) group(CC) commandId(ID) checksum(CS)",
+    "checksum": "sum of all bytes mod 256",
+    "commands": {
+      "power": "AB 02 0C 14",
+      "volume_up": "AB 02 0C 12",
+      "volume_down": "AB 02 0C 13"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+sequenceDiagram
+    title Sample Auth Flow
+    participant Browser
+    participant API as api.example.com
+
+    Browser->>API: POST /api/v1/auth/login
+    API-->>Browser: 200 (access_token JWT)
+    Browser->>API: GET /api/v1/users (Authorization: Bearer)
+    API-->>Browser: 200 (user list)
+
+    %% Confidence: High — observed in capture

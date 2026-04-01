@@ -31,13 +31,22 @@ dist/
 ## NuGet
 *.nupkg
 
+## Investigation artifacts (research data, not tooling)
+.iaet-projects/
+uat-output/
+findings.md
+progress.md
+task_plan.md
+
 ## Worktrees
 .worktrees/
 
 ## Superpowers brainstorm
 .superpowers/
 
+## Tools (downloaded binaries)
+tools/
+
 ## OS
 Thumbs.db
 .DS_Store
-.iaet-projects/**/.env.iaet

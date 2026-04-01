@@ -1,0 +1,14 @@
+{
+  "packageName": "com.example.bledevice",
+  "versionName": "1.0.0",
+  "minSdk": 24,
+  "targetSdk": 34,
+  "permissions": [
+    "android.permission.BLUETOOTH",
+    "android.permission.BLUETOOTH_CONNECT",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.INTERNET"
+  ],
+  "exportedServices": [],
+  "exportedReceivers": []
+}

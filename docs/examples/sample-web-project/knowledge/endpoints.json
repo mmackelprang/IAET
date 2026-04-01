@@ -1,0 +1,23 @@
+{
+  "endpoints": [
+    {
+      "signature": "GET /api/v1/users",
+      "confidence": "high",
+      "observationCount": 12,
+      "sources": ["network-capture-round-1"],
+      "hasSchema": true
+    },
+    {
+      "signature": "POST /api/v1/messages",
+      "confidence": "high",
+      "observationCount": 5,
+      "sources": ["network-capture-round-1"]
+    },
+    {
+      "signature": "GET /api/v1/settings",
+      "confidence": "medium",
+      "observationCount": 1,
+      "sources": ["js-bundle-analyzer-round-2"]
+    }
+  ]
+}
