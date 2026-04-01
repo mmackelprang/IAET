@@ -1,0 +1,1396 @@
+{
+  "protocol": {
+    "name": "Raddy Radio-C BLE Response Protocol",
+    "source": "com.myhomesmartlife.bluetooth.MainActivity (decompiled)",
+    "header": "0xAB",
+    "encoding": "Hex-encoded bytes over BLE GATT characteristic 0000FF14",
+    "writeCharacteristic": "0000FF13-0000-1000-8000-00805F9B34FB",
+    "notifyCharacteristic": "0000FF14-0000-1000-8000-00805F9B34FB",
+    "handshake": "sendWoshou sent on service discovery",
+    "framing": {
+      "byte0": "0xAB (header, always)",
+      "byte1": "Length or sub-length depending on command group",
+      "byte2": "Command group byte",
+      "note": "substring = hex chars [0:6] (3 bytes), substring2 = hex chars [0:2], substring3/str = hex chars [4:6], substring45 = hex chars [6:8]"
+    }
+  },
+  "responses": [
+    {
+      "code": "ab0417",
+      "name": "UI Button State",
+      "group": "0x17",
+      "description": "Controls the enable/disable state and click behavior of three main UI buttons: Sub-Band (MODE), Step, and Play/Scan. Each byte is 00=disabled (gray) or 01=enabled (active color with touch/click handlers).",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "subbandButtonState",
+          "type": "enum",
+          "values": { "00": "disabled (gray, no click)", "01": "enabled (active, sends sendButtonSubBand)" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "stepButtonState",
+          "type": "enum",
+          "values": { "00": "disabled (gray, no click)", "01": "enabled (active, sends sendButtonStep)" }
+        },
+        {
+          "offset": "byte5 (hex chars 10-12)",
+          "name": "playButtonState",
+          "type": "enum",
+          "values": { "00": "disabled (gray, no click)", "01": "enabled (active, sends sendButtonPlay)" }
+        }
+      ],
+      "uiElements": ["aM (bt_subband_text / MODE button)", "aL (bt_step_text / STEP button)", "aN (bt_play / SCAN button)"],
+      "sourceLines": "681-808"
+    },
+    {
+      "code": "ab031e",
+      "name": "Radio Info Row Visibility",
+      "group": "0x1e",
+      "description": "Controls visibility and flicker state of 5 radio info indicator rows (demodulation, bandwidth, SNR, RSSI, text9). Position byte selects which row, state byte controls hidden/visible/flicker.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "position",
+          "type": "uint8",
+          "values": { "1": "lin_demodulation (br)", "2": "lin_bandwidth (bs)", "3": "lin_snr (bt)", "4": "lin_rssi (bu)", "5": "lin_text_9 (bv)" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "state",
+          "type": "enum",
+          "values": { "00": "hidden (visibility=INVISIBLE)", "01": "visible (visibility=VISIBLE)", "02": "visible + flicker animation" }
+        }
+      ],
+      "uiElements": ["br (lin_demodulation)", "bs (lin_bandwidth)", "bt (lin_snr)", "bu (lin_rssi)", "bv (lin_text_9)"],
+      "sourceLines": "809-878"
+    },
+    {
+      "code": "ab0901",
+      "name": "Frequency & Band Status (Main)",
+      "group": "0x01",
+      "description": "Primary frequency status response. Contains band type, 4-byte frequency (little-endian), frequency unit, decimal point position, and signal scan state. This is the main tuning status update sent continuously.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "band",
+          "type": "enum",
+          "values": {
+            "00": "FM", "01": "AM", "02": "SW", "03": "AIR", "04": "CB",
+            "05": "UHF", "06": "WB", "07": "VHF", "08": "LW", "09": "HAM",
+            "10": "RAIL", "11": "MRN", "12": "RACE", "13": "POL", "14": "FIRE", "15": "OTHER"
+          }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "freqByte0 (LSB)",
+          "type": "hex"
+        },
+        {
+          "offset": "byte5 (hex chars 10-12)",
+          "name": "freqByte1",
+          "type": "hex"
+        },
+        {
+          "offset": "byte6 (hex chars 12-14)",
+          "name": "freqByte2",
+          "type": "hex"
+        },
+        {
+          "offset": "byte7 (hex chars 14-16)",
+          "name": "freqByte3 (MSB)",
+          "type": "hex",
+          "note": "Frequency = hexToDec(byte7+byte6+byte5+byte4), little-endian 32-bit"
+        },
+        {
+          "offset": "byte8 (hex chars 16-18)",
+          "name": "frequencyUnit",
+          "type": "enum",
+          "values": { "00": "MHZ", "01": "KHZ" }
+        },
+        {
+          "offset": "byte9 (hex chars 18-20)",
+          "name": "decimalPointInfo",
+          "type": "bitmask",
+          "note": "Low nibble = af (decimal digits after point), High nibble = ag (decimal digits before point)"
+        },
+        {
+          "offset": "byte10 (hex chars 20-22)",
+          "name": "signalScanState",
+          "type": "enum",
+          "values": { "00": "signal indicator hidden", "01": "signal indicator visible", "02": "signal indicator flicker (scanning)" },
+          "note": "Stored in this.cj. Special case: if band=WB and freq=000000ff, shows 'ALERT' with flicker"
+        }
+      ],
+      "uiElements": [
+        "p (tv_band)", "x (tv_rate_tip / MHZ|KHZ)", "ae (lin_rate / frequency display)",
+        "ad (tv_please / ALERT text)", "ap (tv_remark / bookmark name)",
+        "q,S,T,U,V,W (tv_rate,tv_rate1-5 / frequency digits)", "O (tv_rate_final)",
+        "X,Y,Z,aa,ab,ac (tv_dian-tv_dian5 / decimal points)"
+      ],
+      "sourceLines": "879-1007"
+    },
+    {
+      "code": "ab0303",
+      "name": "Signal Strength (RSSI & SNR)",
+      "group": "0x03",
+      "description": "Reports the current signal RSSI and SNR values as hex-encoded integers.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "rssi",
+          "type": "uint8_hex",
+          "note": "Converted to decimal via hexToDec()"
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "snr",
+          "type": "uint8_hex",
+          "note": "Converted to decimal via hexToDec()"
+        }
+      ],
+      "uiElements": ["n (tv_rssi)", "o (tv_snr)"],
+      "sourceLines": "1008-1025"
+    },
+    {
+      "code": "ab031f",
+      "name": "SQ Dialog / Preset Row Selection",
+      "group": "0x1f",
+      "description": "Controls the SQ (squelch) dialog dismiss and preset row selection popup. When byte3=00, dismisses the SQ dialog. When byte3=01, shows SQ selection popup attached to the row indicated by byte4.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "action",
+          "type": "enum",
+          "values": { "00": "dismiss SQ dialog", "01": "show SQ popup on target row" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "targetRow",
+          "type": "enum",
+          "values": { "01": "lin_demodulation (br)", "02": "lin_bandwidth (bs)", "03": "lin_snr (bt)", "04": "lin_rssi (bu)", "05": "lin_text_9 (bv)" },
+          "note": "Only used when action=01"
+        }
+      ],
+      "uiElements": ["aU (SQDialog)", "br-bv (row LinearLayouts)"],
+      "sourceLines": "1026-1059"
+    },
+    {
+      "code": "ab090f",
+      "name": "Frequency Input Mode Status",
+      "group": "0x0f",
+      "description": "Response to frequency input mode. Similar to ab0901 but includes an input mode status byte. Mode 00=normal display, 01=frequency entry mode (shows 'Please enter' if freq=0), 02=input error.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "inputMode",
+          "type": "enum",
+          "values": { "00": "normal (display frequency)", "01": "frequency entry mode", "02": "input error" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "band",
+          "type": "enum",
+          "values": {
+            "00": "FM", "01": "AM", "02": "SW", "03": "AIR", "04": "CB",
+            "05": "UHF", "06": "WB", "07": "VHF", "08": "LW", "09": "HAM",
+            "10": "RAIL", "11": "MRN", "12": "RACE", "13": "POL", "14": "FIRE", "15": "OTHER"
+          }
+        },
+        {
+          "offset": "bytes 5-8 (hex chars 10-18)",
+          "name": "frequency",
+          "type": "uint32_le_hex",
+          "note": "4 bytes little-endian, same format as ab0901"
+        },
+        {
+          "offset": "byte9 (hex chars 18-20)",
+          "name": "frequencyUnit",
+          "type": "enum",
+          "values": { "00": "MHZ", "01": "KHZ" }
+        },
+        {
+          "offset": "byte10 (hex chars 20-22)",
+          "name": "decimalPointInfo",
+          "type": "bitmask",
+          "note": "Low nibble = decimal position after, High nibble = decimal position before"
+        }
+      ],
+      "uiElements": [
+        "p (tv_band)", "x (tv_rate_tip)", "ad (tv_please / 'Please enter' or 'Input error')",
+        "ae (lin_rate)", "ap (tv_remark)", "frequency digit TextViews"
+      ],
+      "sourceLines": "1060-1198"
+    },
+    {
+      "code": "ab0904",
+      "name": "Demodulation & Bandwidth Settings",
+      "group": "0x04",
+      "description": "Reports current demodulation mode, filter settings, and step/bandwidth values. Contains demodulation type, two unknown setting bytes, and a 16-bit step value.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "demodulation",
+          "type": "enum",
+          "values": {
+            "00": "WFM", "01": "NFM", "02": "MONO", "03": "STEREO",
+            "04": "AM", "05": "SSB", "06": "LSB", "07": "USB"
+          }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "unknown1",
+          "type": "hex",
+          "note": "Read but no visible UI update"
+        },
+        {
+          "offset": "byte5 (hex chars 10-12)",
+          "name": "unknown2",
+          "type": "hex",
+          "note": "Converted to decimal, checked for 0 or 1 but no visible UI update"
+        },
+        {
+          "offset": "byte6 (hex chars 12-14)",
+          "name": "unknown3",
+          "type": "hex",
+          "note": "Checked for 00 or 01 but no visible UI update"
+        },
+        {
+          "offset": "bytes 7-8 (hex chars 14-18)",
+          "name": "unknown4",
+          "type": "uint16_hex",
+          "note": "hexToDec(byte8+byte7), read but no visible UI update"
+        },
+        {
+          "offset": "bytes 9-10 (hex chars 18-22)",
+          "name": "step",
+          "type": "uint16_le_hex",
+          "note": "hexToDec(byte10+byte9) -> displayed as step value"
+        }
+      ],
+      "uiElements": ["s (tv_demodulation)", "t (tv_band_width)"],
+      "sourceLines": "1199-1289"
+    },
+    {
+      "code": "ab0205",
+      "name": "Sleep Timer Status",
+      "group": "0x05",
+      "description": "Reports sleep timer countdown value. If 0, shows sleep-off icon with no text. Otherwise shows sleep-on icon with remaining minutes.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "sleepMinutes",
+          "type": "uint8_hex",
+          "note": "Converted to decimal. 0=sleep off, >0=minutes remaining"
+        }
+      ],
+      "uiElements": ["u (tv_sleep_time)"],
+      "sourceLines": "1290-1307"
+    },
+    {
+      "code": "ab0506",
+      "name": "Alarm Clock Status",
+      "group": "0x06",
+      "description": "Reports alarm clock settings including alarm type, hour, minute, and alarm state (off/set/ringing/snooze). Updates alarm icon and time display accordingly.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "alarmType",
+          "type": "enum",
+          "values": { "00": "normal alarm", "01": "tip/reminder alarm" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "hour",
+          "type": "uint8_hex",
+          "note": "Stored in this.I, displayed as 2-digit decimal"
+        },
+        {
+          "offset": "byte5 (hex chars 10-12)",
+          "name": "minute",
+          "type": "uint8_hex",
+          "note": "Stored in this.J, displayed as 2-digit decimal"
+        },
+        {
+          "offset": "byte6 (hex chars 12-14)",
+          "name": "alarmState",
+          "type": "enum",
+          "values": {
+            "00": "alarm off (ic_alarm_off)",
+            "01": "alarm set (ic_alarm_open or ic_alarm_tip depending on type)",
+            "02": "alarm ringing (flicker animation)",
+            "03": "snooze active (ic_dadun)"
+          }
+        }
+      ],
+      "uiElements": ["v (tv_alarm)"],
+      "sourceLines": "1308-1538"
+    },
+    {
+      "code": "ab0207",
+      "name": "Device Mode / Source Select",
+      "group": "0x07",
+      "description": "Reports the current device operating mode/input source. Switches between radio view, MP3/media view, and various source-specific layouts.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "mode",
+          "type": "enum",
+          "values": {
+            "00": "Standby / off (show tip view, 'please enjoy')",
+            "01": "Bluetooth audio (show MP3 layout, BT play controls)",
+            "02": "Radio mode (show radio layout)",
+            "03": "Sleep / standby (show tip view, 'please enjoy')",
+            "04": "SD card / USB playback (show MP3 layout with track info)",
+            "06": "PC / USB audio input (show MP3 layout with PC icon)",
+            "07": "AUX input (show MP3 layout with AUX icon)"
+          }
+        }
+      ],
+      "uiElements": [
+        "con_mp3 (MP3 layout)", "con_radio (Radio layout)", "con_tip (Tip layout)",
+        "aE (tv_content / status text)", "bP (lin_mp3_play)", "C (iv_mp3_play)",
+        "ai (iv_play_button)", "D (tv_num / track number)", "E (tv_mp3_play_time)",
+        "Q (iv_xunhuan / loop mode icon)"
+      ],
+      "sourceLines": "1539-1663"
+    },
+    {
+      "code": "ab0308",
+      "name": "Battery Level",
+      "group": "0x08",
+      "description": "Reports battery level and charging status. Updates battery icon in both radio and MP3 views.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "batteryLevel",
+          "type": "enum",
+          "values": {
+            "00": "empty (ic_dianliang)",
+            "01": "1 bar (ic_battery_one)",
+            "02": "2 bars (ic_battery_two)",
+            "03": "3 bars / full (ic_battery_three)"
+          }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "chargingStatus",
+          "type": "enum",
+          "values": { "00": "not charging (show battery level)", "01": "charging (ic_chongdian)" }
+        }
+      ],
+      "uiElements": ["ao (iv_dianliang / radio battery)", "as (iv_dianliang1 / MP3 battery)"],
+      "sourceLines": "1664-1699"
+    },
+    {
+      "code": "ab0209",
+      "name": "Volume Level",
+      "group": "0x09",
+      "description": "Reports the current audio volume level as a hex-encoded value.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "volume",
+          "type": "uint8_hex",
+          "note": "Displayed as 'VOL:' + decimal value"
+        }
+      ],
+      "uiElements": ["R (tv_sdvol)"],
+      "sourceLines": "1700-1708"
+    },
+    {
+      "code": "ab020a",
+      "name": "EQ Mode",
+      "group": "0x0a",
+      "description": "Reports current equalizer preset. Updates the EQ icon image.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "eqMode",
+          "type": "enum",
+          "values": {
+            "00": "Normal (ic_normal)",
+            "01": "Pop (ic_pop)",
+            "02": "Rock (ic_rock)",
+            "03": "Jazz (ic_jazz)",
+            "04": "Classic (ic_classic)",
+            "05": "Country (ic_country)"
+          }
+        }
+      ],
+      "uiElements": ["L (iv_music_type)"],
+      "sourceLines": "1709-1740"
+    },
+    {
+      "code": "ab0220",
+      "name": "Language Setting",
+      "group": "0x20",
+      "description": "Sets the app locale to match the device language setting.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "language",
+          "type": "enum",
+          "values": { "00": "Simplified Chinese", "other": "English (US)" }
+        }
+      ],
+      "uiElements": [],
+      "note": "Changes app locale via Resources.updateConfiguration()",
+      "sourceLines": "1741-1755"
+    },
+    {
+      "code": "ab030b",
+      "name": "Device Online Status",
+      "group": "0x0b",
+      "description": "Reports current device online information. Logged but no UI update observed in decompiled code.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "onlineStatus",
+          "type": "hex"
+        }
+      ],
+      "uiElements": [],
+      "note": "Only logged: '蓝牙传输回当前设备在线信息' (BT returned current device online info)",
+      "sourceLines": "1756-1758"
+    },
+    {
+      "code": "ab020e",
+      "name": "Playback Status",
+      "group": "0x0e",
+      "description": "Reports whether media is currently playing or paused. Updates the play/pause button icon.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "playState",
+          "type": "enum",
+          "values": { "01": "playing (ic_mp3_playing)", "other": "paused (ic_mp3_pause)" }
+        }
+      ],
+      "uiElements": ["ai (iv_play_button)"],
+      "sourceLines": "1759-1777"
+    },
+    {
+      "code": "ab0410",
+      "name": "Preset Station Mode",
+      "group": "0x10",
+      "description": "Reports the current preset/memory station mode and number. Controls visibility and flicker of the preset indicator.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "presetMode",
+          "type": "enum",
+          "values": {
+            "00": "no preset (hide preset indicator)",
+            "01": "preset active (show preset number)",
+            "02": "storing preset (show number + flicker)",
+            "03": "searching preset (show '- -' + flicker)"
+          }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "presetNumber",
+          "type": "uint8_hex",
+          "note": "Converted to decimal via hexToDec()"
+        }
+      ],
+      "uiElements": ["r (tv_preset)", "ah (lin_preset)"],
+      "sourceLines": "1778-1810"
+    },
+    {
+      "code": "ab0211",
+      "name": "Loop/Repeat Mode",
+      "group": "0x11",
+      "description": "Reports the current playback loop/repeat mode for MP3/SD card playback.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "loopMode",
+          "type": "enum",
+          "values": {
+            "00": "repeat all (ic_xunhuan)",
+            "01": "repeat one (ic_danqu_xunhuan)",
+            "02": "folder repeat (ic_wenjianjia_xunhuan)",
+            "03": "shuffle (ic_suiji)"
+          }
+        }
+      ],
+      "uiElements": ["Q (iv_xunhuan)"],
+      "sourceLines": "1811-1833"
+    },
+    {
+      "code": "ab0402",
+      "name": "Track Selection / Number Input",
+      "group": "0x02",
+      "description": "Reports track selection mode and current track number for MP3/SD card playback.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "selectionMode",
+          "type": "enum",
+          "values": { "00": "normal mode (show current/total)", "other": "number input mode (show entered number)" }
+        },
+        {
+          "offset": "bytes 4-5 (hex chars 8-12)",
+          "name": "trackNumber",
+          "type": "uint16_le_hex",
+          "note": "hexToDec(byte5+byte4). If 0, shows 'Please Enter'"
+        }
+      ],
+      "uiElements": ["D (tv_num)"],
+      "sourceLines": "1834-1853"
+    },
+    {
+      "code": "ab070d",
+      "name": "Playback Time & Track Index",
+      "group": "0x0d",
+      "description": "Reports current playback elapsed time in seconds and current track index. Time is displayed as MM:SS format.",
+      "fields": [
+        {
+          "offset": "bytes 3-4 (hex chars 6-10)",
+          "name": "elapsedSeconds",
+          "type": "uint16_le_hex",
+          "note": "hexToDec(byte4+byte3), converted to minutes:seconds"
+        },
+        {
+          "offset": "bytes 7-8 (hex chars 14-18)",
+          "name": "unused_field",
+          "type": "uint16_le_hex"
+        },
+        {
+          "offset": "bytes 8-9 (hex chars 16-18 + 14-16)",
+          "name": "currentTrackIndex",
+          "type": "uint16_le_hex",
+          "note": "hexToDec(byte9+byte8), displayed when in normal mode"
+        }
+      ],
+      "uiElements": ["E (tv_mp3_play_time)", "D (tv_num)"],
+      "sourceLines": "1854-1895"
+    },
+    {
+      "code": "ab060c",
+      "name": "Track Count & Current Track",
+      "group": "0x0c",
+      "description": "Reports the current track number and total track count for MP3/SD playback.",
+      "fields": [
+        {
+          "offset": "bytes 3-4 (hex chars 6-10)",
+          "name": "currentTrack",
+          "type": "uint16_le_hex",
+          "note": "hexToDec(byte4+byte3)"
+        },
+        {
+          "offset": "bytes 5-6 (hex chars 10-14)",
+          "name": "totalTracks",
+          "type": "uint16_le_hex",
+          "note": "hexToDec(byte6+byte5)"
+        }
+      ],
+      "uiElements": ["D (tv_num) - shows 'current/total' format"],
+      "sourceLines": "1896-1914"
+    },
+    {
+      "code": "ab__12",
+      "name": "Bluetooth Device Name (Multi-Packet)",
+      "group": "0x12",
+      "matchPattern": "substring2=='ab' && str=='12'",
+      "description": "Multi-packet transfer of the connected Bluetooth device name string (GBK encoded). Uses packet sequencing (01-04) for reassembly. Final result shown in a tip overlay.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "packetSequence",
+          "type": "enum",
+          "values": { "01": "first packet (store)", "02": "continuation (append)", "03": "final short packet (decode+display)", "04": "final after multi (decode+display)" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "payloadLength",
+          "type": "uint8_hex",
+          "note": "Number of data bytes following"
+        },
+        {
+          "offset": "bytes 5+ (hex chars 10+)",
+          "name": "namePayload",
+          "type": "GBK_encoded_hex",
+          "note": "Length = payloadLength * 2 hex chars"
+        }
+      ],
+      "uiElements": ["aE (tv_content) - shown in con_tip overlay"],
+      "sourceLines": "1915-1961"
+    },
+    {
+      "code": "ab__19",
+      "name": "Firmware Version (Multi-Packet)",
+      "group": "0x19",
+      "matchPattern": "substring2=='ab' && str=='19'",
+      "description": "Multi-packet transfer of firmware version string (GBK encoded). Uses packet sequencing for reassembly. Shows version in a VersionDialog.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "packetSequence",
+          "type": "enum",
+          "values": { "01": "first packet", "02": "continuation", "03": "final short", "04": "final after multi" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "payloadLength",
+          "type": "uint8_hex"
+        },
+        {
+          "offset": "bytes 5+ (hex chars 10+)",
+          "name": "versionPayload",
+          "type": "GBK_encoded_hex"
+        }
+      ],
+      "uiElements": ["P (VersionDialog)"],
+      "sourceLines": "1962-2022"
+    },
+    {
+      "code": "ab__1c_01",
+      "name": "Custom Label 1: Demodulation Title (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x01",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='01'",
+      "description": "Multi-packet string for custom label row 1 (demodulation title). GBK encoded. Only displayed when the outer index byte equals 1.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "rowIndex",
+          "type": "uint8_hex",
+          "note": "Must be 01 for this label to display"
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "packetSequence",
+          "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        {
+          "offset": "byte5 (hex chars 10-12)",
+          "name": "payloadLength",
+          "type": "uint8_hex"
+        },
+        {
+          "offset": "bytes 6+ (hex chars 12+)",
+          "name": "labelPayload",
+          "type": "GBK_encoded_hex"
+        }
+      ],
+      "uiElements": ["aV (tv_demodulation_title)"],
+      "sourceLines": "2024-2073"
+    },
+    {
+      "code": "ab__1c_02",
+      "name": "Custom Label 2: Demodulation Value (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x02",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='02'",
+      "description": "Multi-packet string for custom label row 2 (demodulation value). GBK encoded. Only displayed when the outer index byte equals 2.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "rowIndex",
+          "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "packetSequence",
+          "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        {
+          "offset": "byte5 (hex chars 10-12)",
+          "name": "payloadLength",
+          "type": "uint8_hex"
+        },
+        {
+          "offset": "bytes 6+ (hex chars 12+)",
+          "name": "labelPayload",
+          "type": "GBK_encoded_hex"
+        }
+      ],
+      "uiElements": ["s (tv_demodulation)"],
+      "sourceLines": "2074-2123"
+    },
+    {
+      "code": "ab__1c_03",
+      "name": "Custom Label 3: Bandwidth Title (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x03",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='03'",
+      "description": "Multi-packet string for custom label row 3 (bandwidth title). Only displayed when outer index byte equals 3.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["aW (tv_band_width_title)"],
+      "sourceLines": "2124-2173"
+    },
+    {
+      "code": "ab__1c_04",
+      "name": "Custom Label 4: Bandwidth Value (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x04",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='04'",
+      "description": "Multi-packet string for custom label row 4 (bandwidth/step value). Only displayed when outer index byte equals 4.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["t (tv_band_width)"],
+      "sourceLines": "2174-2223"
+    },
+    {
+      "code": "ab__1c_05",
+      "name": "Custom Label 5: SNR Title (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x05",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='05'",
+      "description": "Multi-packet string for custom label row 5 (SNR title). Only displayed when outer index byte equals 5.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["aX (tv_snr_title)"],
+      "sourceLines": "2224-2273"
+    },
+    {
+      "code": "ab__1c_06",
+      "name": "Custom Label 6: SNR Value (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x06",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='06'",
+      "description": "Multi-packet string for custom label row 6 (SNR value). Only displayed when outer index byte equals 6.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["o (tv_snr)"],
+      "sourceLines": "2274-2323"
+    },
+    {
+      "code": "ab__1c_07",
+      "name": "Custom Label 7: RSSI Title (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x07",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='07'",
+      "description": "Multi-packet string for custom label row 7 (RSSI title). Only displayed when outer index byte equals 7.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["aY (tv_rssi_title)"],
+      "sourceLines": "2324-2373"
+    },
+    {
+      "code": "ab__1c_08",
+      "name": "Custom Label 8: RSSI Value (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x08",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='08'",
+      "description": "Multi-packet string for custom label row 8 (RSSI value). Only displayed when outer index byte equals 8.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["n (tv_rssi)"],
+      "sourceLines": "2374-2423"
+    },
+    {
+      "code": "ab__1c_09",
+      "name": "Custom Label 9: Row 9 Text (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x09",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='09'",
+      "description": "Multi-packet string for custom label row 9. Only displayed when outer index byte equals 9.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["aZ (tv_text9)"],
+      "sourceLines": "2424-2473"
+    },
+    {
+      "code": "ab__1c_0a",
+      "name": "Custom Label 10: Row 10 Text (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x0a",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='0a'",
+      "description": "Multi-packet string for custom label row 10. Only displayed when outer index byte equals 10.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["ba (tv_text10)"],
+      "sourceLines": "2474-2523"
+    },
+    {
+      "code": "ab__1c_0b",
+      "name": "Custom Label 11: Row 11 Text (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x0b",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='0b'",
+      "description": "Multi-packet string for custom label row 11. Only displayed when outer index byte equals 11.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["bb (tv_text_11)"],
+      "sourceLines": "2524-2573"
+    },
+    {
+      "code": "ab__1c_0c",
+      "name": "Custom Label 12: Row 12 Text (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x0c",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='0c'",
+      "description": "Multi-packet string for custom label row 12. Displayed unconditionally on final decode.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["bc (tv_text_12)"],
+      "sourceLines": "2574-2619"
+    },
+    {
+      "code": "ab__1c_0d",
+      "name": "Custom Label 13: Volume/SD Label (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x0d",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='0d'",
+      "description": "Multi-packet string for SD volume / text row 13. Displayed unconditionally.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["R (tv_sdvol)"],
+      "sourceLines": "2620-2665"
+    },
+    {
+      "code": "ab__1c_0e",
+      "name": "Custom Label 14: Track Name (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x0e",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='0e'",
+      "description": "Multi-packet string for track/song name (row 14). Displayed unconditionally. Log label: '歌曲名' (song name).",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["D (tv_num)"],
+      "sourceLines": "2666-2712"
+    },
+    {
+      "code": "ab__1c_0f",
+      "name": "Custom Label 15: Secondary Track Info (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x0f",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='0f'",
+      "description": "Multi-packet string for secondary track/song info (row 15). Displayed unconditionally. Log label: '歌曲名' (song name).",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["bO (tv_text_15)"],
+      "sourceLines": "2713-2759"
+    },
+    {
+      "code": "ab__21_01",
+      "name": "Dynamic Button Label 1: MODE Button (Multi-Packet)",
+      "group": "0x21",
+      "subcommand": "0x01",
+      "matchPattern": "substring2=='ab' && str=='21' && substring45=='01'",
+      "description": "Multi-packet string for the MODE button label. GBK encoded.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "buttonIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["aM (bt_subband_text / MODE button)"],
+      "sourceLines": "2760-2805"
+    },
+    {
+      "code": "ab__21_02",
+      "name": "Dynamic Button Label 2: STEP Button (Multi-Packet)",
+      "group": "0x21",
+      "subcommand": "0x02",
+      "matchPattern": "substring2=='ab' && str=='21' && substring45=='02'",
+      "description": "Multi-packet string for the STEP button label. GBK encoded.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "buttonIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["aL (bt_step_text / STEP button)"],
+      "sourceLines": "2806-2851"
+    },
+    {
+      "code": "ab__21_03",
+      "name": "Dynamic Button Label 3: SCAN/Play Button (Multi-Packet)",
+      "group": "0x21",
+      "subcommand": "0x03",
+      "matchPattern": "substring2=='ab' && str=='21' && substring45=='03'",
+      "description": "Multi-packet string for the SCAN/Play button label. GBK encoded.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "buttonIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["aN (bt_play / SCAN button)"],
+      "sourceLines": "2852-2897"
+    },
+    {
+      "code": "ab__21_04",
+      "name": "Dynamic Button Label 4: SOS Button (Multi-Packet)",
+      "group": "0x21",
+      "subcommand": "0x04",
+      "matchPattern": "substring2=='ab' && str=='21' && substring45=='04'",
+      "description": "Multi-packet string for the SOS button label. GBK encoded.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "buttonIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["bW (iv_sos / SOS button)"],
+      "sourceLines": "2898-2943"
+    },
+    {
+      "code": "ab__21_05",
+      "name": "Dynamic Button Label 5: FUNC Button (Multi-Packet)",
+      "group": "0x21",
+      "subcommand": "0x05",
+      "matchPattern": "substring2=='ab' && str=='21' && substring45=='05'",
+      "description": "Multi-packet string for the FUNC button label. GBK encoded.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "buttonIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["bX (iv_phone_play / FUNC button)"],
+      "sourceLines": "2944-2989"
+    },
+    {
+      "code": "ab__1c_10",
+      "name": "Custom Label 16: REC Status (Multi-Packet)",
+      "group": "0x1c",
+      "subcommand": "0x10",
+      "matchPattern": "substring2=='ab' && str=='1c' && substring45=='10'",
+      "description": "Multi-packet string for REC (recording) status label (row 16). Displayed unconditionally.",
+      "fields": [
+        {
+          "offset": "byte3", "name": "rowIndex", "type": "uint8_hex"
+        },
+        {
+          "offset": "byte4", "name": "packetSequence", "type": "enum",
+          "values": { "01": "first", "02": "continuation", "03": "final short", "04": "final multi" }
+        },
+        { "offset": "byte5", "name": "payloadLength", "type": "uint8_hex" },
+        { "offset": "bytes 6+", "name": "labelPayload", "type": "GBK_encoded_hex" }
+      ],
+      "uiElements": ["aF (tv_rec)"],
+      "sourceLines": "2990-3035"
+    },
+    {
+      "code": "ab031300c0",
+      "name": "Device Power Off Notification",
+      "group": "0x13",
+      "description": "Exact 5-byte match. Indicates the device is powered off. Hides the tip container and shows 'Please turn on the device...' message.",
+      "fields": [],
+      "uiElements": ["con_tip (tip container)", "aE (tv_content)"],
+      "sourceLines": "3036-3044"
+    },
+    {
+      "code": "ab031d",
+      "name": "Radio Detail Row Visibility",
+      "group": "0x1d",
+      "description": "Controls visibility and flicker state of 16 radio detail text rows. Similar to ab031e but for individual text labels rather than indicator rows. Position values 1-16 map to various display elements.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "position",
+          "type": "uint8_hex",
+          "values": {
+            "1": "aV (tv_demodulation_title)",
+            "2": "s (tv_demodulation)",
+            "3": "aW (tv_band_width_title)",
+            "4": "t (tv_band_width)",
+            "5": "aX (tv_snr_title)",
+            "6": "o (tv_snr)",
+            "7": "aY (tv_rssi_title)",
+            "8": "n (tv_rssi)",
+            "9": "aZ (tv_text9)",
+            "10": "ba (tv_text10)",
+            "11": "bb (tv_text_11)",
+            "12": "bc (tv_text_12)",
+            "13": "R (tv_sdvol)",
+            "14": "D (tv_num)",
+            "15": "bO (tv_text_15)",
+            "16": "aF (tv_rec)"
+          }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "state",
+          "type": "enum",
+          "values": { "00": "hidden", "01": "visible", "02": "visible + flicker" }
+        }
+      ],
+      "uiElements": ["aV, s, aW, t, aX, o, aY, n, aZ, ba, bb, bc, R, D, bO, aF"],
+      "sourceLines": "3045-3246"
+    },
+    {
+      "code": "ab0224",
+      "name": "BLE Disconnect Command",
+      "group": "0x24",
+      "description": "Instructs the app to disconnect from the BLE device. Only acts if currently connected (am==2).",
+      "fields": [],
+      "uiElements": [],
+      "sourceLines": "3247-3257"
+    },
+    {
+      "code": "ab0414",
+      "name": "Frequency Range Info",
+      "group": "0x14",
+      "description": "Reports frequency range or band configuration. Stores band info and a 16-bit frequency value but does not update visible UI. Log label: stored in aH.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "bandConfig",
+          "type": "hex",
+          "note": "Stored in this.aH"
+        },
+        {
+          "offset": "bytes 4-5 (hex chars 8-12)",
+          "name": "frequencyValue",
+          "type": "uint16_le_hex",
+          "note": "hexToDec(byte5+byte4)"
+        }
+      ],
+      "uiElements": [],
+      "sourceLines": "3258-3269"
+    },
+    {
+      "code": "ab0315",
+      "name": "Band Type Bitmask",
+      "group": "0x15",
+      "description": "Reports a 16-bit bitmask (two bytes, converted to binary, reversed) indicating which radio bands/features are enabled. Each bit position maps to a RateTypeInfo entry in the band selector list.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "bitmaskLow",
+          "type": "hex",
+          "note": "Converted to 8-bit binary string (padded to 8 bits)"
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "bitmaskHigh",
+          "type": "hex",
+          "note": "Converted to 8-bit binary string (padded to 8 bits)"
+        }
+      ],
+      "derivedFields": [
+        {
+          "name": "bandEnableBits",
+          "description": "String.reverse(bitmaskHigh + bitmaskLow) - 16-bit reversed string where each character is '0' or '1'. Position i maps to aJ.get(i).setBitType(bit)"
+        }
+      ],
+      "uiElements": ["aJ (RateTypeInfo list / band selector)"],
+      "sourceLines": "3270-3308"
+    },
+    {
+      "code": "ab0216",
+      "name": "Hardware Version / Device ID",
+      "group": "0x16",
+      "description": "Reports a device version or configuration identifier. Stores value and shows it in the VersionDialog.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "versionId",
+          "type": "hex",
+          "note": "Stored in this.aI, displayed in VersionDialog alongside firmware version"
+        }
+      ],
+      "uiElements": ["P (VersionDialog)"],
+      "sourceLines": "3309-3321"
+    },
+    {
+      "code": "ab__23",
+      "name": "Toast Message (Multi-Packet)",
+      "group": "0x23",
+      "matchPattern": "substring2=='ab' && str=='23'",
+      "description": "Multi-packet string displayed as an Android Toast notification. GBK encoded. Used for device-originated messages/alerts.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "packetSequence",
+          "type": "enum",
+          "values": { "01": "first packet", "02": "continuation", "03": "final short (single or reset)", "04": "final after multi" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "payloadLength",
+          "type": "uint8_hex"
+        },
+        {
+          "offset": "bytes 5+ (hex chars 10+)",
+          "name": "messagePayload",
+          "type": "GBK_encoded_hex"
+        }
+      ],
+      "uiElements": ["Toast notification"],
+      "sourceLines": "3322-3369"
+    },
+    {
+      "code": "ab0318",
+      "name": "SQ Level / Max SQ",
+      "group": "0x18",
+      "description": "Reports the current squelch level and maximum squelch value. Both stored as decimal strings.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "currentSQ",
+          "type": "uint8_hex",
+          "note": "hexToDec(), stored in this.aS"
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "maxSQ",
+          "type": "uint8_hex",
+          "note": "hexToDec(), stored in this.aT"
+        }
+      ],
+      "uiElements": [],
+      "note": "Values stored but minimal UI update (only checks aT.equals('0'))",
+      "sourceLines": "3370-3379"
+    },
+    {
+      "code": "ab021b",
+      "name": "Unknown Status 0x1b",
+      "group": "0x1b",
+      "description": "Single-byte status response. The value is read and checked against '00' on the UI thread but no visible action is taken in the decompiled code.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "status",
+          "type": "hex"
+        }
+      ],
+      "uiElements": [],
+      "sourceLines": "3380-3391"
+    },
+    {
+      "code": "ab0322",
+      "name": "SOS/FUNC Button Flicker",
+      "group": "0x22",
+      "description": "Controls the flicker animation state of the SOS and FUNC button labels.",
+      "fields": [
+        {
+          "offset": "byte3 (hex chars 6-8)",
+          "name": "buttonId",
+          "type": "enum",
+          "values": { "01": "SOS button (bW/iv_sos)", "02": "FUNC button (bX/iv_phone_play)" }
+        },
+        {
+          "offset": "byte4 (hex chars 8-10)",
+          "name": "flickerState",
+          "type": "enum",
+          "values": { "00": "stop flicker (clearAnimation)", "01": "start flicker" }
+        }
+      ],
+      "uiElements": ["bW (iv_sos / SOS label)", "bX (iv_phone_play / FUNC label)"],
+      "sourceLines": "3392-3411"
+    }
+  ],
+  "uiFieldMap": {
+    "n": { "id": "tv_rssi", "type": "TextView", "purpose": "RSSI signal strength value" },
+    "o": { "id": "tv_snr", "type": "TextView", "purpose": "SNR signal-to-noise ratio value" },
+    "p": { "id": "tv_band", "type": "TextView", "purpose": "Current radio band name (FM/AM/SW/etc)" },
+    "q": { "id": "tv_rate", "type": "TextView", "purpose": "Frequency digit (leftmost)" },
+    "r": { "id": "tv_preset", "type": "TextView", "purpose": "Preset station number" },
+    "s": { "id": "tv_demodulation", "type": "TextView", "purpose": "Demodulation mode text" },
+    "t": { "id": "tv_band_width", "type": "TextView", "purpose": "Bandwidth/step value" },
+    "u": { "id": "tv_sleep_time", "type": "TextView", "purpose": "Sleep timer countdown" },
+    "v": { "id": "tv_alarm", "type": "TextView", "purpose": "Alarm clock display" },
+    "x": { "id": "tv_rate_tip", "type": "TextView", "purpose": "Frequency unit (MHZ/KHZ)" },
+    "C": { "id": "iv_mp3_play", "type": "ImageView", "purpose": "MP3/source mode icon" },
+    "D": { "id": "tv_num", "type": "TextView", "purpose": "Track number or song name" },
+    "E": { "id": "tv_mp3_play_time", "type": "TextView", "purpose": "Playback elapsed time (MM:SS)" },
+    "L": { "id": "iv_music_type", "type": "ImageView", "purpose": "EQ mode icon" },
+    "O": { "id": "tv_rate_final", "type": "TextView", "purpose": "Frequency trailing digits" },
+    "Q": { "id": "iv_xunhuan", "type": "ImageView", "purpose": "Loop/repeat mode icon" },
+    "R": { "id": "tv_sdvol", "type": "TextView", "purpose": "Volume level display" },
+    "S-W": { "id": "tv_rate1-tv_rate5", "type": "TextView", "purpose": "Frequency digit positions 1-5" },
+    "X-ac": { "id": "tv_dian-tv_dian5", "type": "TextView", "purpose": "Decimal point indicators" },
+    "ad": { "id": "tv_please", "type": "TextView", "purpose": "Status text overlay (ALERT/Please enter/Input error)" },
+    "ae": { "id": "lin_rate", "type": "LinearLayout", "purpose": "Frequency digit container" },
+    "ah": { "id": "lin_preset", "type": "LinearLayout", "purpose": "Preset indicator container" },
+    "ai": { "id": "iv_play_button", "type": "ImageView", "purpose": "Play/pause button icon" },
+    "ao": { "id": "iv_dianliang", "type": "ImageView", "purpose": "Battery icon (radio view)" },
+    "ap": { "id": "tv_remark", "type": "TextView", "purpose": "Frequency bookmark name" },
+    "as": { "id": "iv_dianliang1", "type": "ImageView", "purpose": "Battery icon (MP3 view)" },
+    "aE": { "id": "tv_content", "type": "TextView", "purpose": "Tip/status content text" },
+    "aF": { "id": "tv_rec", "type": "TextView", "purpose": "Recording status label" },
+    "aG": { "id": "iv_bluetooth_connect", "type": "ImageView", "purpose": "BLE connection status icon" },
+    "aL": { "id": "bt_step_text", "type": "Button", "purpose": "STEP button" },
+    "aM": { "id": "bt_subband_text", "type": "Button", "purpose": "MODE / Sub-Band button" },
+    "aN": { "id": "bt_play", "type": "Button", "purpose": "SCAN / Play button" },
+    "aV": { "id": "tv_demodulation_title", "type": "TextView", "purpose": "Demodulation row title label" },
+    "aW": { "id": "tv_band_width_title", "type": "TextView", "purpose": "Bandwidth row title label" },
+    "aX": { "id": "tv_snr_title", "type": "TextView", "purpose": "SNR row title label" },
+    "aY": { "id": "tv_rssi_title", "type": "TextView", "purpose": "RSSI row title label" },
+    "aZ": { "id": "tv_text9", "type": "TextView", "purpose": "Info row 9 text" },
+    "ba": { "id": "tv_text10", "type": "TextView", "purpose": "Info row 10 text" },
+    "bb": { "id": "tv_text_11", "type": "TextView", "purpose": "Info row 11 text" },
+    "bc": { "id": "tv_text_12", "type": "TextView", "purpose": "Info row 12 text" },
+    "bO": { "id": "tv_text_15", "type": "TextView", "purpose": "Info row 15 text" },
+    "bP": { "id": "lin_mp3_play", "type": "LinearLayout", "purpose": "MP3 playback controls container" },
+    "bW": { "id": "iv_sos", "type": "TextView", "purpose": "SOS button label" },
+    "bX": { "id": "iv_phone_play", "type": "TextView", "purpose": "FUNC button label" },
+    "br": { "id": "lin_demodulation", "type": "LinearLayout", "purpose": "Demodulation indicator row" },
+    "bs": { "id": "lin_bandwidth", "type": "LinearLayout", "purpose": "Bandwidth indicator row" },
+    "bt": { "id": "lin_snr", "type": "LinearLayout", "purpose": "SNR indicator row" },
+    "bu": { "id": "lin_rssi", "type": "LinearLayout", "purpose": "RSSI indicator row" },
+    "bv": { "id": "lin_text_9", "type": "LinearLayout", "purpose": "Info row 9 indicator" }
+  },
+  "bandCodes": {
+    "00": "FM", "01": "AM", "02": "SW", "03": "AIR", "04": "CB",
+    "05": "UHF", "06": "WB", "07": "VHF", "08": "LW", "09": "HAM",
+    "10": "RAIL", "11": "MRN", "12": "RACE", "13": "POL", "14": "FIRE", "15": "OTHER"
+  },
+  "demodulationCodes": {
+    "00": "WFM", "01": "NFM", "02": "MONO", "03": "STEREO",
+    "04": "AM", "05": "SSB", "06": "LSB", "07": "USB"
+  },
+  "multiPacketProtocol": {
+    "description": "Strings longer than one BLE packet use a multi-packet assembly protocol. The packet sequence byte indicates position.",
+    "sequenceValues": {
+      "01": "First packet - store payload in buffer",
+      "02": "Continuation - append payload to buffer",
+      "03": "Final packet (short string, single packet) - decode and display",
+      "04": "Final packet (after multi-packet) - append, then decode full buffer and display"
+    },
+    "encoding": "GBK (Chinese character set, decoded via bytes2decString -> new String(bytes, 'GBK'))",
+    "affectedGroups": ["0x12", "0x19", "0x1c (01-10)", "0x21 (01-05)", "0x23"]
+  }
+}
