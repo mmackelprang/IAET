@@ -11,18 +11,22 @@ namespace Iaet.Cli.Commands;
 
 internal static class ExportCommand
 {
-    // Maps subcommand name to default file extension for --project output.
-    private static readonly Dictionary<string, string> FormatExtensions = new(StringComparer.Ordinal)
+    // Maps subcommand name to canonical file name for --project output.
+    // These are the names the dashboard generator expects in the output/ directory.
+    private static readonly Dictionary<string, string> CanonicalNames = new(StringComparer.Ordinal)
     {
-        ["report"] = ".md",
-        ["html"] = ".html",
-        ["openapi"] = ".yaml",
-        ["postman"] = ".postman.json",
-        ["csharp"] = ".cs",
-        ["har"] = ".har",
-        ["narrative"] = ".narrative.md",
-        ["client-prompt"] = ".prompt.md",
+        ["report"] = "report.md",
+        ["html"] = "report.html",
+        ["openapi"] = "api.yaml",
+        ["postman"] = "collection.json",
+        ["csharp"] = "client.cs",
+        ["har"] = "session.har",
+        ["narrative"] = "narrative.md",
+        ["client-prompt"] = "client-prompt.md",
     };
+
+    private static string GetCanonicalName(string subcommandName)
+        => CanonicalNames.GetValueOrDefault(subcommandName, $"{subcommandName}.txt");
 
     internal static Command Create(IServiceProvider services)
     {
@@ -122,9 +126,9 @@ internal static class ExportCommand
             var projectOutputDir = Path.Combine(projectDir, "output");
             Directory.CreateDirectory(projectOutputDir);
 
-            var extension = FormatExtensions.GetValueOrDefault(subcommandName, ".txt");
-            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
-            outputPath = Path.Combine(projectOutputDir, $"{timestamp}-{subcommandName}{extension}");
+            // Write to the canonical name that the dashboard expects
+            var canonicalName = GetCanonicalName(subcommandName);
+            outputPath = Path.Combine(projectOutputDir, canonicalName);
         }
 
         var ctx    = await ExportContext.LoadAsync(sessionId, catalog, streamCatalog, schemaInferrer).ConfigureAwait(false);
