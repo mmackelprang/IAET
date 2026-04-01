@@ -64,6 +64,10 @@ internal static class ImportCommand
                 if (project is not null)
                 {
                     await ArchiveCaptureAsync(file, project, services).ConfigureAwait(false);
+
+                    using var refreshScope = services.CreateScope();
+                    var projectStore = refreshScope.ServiceProvider.GetRequiredService<IProjectStore>();
+                    await projectStore.RefreshStatusAsync(project).ConfigureAwait(false);
                 }
                 return;
             }

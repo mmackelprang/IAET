@@ -9,5 +9,6 @@ public interface IProjectStore
     Task<IReadOnlyList<ProjectConfig>> ListAsync(CancellationToken ct = default);
     Task SaveAsync(ProjectConfig config, CancellationToken ct = default);
     Task ArchiveAsync(string projectName, CancellationToken ct = default);
+    Task<ProjectConfig> RefreshStatusAsync(string projectName, CancellationToken ct = default);
     string GetProjectDirectory(string projectName);
 }

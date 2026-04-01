@@ -86,6 +86,7 @@ internal static class ApkCommand
             {
                 Console.WriteLine($"Decompilation complete: {result.FileCount} Java files in {result.DurationMs}ms");
                 Console.WriteLine($"Output: {result.OutputDirectory}");
+                await projectStore.RefreshStatusAsync(project).ConfigureAwait(false);
             }
             else
             {
@@ -251,6 +252,8 @@ internal static class ApkCommand
             Console.WriteLine($"  Pinned:      {netSecurity.PinnedDomains.Count} domains");
             if (traceDataflow)
                 Console.WriteLine($"  Net flows:   {networkFlows.Count}");
+
+            await projectStore.RefreshStatusAsync(project).ConfigureAwait(false);
         });
 
         return analyzeCmd;
