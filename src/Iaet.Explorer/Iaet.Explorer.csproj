@@ -7,6 +7,11 @@
     <NoWarn>$(NoWarn);CA1515</NoWarn>
   </PropertyGroup>
 
+  <!-- Embed dashboard.html as a resource so it's available in global tool deployments -->
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\dashboard.html" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Iaet.Core\Iaet.Core.csproj" />
     <ProjectReference Include="..\Iaet.Catalog\Iaet.Catalog.csproj" />
