@@ -53,11 +53,16 @@ public static class ExplorerApp
         ExportApi.Map(app);
         ProjectsApi.Map(app);
 
-        // Serve dashboard SPA at /dashboard (without .html extension)
-        app.MapGet("/dashboard", (Microsoft.AspNetCore.Hosting.IWebHostEnvironment env) =>
+        // Serve dashboard SPA at /dashboard — embedded as a resource for global tool compatibility
+        app.MapGet("/dashboard", () =>
         {
-            var filePath = Path.Combine(env.WebRootPath, "dashboard.html");
-            return Results.File(filePath, "text/html");
+            using var stream = typeof(ExplorerApp).Assembly.GetManifestResourceStream("Iaet.Explorer.wwwroot.dashboard.html");
+            if (stream is null)
+                return Results.NotFound("dashboard.html not found as embedded resource.");
+
+            using var reader = new StreamReader(stream);
+            var html = reader.ReadToEnd();
+            return Results.Content(html, "text/html");
         });
 
         return app;
