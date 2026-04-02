@@ -420,28 +420,36 @@ async function loadNextSteps(projectName, files, panel) {
     const ip = match[1];
     if (!ip.startsWith('0.') && !ip.startsWith('127.')) ips.add(ip);
   }
-  for (const ip of Array.from(ips).sort()) {
-    steps.push({category:'Resolve IP Addresses', type:'human',
-      item:'Resolve <code>' + escapeHtml(ip) + '</code> to hostname',
-      detail:'Run <code>nslookup ' + escapeHtml(ip) + '</code> or <code>dig -x ' + escapeHtml(ip) + '</code>.'});
+  if (ips.size > 0) {
+    steps.push({category:'Resolve IP Addresses', type:'tooling',
+      item:'Run automated reverse DNS on ' + ips.size + ' IP address(es)',
+      detail:'IAET has a built-in DnsResolver. Run: <code>iaet analyze correlate --project ' + escapeHtml(projectName) + '</code> to enrich findings with hostname resolution.'});
   }
 
   if (allText.includes('non-JSON') || allText.toLowerCase().includes('protobuf')) {
-    steps.push({category:'Protocol Decoding', type:'tooling',
-      item:'Add protobuf/protojson decoder to schema inferrer',
-      detail:'Positional JSON arrays need a protojson-aware inferrer to map array positions to field names.'});
-    steps.push({category:'Protocol Decoding', type:'human',
-      item:'Try <code>?alt=json</code> query parameter on API requests',
-      detail:'Some Google APIs support standard JSON output which the existing schema inferrer can parse.'});
+    // Only suggest protojson decoder if schemas show Field0/Field1 (not yet resolved)
+    if (allText.includes('Field0') || allText.includes('field names are inferred from position')) {
+      steps.push({category:'Protocol Decoding', type:'tooling',
+        item:'Run Deep Field Resolver for better protojson field names',
+        detail:'Use <code>iaet export smart-client-prompt --project ' + escapeHtml(projectName) + '</code> to trigger recursive analysis with value patterns and endpoint context.'});
+    }
   }
 
-  // Standard suggestions
-  steps.push({category:'Tooling Improvements', type:'tooling',
-    item:'Automatic reverse DNS for IP addresses in captures',
-    detail:'Resolve IPs found in SDP, ICE candidates, and API responses to hostnames automatically.'});
-  steps.push({category:'Output Generation', type:'tooling',
-    item:'Generate API client prompt for AI code generation',
-    detail:'Package OpenAPI spec, auth chains, and protocol details into a prompt for AI-assisted client generation.'});
+  // Only suggest client prompt if one doesn't exist yet
+  const hasClientPrompt = files.output && files.output.some(f => f && f.includes('client-prompt'));
+  if (!hasClientPrompt) {
+    steps.push({category:'Output Generation', type:'tooling',
+      item:'Generate API client prompt',
+      detail:'Run: <code>iaet export smart-client-prompt --project ' + escapeHtml(projectName) + '</code>'});
+  }
+
+  // Only suggest correlation if correlations.json doesn't exist
+  const hasCorrelations = files.knowledge && files.knowledge.some(f => f && f.includes('correlation'));
+  if (!hasCorrelations && files.knowledge && files.knowledge.some(f => f && f.includes('endpoints'))) {
+    steps.push({category:'Analysis', type:'tooling',
+      item:'Run cross-endpoint value correlation',
+      detail:'Run: <code>iaet analyze correlate --project ' + escapeHtml(projectName) + ' --session-id &lt;guid&gt;</code>'});
+  }
 
   // Render
   let html = '<h2>Further Investigation / Next Steps</h2>';
