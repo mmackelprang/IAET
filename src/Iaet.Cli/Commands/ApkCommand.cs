@@ -254,6 +254,29 @@ internal static class ApkCommand
                     JsonSerializer.Serialize(flowsObj, JsonOptions)).ConfigureAwait(false);
             }
 
+            // Auto-generate diagrams from analysis results
+            var diagramsDir = Path.Combine(projectDir, "output", "diagrams");
+            Directory.CreateDirectory(diagramsDir);
+
+            if (urls.Count > 0)
+            {
+                Console.WriteLine("  Generating API architecture diagram...");
+                var apiDiagram = GenerateApiArchitectureDiagram(urls);
+                await File.WriteAllTextAsync(
+                    Path.Combine(diagramsDir, "api-architecture.mmd"),
+                    apiDiagram).ConfigureAwait(false);
+            }
+
+            if (traceDataflow && networkFlows.Count > 0)
+            {
+                Console.WriteLine("  Generating data flow diagram...");
+                var flowDiagram = Iaet.Diagrams.DataFlowDiagramGenerator.GenerateFromNetworkFlows(
+                    $"{project} Network Data Flows", networkFlows);
+                await File.WriteAllTextAsync(
+                    Path.Combine(diagramsDir, "network-data-flow.mmd"),
+                    flowDiagram).ConfigureAwait(false);
+            }
+
             Console.WriteLine();
             Console.WriteLine("Analysis complete. Knowledge base updated.");
             Console.WriteLine($"  Endpoints:   {urls.Count}");
@@ -262,6 +285,8 @@ internal static class ApkCommand
             Console.WriteLine($"  Pinned:      {netSecurity.PinnedDomains.Count} domains");
             if (traceDataflow)
                 Console.WriteLine($"  Net flows:   {networkFlows.Count}");
+            if (urls.Count > 0 || (traceDataflow && networkFlows.Count > 0))
+                Console.WriteLine($"  Diagrams:    {diagramsDir}");
 
             await projectStore.RefreshStatusAsync(project).ConfigureAwait(false);
         });
@@ -455,6 +480,29 @@ internal static class ApkCommand
                 Console.WriteLine($"BLE data flows written to: {flowsPath}");
             }
 
+            // Auto-generate BLE diagrams
+            var diagramsDir = Path.Combine(projectDir, "output", "diagrams");
+            Directory.CreateDirectory(diagramsDir);
+
+            if (result.Services.Count > 0 || result.Characteristics.Count > 0)
+            {
+                Console.WriteLine("  Generating BLE architecture diagram...");
+                var bleDiagram = GenerateBleArchitectureDiagram(result.Services, result.Characteristics);
+                await File.WriteAllTextAsync(
+                    Path.Combine(diagramsDir, "ble-architecture.mmd"),
+                    bleDiagram).ConfigureAwait(false);
+            }
+
+            if (traceDataflow && bleFlows.Count > 0)
+            {
+                Console.WriteLine("  Generating BLE data flow diagram...");
+                var flowDiagram = Iaet.Diagrams.DataFlowDiagramGenerator.GenerateFromBleFlows(
+                    $"{project} BLE Data Flows", bleFlows);
+                await File.WriteAllTextAsync(
+                    Path.Combine(diagramsDir, "ble-data-flow.mmd"),
+                    flowDiagram).ConfigureAwait(false);
+            }
+
             Console.WriteLine();
             if (hciResult is not null && hciResult.Errors.Count == 0)
             {
@@ -465,9 +513,124 @@ internal static class ApkCommand
                 if (protocolFrames.Count > 0)
                     Console.WriteLine($"  0xAB frames: {protocolFrames.Count}");
             }
+            if (result.Services.Count > 0 || result.Characteristics.Count > 0)
+                Console.WriteLine($"  Diagrams:    {diagramsDir}");
             Console.WriteLine($"BLE analysis written to: {outputPath}");
         });
 
         return bleCmd;
     }
+
+    /// <summary>
+    /// Generates a Mermaid flowchart showing discovered API endpoints grouped by host.
+    /// </summary>
+    private static string GenerateApiArchitectureDiagram(IReadOnlyList<Iaet.Core.Models.ExtractedUrl> urls)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("flowchart LR");
+        sb.AppendLine("    App([Android App])");
+
+        // Group endpoints by host
+        var byHost = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var url in urls)
+        {
+            string host;
+            if (Uri.TryCreate(url.Url, UriKind.Absolute, out var uri))
+                host = uri.Host;
+            else
+                continue;
+
+            if (!byHost.TryGetValue(host, out var paths))
+            {
+                paths = [];
+                byHost[host] = paths;
+            }
+
+            var path = uri.AbsolutePath;
+            if (path.Length > 40)
+                path = path[..40] + "...";
+            var label = url.HttpMethod is not null ? $"{url.HttpMethod} {path}" : path;
+            if (!paths.Contains(label))
+                paths.Add(label);
+        }
+
+        var hostIdx = 0;
+        foreach (var (host, paths) in byHost)
+        {
+            var hostId = $"H{hostIdx++}";
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"    {hostId}[\"{host}\"]");
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"    App -->|\"{paths.Count} endpoint(s)\"| {hostId}");
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Generates a Mermaid flowchart showing BLE services, characteristics, and their operations.
+    /// </summary>
+    private static string GenerateBleArchitectureDiagram(
+        IReadOnlyList<Iaet.Core.Models.BleService> services,
+        IReadOnlyList<Iaet.Core.Models.BleCharacteristic> characteristics)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("flowchart LR");
+        sb.AppendLine("    App([Android App])");
+
+        var nodeIdx = 0;
+
+        // Services with their characteristics
+        foreach (var svc in services)
+        {
+            var svcId = $"S{nodeIdx++}";
+            var svcLabel = svc.Name ?? TruncateUuid(svc.Uuid);
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"    {svcId}[\"{svcLabel}\"]");
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"    App --> {svcId}");
+
+            foreach (var ch in svc.Characteristics)
+            {
+                var chId = $"C{nodeIdx++}";
+                var chLabel = ch.Name ?? TruncateUuid(ch.Uuid);
+                var ops = ch.Operations.Count > 0
+                    ? string.Join(", ", ch.Operations)
+                    : "unknown";
+                sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                    $"    {chId}[/\"{chLabel}\"\\]");
+                sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                    $"    {svcId} -->|\"{ops}\"| {chId}");
+            }
+        }
+
+        // Standalone characteristics (not under a service)
+        if (characteristics.Count > 0)
+        {
+            var standaloneId = $"Standalone{nodeIdx++}";
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"    {standaloneId}[\"Standalone Characteristics\"]");
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                $"    App --> {standaloneId}");
+
+            foreach (var ch in characteristics)
+            {
+                var chId = $"C{nodeIdx++}";
+                var chLabel = ch.Name ?? TruncateUuid(ch.Uuid);
+                var ops = ch.Operations.Count > 0
+                    ? string.Join(", ", ch.Operations)
+                    : "discovered";
+                sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                    $"    {chId}[/\"{chLabel}\"\\]");
+                sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
+                    $"    {standaloneId} -->|\"{ops}\"| {chId}");
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>Truncate a full UUID to a readable short form.</summary>
+    private static string TruncateUuid(string uuid) =>
+        uuid.Length > 8 ? uuid[..8] + "..." : uuid;
 }
