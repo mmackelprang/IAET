@@ -24,20 +24,22 @@
   h3{color:white;font-size:16px;margin:16px 0 12px}
   .subtitle{color:var(--muted);margin-bottom:16px}
   .header-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap}
-  .selector{background:var(--card);color:var(--text);border:1px solid var(--border);padding:8px 12px;border-radius:6px;font-size:14px;min-width:200px}
-  .nav-bar{background:#0a3d62;color:#fff;padding:0 1.5rem;display:flex;align-items:center;gap:2rem;height:52px}
-  .nav-bar a{color:#cce5ff;font-size:.9rem;text-decoration:none}
-  .nav-bar a:hover{color:#fff}
-  .nav-brand{font-size:1.1rem;font-weight:700;color:#fff!important}
-  .tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px;flex-wrap:wrap}
-  .tab{padding:10px 20px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;font-size:14px;user-select:none}
-  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-  .tab:hover{color:white}
+  .nav-bar{background:#0a3d62;color:#fff;padding:0 1.5rem;display:flex;align-items:center;height:52px}
+  .nav-brand{font-size:1.1rem;font-weight:700;color:#fff;text-decoration:none}
+  .nav-spacer{flex:1}
+  .nav-bar .selector{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:6px 12px;border-radius:6px;font-size:14px;min-width:200px}
+  .nav-bar .selector option{background:var(--card);color:var(--text)}
+  .tab-tiles{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+  .tab-tile{background:var(--card);border-radius:8px;padding:12px 18px;cursor:pointer;border:2px solid transparent;transition:border-color .2s, background .2s;user-select:none;display:flex;flex-direction:column;align-items:center;min-width:110px}
+  .tab-tile:hover{border-color:var(--accent);background:#253350}
+  .tab-tile.active{border-color:var(--accent);background:rgba(99,102,241,.12)}
+  .tab-tile-label{font-size:13px;color:var(--muted);margin-bottom:4px}
+  .tab-tile.active .tab-tile-label{color:var(--accent)}
+  .tab-tile-value{font-size:22px;font-weight:bold;color:var(--text)}
+  .tab-tile.active .tab-tile-value{color:var(--accent)}
+  .tab-tile-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);margin-top:2px}
+  .tab-tile.active .tab-tile-dot{background:var(--accent)}
   .tab-content{display:none}.tab-content.active{display:block}
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
-  .stat{background:var(--card);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s;border:1px solid transparent}
-  .stat:hover{border-color:var(--accent)}
-  .stat-value{font-size:28px;font-weight:bold;color:var(--accent)}.stat-label{font-size:12px;color:var(--muted)}
   .diagram-card,.data-card{background:var(--card);border-radius:8px;padding:20px;margin-bottom:16px;overflow-x:auto}
   pre.mermaid{background:white;border-radius:6px;padding:16px;margin:12px 0;color:#333}
   details{margin-top:8px} summary{cursor:pointer;color:var(--muted);font-size:13px}
@@ -74,16 +76,15 @@
 </head>
 <body>
 <nav class="nav-bar">
-  <a class="nav-brand" href="/">IAET Explorer</a>
-  <a href="/">Sessions</a>
-  <a href="/dashboard">Dashboard</a>
+  <a class="nav-brand" href="/dashboard">IAET Explorer</a>
+  <span class="nav-spacer"></span>
+  <select id="project-selector" class="selector" onchange="switchProject(this.value)">
+    <option value="">Loading projects...</option>
+  </select>
 </nav>
 <div class="container">
   <div class="header-row">
     <h1>IAET Investigation Dashboard</h1>
-    <select id="project-selector" class="selector" onchange="switchProject(this.value)">
-      <option value="">Loading projects...</option>
-    </select>
   </div>
   <div id="project-area">
     <div class="loading">Loading projects...</div>
@@ -144,6 +145,17 @@ async function switchProject(name) {
   renderProjectView();
 }
 
+function tabTile(id, label, value, activeTab) {
+  const active = id === activeTab ? ' active' : '';
+  let inner = '<div class="tab-tile-label">' + escapeHtml(label) + '</div>';
+  if (value !== null && value !== undefined) {
+    inner += '<div class="tab-tile-value">' + escapeHtml(String(value)) + '</div>';
+  } else {
+    inner += '<div class="tab-tile-dot"></div>';
+  }
+  return '<div class="tab-tile' + active + '" data-tab="' + id + '" onclick="showTab(\'' + id + '\')">' + inner + '</div>';
+}
+
 function renderProjectView() {
   const p = currentProject;
   const files = fileCache[p.name] || {knowledge:[], output:[], diagrams:[]};
@@ -154,7 +166,6 @@ function renderProjectView() {
   const hasKnowledge = files.knowledge && files.knowledge.length > 0;
   const hasOpenapi = files.output && files.output.some(f => f && (f.endsWith('.yaml') || f.endsWith('.yml')));
   const hasPrompt = files.output && files.output.some(f => f && f.includes('client-prompt'));
-  const isWeb = String(p.targetType) === 'web' || String(p.targetType) === 'Web';
 
   // Status bar
   const statusClass = {new:'status-new', investigating:'status-investigating', complete:'status-complete', archived:'status-archived',
@@ -163,7 +174,6 @@ function renderProjectView() {
   // Stats from knowledge files
   const kCount = files.knowledge ? files.knowledge.length : 0;
   const dCount = files.diagrams ? files.diagrams.length : 0;
-  const oCount = files.output ? files.output.length : 0;
 
   const url = p.url || 'N/A';
 
@@ -182,26 +192,20 @@ function renderProjectView() {
   // Subtitle
   html += '<p class="subtitle">' + escapeHtml(p.displayName) + ' &mdash; ' + escapeHtml(url) + '</p>';
 
-  // Stats tiles
-  html += '<div class="stats">';
-  html += '<div class="stat" onclick="showTab(\'diagrams\')"><div class="stat-value">' + dCount + '</div><div class="stat-label">Diagrams</div></div>';
-  html += '<div class="stat" onclick="showTab(\'knowledge\')"><div class="stat-value">' + kCount + '</div><div class="stat-label">Knowledge</div></div>';
-  html += '<div class="stat" onclick="showTab(\'output\')"><div class="stat-value">' + oCount + '</div><div class="stat-label">Output Files</div></div>';
-  html += '<div class="stat" onclick="showTab(\'nextsteps\')"><div class="stat-value">R' + (p.currentRound || 0) + '</div><div class="stat-label">Round</div></div>';
-  html += '</div>';
+  // Default tab selection
+  const defaultTab = hasDiagrams ? 'diagrams' : hasNarrative ? 'narrative' : 'knowledge';
 
-  // Tabs
-  html += '<div class="tabs">';
-  if (hasDiagrams) html += '<div class="tab active" data-tab="diagrams" onclick="showTab(\'diagrams\')">Diagrams</div>';
-  if (hasNarrative) html += '<div class="tab' + (!hasDiagrams ? ' active' : '') + '" data-tab="narrative" onclick="showTab(\'narrative\')">Narrative</div>';
-  html += '<div class="tab" data-tab="knowledge" onclick="showTab(\'knowledge\')">Knowledge</div>';
-  if (hasOpenapi) html += '<div class="tab" data-tab="openapi" onclick="showTab(\'openapi\')">OpenAPI</div>';
-  if (hasPrompt) html += '<div class="tab" data-tab="prompt" onclick="showTab(\'prompt\')">Prompt</div>';
-  html += '<div class="tab" data-tab="nextsteps" onclick="showTab(\'nextsteps\')">Next Steps</div>';
+  // Unified tab-tiles
+  html += '<div class="tab-tiles">';
+  if (hasDiagrams) html += tabTile('diagrams', 'Diagrams', dCount, defaultTab);
+  if (hasNarrative) html += tabTile('narrative', 'Narrative', null, defaultTab);
+  html += tabTile('knowledge', 'Knowledge', kCount, defaultTab);
+  if (hasOpenapi) html += tabTile('openapi', 'OpenAPI', null, defaultTab);
+  if (hasPrompt) html += tabTile('prompt', 'Prompt', null, defaultTab);
+  html += tabTile('nextsteps', 'Next Steps', 'R' + (p.currentRound || 0), defaultTab);
   html += '</div>';
 
   // Tab content containers
-  const defaultTab = hasDiagrams ? 'diagrams' : hasNarrative ? 'narrative' : 'knowledge';
   html += '<div id="tc-diagrams" class="tab-content' + (defaultTab === 'diagrams' ? ' active' : '') + '"><div class="loading">Loading diagrams...</div></div>';
   html += '<div id="tc-narrative" class="tab-content' + (defaultTab === 'narrative' ? ' active' : '') + '"><div class="loading">Loading...</div></div>';
   html += '<div id="tc-knowledge" class="tab-content' + (defaultTab === 'knowledge' ? ' active' : '') + '"><div class="loading">Loading knowledge...</div></div>';
@@ -216,9 +220,9 @@ function renderProjectView() {
 }
 
 function showTab(name) {
-  // Update tab buttons
-  document.querySelectorAll('#project-area .tab').forEach(el => el.classList.remove('active'));
-  const btn = document.querySelector('#project-area .tab[data-tab="' + name + '"]');
+  // Update tab-tile buttons
+  document.querySelectorAll('#project-area .tab-tile').forEach(el => el.classList.remove('active'));
+  const btn = document.querySelector('#project-area .tab-tile[data-tab="' + name + '"]');
   if (btn) btn.classList.add('active');
 
   // Update tab content
