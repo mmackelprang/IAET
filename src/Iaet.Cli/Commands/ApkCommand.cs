@@ -554,13 +554,14 @@ internal static class ApkCommand
                 paths.Add(label);
         }
 
+        var hostIdx = 0;
         foreach (var (host, paths) in byHost)
         {
-            var safeHost = host.Replace('.', '_').Replace('-', '_');
+            var hostId = $"H{hostIdx++}";
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                $"    {safeHost}[{host}]");
+                $"    {hostId}[\"{host}\"]");
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                $"    App -->|{paths.Count} endpoint(s)| {safeHost}");
+                $"    App -->|\"{paths.Count} endpoint(s)\"| {hostId}");
         }
 
         return sb.ToString();
@@ -585,7 +586,7 @@ internal static class ApkCommand
             var svcId = $"S{nodeIdx++}";
             var svcLabel = svc.Name ?? TruncateUuid(svc.Uuid);
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                $"    {svcId}[{svcLabel}]");
+                $"    {svcId}[\"{svcLabel}\"]");
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
                 $"    App --> {svcId}");
 
@@ -597,9 +598,9 @@ internal static class ApkCommand
                     ? string.Join(", ", ch.Operations)
                     : "unknown";
                 sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                    $"    {chId}[/{chLabel}\\]");
+                    $"    {chId}[/\"{chLabel}\"\\]");
                 sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                    $"    {svcId} -->|{ops}| {chId}");
+                    $"    {svcId} -->|\"{ops}\"| {chId}");
             }
         }
 
@@ -608,7 +609,7 @@ internal static class ApkCommand
         {
             var standaloneId = $"Standalone{nodeIdx++}";
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                $"    {standaloneId}[Standalone Characteristics]");
+                $"    {standaloneId}[\"Standalone Characteristics\"]");
             sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
                 $"    App --> {standaloneId}");
 
@@ -620,9 +621,9 @@ internal static class ApkCommand
                     ? string.Join(", ", ch.Operations)
                     : "discovered";
                 sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                    $"    {chId}[/{chLabel}\\]");
+                    $"    {chId}[/\"{chLabel}\"\\]");
                 sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture,
-                    $"    {standaloneId} -->|{ops}| {chId}");
+                    $"    {standaloneId} -->|\"{ops}\"| {chId}");
             }
         }
 
