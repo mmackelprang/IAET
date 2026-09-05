@@ -71,7 +71,7 @@ public class HomeOutageServiceTests
         report.LookupAccountByPhoneAsync("9195550100", Arg.Any<CancellationToken>())
               .Returns(new AccountLookupResult(true, "ACC-1", "1 Main St", new Dictionary<string, string?>()));
         report.GetExistingOutageAsync("ACC-1", Arg.Any<CancellationToken>())
-              .Returns(new AccountOutageStatus("ACC-1", true, "OUT-3", "Assessing", null, null, null,
+              .Returns(new AccountOutageStatus("ACC-1", true, "OUT-3", "Assessing", null, "1 Main St", null, null,
                   new Dictionary<string, string?>()));
 
         var options = HomeAt();
@@ -80,6 +80,8 @@ public class HomeOutageServiceTests
         var status = await new HomeOutageService(map, report, options).GetHomeStatusAsync();
 
         status.Account!.OutageId.Should().Be("OUT-3");
+        status.Account.ServiceAddress.Should().Be("1 Main St");
+        status.ServiceAddress.Should().Be("1 Main St", "the account's address is authoritative for the premises");
         status.OutageIndicated.Should().BeTrue();
     }
 

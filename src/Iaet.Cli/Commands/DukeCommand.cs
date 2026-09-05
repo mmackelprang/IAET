@@ -29,6 +29,7 @@ internal static class DukeCommand
         cmd.Add(CreateServeCmd());
         cmd.Add(CreateStatusCmd());
         cmd.Add(CreateNeighborhoodCmd());
+        cmd.Add(CreateAddressCmd());
         return cmd;
     }
 
@@ -130,6 +131,50 @@ internal static class DukeCommand
             Console.WriteLine(string.Create(
                 CultureInfo.InvariantCulture,
                 $"{report.OutageCount} outage(s) within {report.RadiusMiles} mile(s); {report.CustomersAffected} customer(s) affected."));
+            Console.WriteLine(JsonSerializer.Serialize(report, JsonOptions));
+        });
+
+        return cmd;
+    }
+
+    private static Command CreateAddressCmd()
+    {
+        var cmd = new Command("address", "List outages near a street address");
+
+        var addressOption      = new Option<string>("--address") { Description = "One-line street address, e.g. \"123 Main St, Raleigh, NC 27601\"", Required = true };
+        var radiusOption       = new Option<double?>("--radius") { Description = "Radius in miles (default: 0.25)" };
+        var jurisdictionOption = new Option<string?>("--jurisdiction") { Description = "Operating-company code, e.g. DEC, DEF, DEI, DEM" };
+        var settingsOption     = SettingsOption();
+
+        cmd.Add(addressOption);
+        cmd.Add(radiusOption);
+        cmd.Add(jurisdictionOption);
+        cmd.Add(settingsOption);
+
+        cmd.SetAction(async (parseResult) =>
+        {
+            using var provider = BuildProvider(parseResult.GetValue(settingsOption));
+
+            var service = provider.GetRequiredService<IAddressOutageService>();
+            var address = parseResult.GetRequiredValue(addressOption);
+
+            var report = await service
+                .GetByAddressAsync(
+                    address,
+                    parseResult.GetValue(radiusOption),
+                    parseResult.GetValue(jurisdictionOption))
+                .ConfigureAwait(false);
+
+            if (report is null)
+            {
+                await Console.Error.WriteLineAsync(
+                    $"Could not locate '{address}'. Include the city, state and ZIP.").ConfigureAwait(false);
+                return;
+            }
+
+            Console.WriteLine(string.Create(
+                CultureInfo.InvariantCulture,
+                $"{report.Address.MatchedAddress ?? report.Address.InputAddress}: {report.Neighborhood.OutageCount} outage(s) within {report.Neighborhood.RadiusMiles} mile(s)."));
             Console.WriteLine(JsonSerializer.Serialize(report, JsonOptions));
         });
 

@@ -79,14 +79,17 @@ A worked example of pointing IAET at a real target and shipping a client for it.
 ```bash
 # Outages near a location — no configuration, no credentials
 iaet duke neighborhood --lat 35.7796 --lon -78.6382 --radius 1.5 --jurisdiction DEC
+iaet duke address --address "123 Main St, Raleigh, NC 27601"
 
 # Or run the REST service
 iaet duke serve --port 9300 --settings dukeenergy.settings.json
 curl "http://localhost:9300/api/v1/outages/neighborhood?lat=35.7796&lon=-78.6382&radiusMiles=1.5"
+curl "http://localhost:9300/api/v1/outages/at-address?address=123+Main+St,+Raleigh,+NC+27601"
 curl  http://localhost:9300/api/v1/home/status
 ```
 
-The neighborhood and county endpoints work immediately. The account-scoped endpoints (account
+The neighborhood, address and county endpoints work immediately — address lookup geocodes through
+the US Census geocoder and answers by proximity, not per-meter. The account-scoped endpoints (account
 lookup, existing-outage status, filing a report) are wired end to end but driven by an endpoint
 profile you capture yourself with IAET — see
 **[docs/duke-energy-rest-interface.md](docs/duke-energy-rest-interface.md)** for that runbook.
@@ -117,7 +120,7 @@ See **[docs/user-guide.md](docs/user-guide.md)** for comprehensive step-by-step 
 - **Semi-autonomous crawler** — BFS page traversal with configurable depth, blacklists, and TypeScript recipe execution
 - **Cookie analysis** — lifecycle tracking, rotation detection, expiry warnings across snapshots
 - **Diagrams** — Mermaid sequence, data flow, state machine, dependency graph, and confidence-annotated diagrams
-- **Duke Energy outage REST service** — `iaet duke serve` exposes neighborhood, county, and home outage status over REST; the account-scoped report flow is driven by an IAET-captured endpoint profile (see [docs/duke-energy-rest-interface.md](docs/duke-energy-rest-interface.md))
+- **Duke Energy outage REST service** — `iaet duke serve` exposes neighborhood, by-address (Census-geocoded), county, and home outage status over REST; the account-scoped report flow is driven by an IAET-captured endpoint profile (see [docs/duke-energy-rest-interface.md](docs/duke-energy-rest-interface.md))
 
 ---
 
@@ -205,7 +208,9 @@ iaet
 ├── duke
 │   ├── serve         [--port <n>]  [--settings <path>]  [--all-interfaces]
 │   ├── status        [--settings <path>]
-│   └── neighborhood  --lat <deg>  --lon <deg>  [--radius <miles>]
+│   ├── neighborhood  --lat <deg>  --lon <deg>  [--radius <miles>]
+│   │                 [--jurisdiction <DEC|DEF|DEI|DEM>]  [--settings <path>]
+│   └── address       --address <one-line address>  [--radius <miles>]
 │                     [--jurisdiction <DEC|DEF|DEI|DEM>]  [--settings <path>]
 │
 ├── dashboard  [--project <name>]  [--open]

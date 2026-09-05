@@ -13,6 +13,10 @@ public class TemplateOutageReportClientTests
             "/find",
             Body: """{"phone":"{{phoneNumber}}"}""",
             ResponseMap: new Dictionary<string, string> { ["accountNumber"] = "account.id" }),
+        LookupAccountByNumber: new RequestTemplate(
+            "GET",
+            "/accounts/{{accountNumber}}",
+            ResponseMap: new Dictionary<string, string> { ["serviceAddress"] = "account.address" }),
         ExistingOutage: new RequestTemplate(
             "GET",
             "/status?a={{accountNumber}}",
@@ -21,6 +25,7 @@ public class TemplateOutageReportClientTests
                 ["hasActiveOutage"] = "outage.active",
                 ["outageId"]        = "outage.id",
                 ["status"]          = "outage.status",
+                ["serviceAddress"]  = "outage.address",
             }),
         SubmitReport: new RequestTemplate(
             "POST",
@@ -123,6 +128,54 @@ public class TemplateOutageReportClientTests
         var status = await client.GetExistingOutageAsync("ACC-1");
 
         status.HasActiveOutage.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LookupAccountByNumberAsync_returns_the_authoritative_service_address()
+    {
+        var handler = new StubHttpMessageHandler()
+            .Respond("/accounts/", """{"account":{"address":"123 Main St, Raleigh, NC 27601"}}""");
+        using var client = Create(handler, EnabledOptions(), FilledProfile());
+
+        var result = await client.LookupAccountByNumberAsync("ACC-1");
+
+        result.ServiceAddress.Should().Be("123 Main St, Raleigh, NC 27601");
+        handler.Requests[0].RequestUri!.AbsolutePath.Should().Be("/accounts/ACC-1");
+    }
+
+    [Fact]
+    public async Task LookupAccountByNumberAsync_echoes_the_input_account_number_back()
+    {
+        var handler = new StubHttpMessageHandler().Respond("/accounts/", """{"account":{"address":"1 A St"}}""");
+        using var client = Create(handler, EnabledOptions(), FilledProfile());
+
+        var result = await client.LookupAccountByNumberAsync("ACC-1");
+
+        result.AccountNumber.Should().Be("ACC-1", "the response does not repeat it, but the caller supplied it");
+        result.Found.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task LookupAccountByNumberAsync_explains_when_the_profile_lacks_that_template()
+    {
+        var profile = FilledProfile() with { LookupAccountByNumber = null };
+        using var client = Create(new StubHttpMessageHandler(), EnabledOptions(), profile);
+
+        var act = async () => await client.LookupAccountByNumberAsync("ACC-1");
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*lookupAccountByNumber*");
+    }
+
+    [Fact]
+    public async Task GetExistingOutageAsync_carries_the_service_address_when_the_profile_maps_it()
+    {
+        var handler = new StubHttpMessageHandler()
+            .Respond("/status", """{"outage":{"active":true,"id":"OUT-7","address":"9 Elm St"}}""");
+        using var client = Create(handler, EnabledOptions(), FilledProfile());
+
+        var status = await client.GetExistingOutageAsync("ACC-1");
+
+        status.ServiceAddress.Should().Be("9 Elm St");
     }
 
     [Fact]

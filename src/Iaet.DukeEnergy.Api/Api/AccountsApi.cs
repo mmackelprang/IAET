@@ -40,6 +40,25 @@ internal static class AccountsApi
         .WithName("LookupAccount")
         .WithSummary("Resolves a Duke Energy account from a phone number.");
 
+        app.MapGet("/api/v1/accounts/{accountNumber}", async (
+            string accountNumber,
+            IOutageReportClient client,
+            CancellationToken cancellationToken) =>
+        {
+            if (!client.IsConfigured)
+            {
+                return NotConfigured(client);
+            }
+
+            var result = await client
+                .LookupAccountByNumberAsync(accountNumber, cancellationToken)
+                .ConfigureAwait(false);
+
+            return result.Found ? Results.Ok(result) : Results.NotFound(result);
+        })
+        .WithName("GetAccount")
+        .WithSummary("Resolves an account from its account number, including the authoritative service address.");
+
         app.MapGet("/api/v1/accounts/{accountNumber}/outage", async (
             string accountNumber,
             IOutageReportClient client,

@@ -19,6 +19,8 @@ public sealed class HomeOutageService : IHomeOutageService
     private readonly DukeEnergyOptions   _options;
     private readonly TimeProvider        _timeProvider;
 
+    private string? _resolvedServiceAddress;
+
     /// <summary>Initializes a new instance of the <see cref="HomeOutageService"/> class.</summary>
     /// <param name="outageMap">Public outage-map reader.</param>
     /// <param name="reportClient">Account-scoped outage-report client.</param>
@@ -52,6 +54,7 @@ public sealed class HomeOutageService : IHomeOutageService
 
         return new HomeOutageStatus(
             home.Label,
+            account?.ServiceAddress ?? _resolvedServiceAddress,
             _timeProvider.GetUtcNow(),
             account,
             neighborhood,
@@ -93,7 +96,8 @@ public sealed class HomeOutageService : IHomeOutageService
                     return null;
                 }
 
-                accountNumber = lookup.AccountNumber;
+                accountNumber           = lookup.AccountNumber;
+                _resolvedServiceAddress = lookup.ServiceAddress;
             }
             catch (HttpRequestException ex)
             {
@@ -109,9 +113,18 @@ public sealed class HomeOutageService : IHomeOutageService
 
         try
         {
-            return await _reportClient
+            var status = await _reportClient
                 .GetExistingOutageAsync(accountNumber, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (status.ServiceAddress is null && _resolvedServiceAddress is null)
+            {
+                // The outage resource did not carry the address; ask the account resource for it.
+                _resolvedServiceAddress = await TryResolveAddressAsync(accountNumber, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            return status;
         }
         catch (HttpRequestException ex)
         {
@@ -121,6 +134,30 @@ public sealed class HomeOutageService : IHomeOutageService
         catch (InvalidOperationException ex)
         {
             notes.Add($"Account outage status failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Best-effort lookup of the account's service address. A profile need not define the
+    /// account-number template, so failure here is never fatal.
+    /// </summary>
+    private async Task<string?> TryResolveAddressAsync(string accountNumber, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var lookup = await _reportClient
+                .LookupAccountByNumberAsync(accountNumber, cancellationToken)
+                .ConfigureAwait(false);
+
+            return lookup.ServiceAddress;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (InvalidOperationException)
+        {
             return null;
         }
     }

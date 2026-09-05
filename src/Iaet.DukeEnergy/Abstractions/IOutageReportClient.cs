@@ -28,6 +28,17 @@ public interface IOutageReportClient
         string phoneNumber,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Resolves a Duke Energy account from its account number, which is how the authoritative
+    /// service address for a premises is obtained when the account number is already known.
+    /// </summary>
+    /// <param name="accountNumber">The account number.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The account details, including its service address when Duke reports one.</returns>
+    Task<AccountLookupResult> LookupAccountByNumberAsync(
+        string accountNumber,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads the outage Duke Energy currently has on file for an account.</summary>
     /// <param name="accountNumber">Account number to query.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

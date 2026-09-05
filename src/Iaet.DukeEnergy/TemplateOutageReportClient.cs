@@ -106,7 +106,34 @@ public sealed class TemplateOutageReportClient : IOutageReportClient, IDisposabl
             },
             cancellationToken).ConfigureAwait(false);
 
-        var accountNumber = response.Field("accountNumber");
+        return ToLookupResult(response);
+    }
+
+    /// <inheritdoc />
+    public async Task<AccountLookupResult> LookupAccountByNumberAsync(
+        string accountNumber,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountNumber);
+
+        var (profile, template) = RequireTemplate(p => p.LookupAccountByNumber, "lookupAccountByNumber");
+
+        var response = await _executor.ExecuteAsync(
+            template,
+            profile,
+            new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["accountNumber"] = accountNumber,
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        // The account number was the input, so it stands in when the response does not repeat it.
+        return ToLookupResult(response, accountNumber);
+    }
+
+    private static AccountLookupResult ToLookupResult(TemplateResponse response, string? knownAccountNumber = null)
+    {
+        var accountNumber = response.Field("accountNumber") ?? knownAccountNumber;
         var found         = response.Flag("found") ?? (response.IsSuccess && !string.IsNullOrWhiteSpace(accountNumber));
 
         return new AccountLookupResult(
@@ -143,6 +170,7 @@ public sealed class TemplateOutageReportClient : IOutageReportClient, IDisposabl
             outageId,
             response.Field("status"),
             response.Field("cause"),
+            response.Field("serviceAddress"),
             response.Timestamp("reportedAt"),
             response.Timestamp("estimatedRestorationAt"),
             response.Fields);

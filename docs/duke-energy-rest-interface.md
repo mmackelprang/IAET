@@ -30,6 +30,7 @@ is the twenty-minute capture that closes the gap.
 ```bash
 # Nearby outages, no configuration and no credentials needed
 iaet duke neighborhood --lat 35.7796 --lon -78.6382 --radius 1.5 --jurisdiction DEC
+iaet duke address --address "123 Main St, Raleigh, NC 27601"
 
 # Or run the REST service
 iaet duke serve --port 9300 --settings dukeenergy.settings.json
@@ -37,6 +38,7 @@ iaet duke serve --port 9300 --settings dukeenergy.settings.json
 
 ```bash
 curl "http://localhost:9300/api/v1/outages/neighborhood?lat=35.7796&lon=-78.6382&radiusMiles=1.5"
+curl "http://localhost:9300/api/v1/outages/at-address?address=123+Main+St,+Raleigh,+NC+27601"
 curl  http://localhost:9300/api/v1/home/status
 ```
 
@@ -54,8 +56,10 @@ number and can file outage reports, so it should not be exposed to a network you
 | `GET`  | `/api/v1/outages?jurisdiction=DEC` | Every outage the map reports for a jurisdiction. |
 | `GET`  | `/api/v1/outages/counties?jurisdiction=DEC` | Per-county rollup: customers served, customers affected, percent out. |
 | `GET`  | `/api/v1/outages/neighborhood?lat=&lon=&radiusMiles=&jurisdiction=` | Outages within a radius of a point, nearest first. All parameters fall back to the configured home. |
+| `GET`  | `/api/v1/outages/at-address?address=&radiusMiles=&jurisdiction=` | Geocodes a street address and reports outages around it. **Proximity only** — see below. |
 | `GET`  | `/api/v1/home/status` | The combined answer: account outage status + nearby outages + county rollup. |
 | `POST` | `/api/v1/accounts/lookup` | Resolve an account from a phone number. Body: `{"phoneNumber":"9195550100"}`. |
+| `GET`  | `/api/v1/accounts/{accountNumber}` | Resolve an account from its account number, including its service address. |
 | `GET`  | `/api/v1/accounts/{accountNumber}/outage` | The outage Duke Energy currently has on file for an account. |
 | `POST` | `/api/v1/outages/report` | File a new outage report. Body: `{"accountNumber":"...","phoneNumber":"...","comments":"..."}`. |
 
@@ -63,7 +67,8 @@ Errors are RFC 9457 problem documents:
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Bad request — for example a missing location or a non-positive radius. |
+| `400` | Bad request — for example a missing location, a missing address, or a non-positive radius. |
+| `404` | The address could not be geocoded, or no account matched. |
 | `409` | The report was refused by a safety gate (submission disabled, wrong account, daily cap reached). |
 | `502` / `504` | Duke Energy was unreachable, timed out, or rejected the map credentials. |
 | `503` | The account-scoped flow is not configured. The `detail` field says exactly what is missing. |
@@ -74,6 +79,7 @@ the reason is appended to the `notes` array, so a partial answer still tells you
 ```json
 {
   "label": "Home",
+  "serviceAddress": "123 MAIN ST, RALEIGH, NC 27601",
   "account": null,
   "neighborhood": { "outageCount": 2, "customersAffected": 141, "nearestOutageMiles": 0.18, "outages": [ ... ] },
   "county": { "countyName": "Wake", "customersServed": 100000, "customersAffected": 2500, "percentAffected": 2.5 },
@@ -81,6 +87,54 @@ the reason is appended to the `notes` array, so a partial answer still tells you
   "outageIndicated": true
 }
 ```
+
+---
+
+## Two ways to ask about an address
+
+These answer different questions, and the difference matters more than it looks.
+
+### Proximity: `GET /api/v1/outages/at-address`
+
+```bash
+curl "http://localhost:9300/api/v1/outages/at-address?address=425+Stadium+Dr,+Tuscaloosa,+AL+35401"
+```
+
+The address is geocoded with the [US Census geocoder](https://geocoding.geo.census.gov/) — free, no
+API key, and US-only, which matches Duke's footprint — and the resulting point is run through the
+neighbourhood search. The default radius is **0.25 miles**, deliberately tighter than the 1-mile
+neighbourhood default: an address query asks about one premises, so a wide radius mostly adds false
+positives. Geocoding results are cached for a day, because addresses do not move.
+
+**This is not a per-meter status, and the response says so in a `caveat` field** so the warning
+travels with the payload:
+
+- Duke plots outages at **device and transformer locations, not at premises**. A nearby event does
+  not prove this address is on the affected circuit.
+- Finding **none does not prove the address has power**. A single-premise outage frequently never
+  reaches the public map — which is exactly the situation Duke wants you to report.
+
+Use it to answer "is something going on around here?", not "is my power out?".
+
+### Authoritative: the account-scoped endpoints
+
+Duke returns the **service address on the account itself**, so once it has resolved an account you
+get the real premises address and a real per-meter outage status rather than a proximity guess.
+Either identifier gets you there:
+
+| You have | Call | Template |
+|----------|------|----------|
+| Phone number | `POST /api/v1/accounts/lookup` | `lookupAccount` |
+| Account number | `GET /api/v1/accounts/{accountNumber}` | `lookupAccountByNumber` |
+
+Both return `serviceAddress`. `GET /api/v1/accounts/{n}/outage` and `GET /api/v1/home/status` also
+carry it when the profile maps it, and `home/status` resolves it automatically — from the account
+lookup when it started from a phone number, or from the account resource when the account number
+was configured directly. Its top-level `serviceAddress` is the authoritative address for the
+premises.
+
+This half needs the capture below. Address alone will not get you here: the public map has no
+address or premises index, which is the whole reason the proximity endpoint exists.
 
 ---
 
@@ -118,6 +172,9 @@ file.
 |-----|---------|-------|
 | `Jurisdiction` | `DEC` | `DEC` Carolinas, `DEF` Florida, `DEI` Indiana, `DEM` Ohio/Kentucky. `DEP` (Progress) is offered but unverified. |
 | `Home.RadiusMiles` | `1.0` | What counts as "the neighbourhood". |
+| `Geocoder.DefaultRadiusMiles` | `0.25` | Radius for an address query. Tighter, because it asks about one premises. |
+| `Geocoder.Benchmark` | `Public_AR_Current` | Census geocoder benchmark. |
+| `Geocoder.CacheDuration` | `1.00:00:00` | Addresses do not move. |
 | `OutageCacheDuration` | `00:02:00` | Duke refreshes roughly every 15 minutes, so polling faster only adds load. |
 | `Report.Enabled` | `false` | Gates account lookup and existing-outage reads. |
 | `Report.AllowSubmit` | `false` | Gates filing reports. Required *in addition to* `Report.Enabled`. |
@@ -168,6 +225,7 @@ iaet project create --name duke-outage \
 
 # Load extensions/iaet-capture/dist in Chrome, click Start, then in the tab:
 #   1. enter your phone number and submit the account lookup
+#      (if the app also offers account-number or address lookup, walk that route too)
 #   2. let the page show your existing outage status
 #   3. if you are genuinely out, walk the report form up to (not through) the final submit
 # Click Stop, then Export.
@@ -233,11 +291,13 @@ Well-known `responseMap` keys the client interprets:
 | Template | Keys |
 |----------|------|
 | `lookupAccount` | `found`, `accountNumber`, `serviceAddress` |
-| `existingOutage` | `hasActiveOutage`, `outageId`, `status`, `cause`, `reportedAt`, `estimatedRestorationAt` |
+| `lookupAccountByNumber` | `found`, `accountNumber`, `serviceAddress` |
+| `existingOutage` | `hasActiveOutage`, `outageId`, `status`, `cause`, `serviceAddress`, `reportedAt`, `estimatedRestorationAt` |
 | `submitReport` | `accepted`, `confirmationNumber`, `message` |
 
 `found` and `hasActiveOutage` are inferred from whether an account number or outage id came back
-when you do not map them. Timestamps accept ISO-8601 or Unix epoch, in seconds or milliseconds.
+when you do not map them. For `lookupAccountByNumber` the account number you passed in stands in
+when the response does not repeat it. Timestamps accept ISO-8601 or Unix epoch, in seconds or milliseconds.
 
 ### 4. Enable it, dry-run first
 
@@ -262,7 +322,10 @@ modes and their fixes:
   names changed. Add the new spelling to `OutageJsonParser`, or re-capture and update the profile's
   `responseMap`.
 
-Both cases are visible before they are silent, because the models keep every extracted field in
+- **`404` "address could not be located"** — the Census geocoder had no match. Include the city,
+  state and ZIP; it is stricter than a consumer map search.
+
+The first two cases are visible before they are silent, because the models keep every extracted field in
 `fields` and the home status keeps its `notes`.
 
 ---

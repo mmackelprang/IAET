@@ -54,6 +54,7 @@ bool IsConfigured { get; }
 string? ConfigurationProblem { get; }
 
 Task<AccountLookupResult>  LookupAccountByPhoneAsync(string phoneNumber, CancellationToken ct = default);
+Task<AccountLookupResult>  LookupAccountByNumberAsync(string accountNumber, CancellationToken ct = default);
 Task<AccountOutageStatus>  GetExistingOutageAsync(string accountNumber, CancellationToken ct = default);
 Task<OutageReportReceipt>  SubmitReportAsync(OutageReportRequest request, CancellationToken ct = default);
 ```
@@ -67,13 +68,34 @@ name the configured account, and `Report.MaxSubmissionsPerDay` caps a rolling 24
 outage report dispatches real work at a utility, so each gate throws `InvalidOperationException`
 naming itself rather than silently proceeding.
 
+### `IAddressGeocoder` and `IAddressOutageService`
+
+```csharp
+Task<GeocodedAddress?>    GeocodeAsync(string address, CancellationToken ct = default);
+Task<AddressOutageReport?> GetByAddressAsync(string address, double? radiusMiles = null, string? jurisdiction = null, CancellationToken ct = default);
+```
+
+`CensusAddressGeocoder` resolves US addresses through the US Census Bureau geocoder — free, no API
+key, and matching Duke's US footprint. Results are cached for a day because addresses do not move.
+
+`AddressOutageService` geocodes then runs the neighbourhood search, defaulting to a tighter 0.25
+mile radius since an address query asks about one premises. The result carries a `Caveat` string
+stating in plain language that this is proximity, not a per-meter status: Duke plots outages at
+device and transformer locations rather than premises, so a nearby event does not prove this
+address is affected and finding none does not prove it has power. The caveat travels in the payload
+so a consumer cannot mistake the answer for an authoritative one.
+
+For an authoritative per-premises answer, resolve the account — `LookupAccountByPhoneAsync` or
+`LookupAccountByNumberAsync` both return the `ServiceAddress` Duke holds on the account.
+
 ### `IHomeOutageService`
 
 ```csharp
 Task<HomeOutageStatus> GetHomeStatusAsync(CancellationToken ct = default);
 ```
 
-Combines the account outage status, nearby outages and the county rollup. Each source is optional
+Combines the account outage status, nearby outages and the county rollup, and resolves the
+account's authoritative `ServiceAddress` along the way. Each source is optional
 and its failures are isolated: a missing profile or an unreachable map degrades one section to
 `null` and appends the reason to `Notes`, so a partial answer is still returned.
 

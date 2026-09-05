@@ -82,6 +82,46 @@ internal static class OutagesApi
         })
         .WithName("GetNeighborhoodOutages")
         .WithSummary("Lists outages within a radius of a point, nearest first. Defaults to the configured home location.");
+
+        app.MapGet("/api/v1/outages/at-address", async (
+            string? address,
+            double? radiusMiles,
+            string? jurisdiction,
+            IAddressOutageService service,
+            CancellationToken cancellationToken) =>
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return Results.Problem(
+                    title: "Missing address",
+                    detail: "address is required, for example ?address=123 Main St, Raleigh, NC 27601.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            if (radiusMiles is <= 0)
+            {
+                return Results.Problem(
+                    title: "Invalid radius",
+                    detail: "radiusMiles must be greater than zero.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            return await UpstreamAsync(async () =>
+            {
+                var report = await service
+                    .GetByAddressAsync(address, radiusMiles, jurisdiction, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return report is null
+                    ? Results.Problem(
+                        title: "Address could not be located",
+                        detail: $"The geocoder found no match for '{address}'. Include the city, state and ZIP.",
+                        statusCode: StatusCodes.Status404NotFound)
+                    : Results.Ok(report);
+            }).ConfigureAwait(false);
+        })
+        .WithName("GetOutagesAtAddress")
+        .WithSummary("Geocodes a street address and reports outages around it. Proximity only — not a per-meter status.");
     }
 
     /// <summary>
@@ -97,14 +137,14 @@ internal static class OutagesApi
         catch (HttpRequestException ex)
         {
             return Results.Problem(
-                title: "Duke Energy outage map is unreachable",
+                title: "Duke Energy or the geocoder is unreachable",
                 detail: ex.Message,
                 statusCode: StatusCodes.Status502BadGateway);
         }
         catch (TaskCanceledException ex)
         {
             return Results.Problem(
-                title: "Duke Energy outage map timed out",
+                title: "Duke Energy or the geocoder timed out",
                 detail: ex.Message,
                 statusCode: StatusCodes.Status504GatewayTimeout);
         }

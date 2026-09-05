@@ -10,7 +10,8 @@ namespace Iaet.DukeEnergy;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers <see cref="IOutageMapClient"/>, <see cref="IOutageReportClient"/> and
+    /// Registers <see cref="IOutageMapClient"/>, <see cref="IOutageReportClient"/>,
+    /// <see cref="IAddressGeocoder"/>, <see cref="IAddressOutageService"/> and
     /// <see cref="IHomeOutageService"/>, each backed by a resilient <see cref="HttpClient"/>.
     /// </summary>
     /// <param name="services">The service collection to register into.</param>
@@ -53,6 +54,18 @@ public static class ServiceCollectionExtensions
                         profile,
                         sp.GetService<TimeProvider>()))
                 .AddStandardResilienceHandler();
+
+        services.AddHttpClient<IAddressGeocoder, CensusAddressGeocoder>(
+                    (http, sp) => new CensusAddressGeocoder(
+                        Configure(http, options),
+                        options,
+                        sp.GetService<TimeProvider>()))
+                .AddStandardResilienceHandler();
+
+        services.AddSingleton<IAddressOutageService>(sp => new AddressOutageService(
+            sp.GetRequiredService<IAddressGeocoder>(),
+            sp.GetRequiredService<IOutageMapClient>(),
+            options));
 
         services.AddSingleton<IHomeOutageService>(sp => new HomeOutageService(
             sp.GetRequiredService<IOutageMapClient>(),

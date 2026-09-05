@@ -4,6 +4,10 @@ namespace Iaet.DukeEnergy.Models;
 /// Combined answer to "is my power out, and is it just me?".
 /// </summary>
 /// <param name="Label">Friendly label for the service location.</param>
+/// <param name="ServiceAddress">
+/// The service address Duke Energy has on the account, once it has been resolved. This is the
+/// authoritative address for the premises, as opposed to a geocoded guess.
+/// </param>
 /// <param name="GeneratedAt">When this status was produced.</param>
 /// <param name="Account">
 /// Account-scoped outage status, or <see langword="null"/> when the account flow is not configured.
@@ -15,6 +19,7 @@ namespace Iaet.DukeEnergy.Models;
 /// <param name="Notes">Explanations for anything that could not be answered.</param>
 public sealed record HomeOutageStatus(
     string? Label,
+    string? ServiceAddress,
     DateTimeOffset GeneratedAt,
     AccountOutageStatus? Account,
     NeighborhoodOutageReport? Neighborhood,

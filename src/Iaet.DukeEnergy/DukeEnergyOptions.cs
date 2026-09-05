@@ -55,6 +55,31 @@ public sealed class DukeEnergyOptions
 
     /// <summary>Settings for the account-scoped outage-report flow.</summary>
     public OutageReportOptions Report { get; } = new();
+
+    /// <summary>Settings for address geocoding.</summary>
+    public GeocoderOptions Geocoder { get; } = new();
+}
+
+/// <summary>
+/// Settings for resolving street addresses to coordinates.
+/// </summary>
+public sealed class GeocoderOptions
+{
+    /// <summary>Base address of the geocoding service.</summary>
+    public Uri BaseUri { get; set; } =
+        new("https://geocoding.geo.census.gov/geocoder/locations/onelineaddress");
+
+    /// <summary>Which Census benchmark to resolve against.</summary>
+    public string Benchmark { get; set; } = "Public_AR_Current";
+
+    /// <summary>
+    /// Default radius for an address query, in miles. Tighter than the neighborhood default: an
+    /// address query is asking about one premises, so a wide radius mostly adds false positives.
+    /// </summary>
+    public double DefaultRadiusMiles { get; set; } = 0.25;
+
+    /// <summary>How long geocoding results are cached. Addresses do not move.</summary>
+    public TimeSpan CacheDuration { get; set; } = TimeSpan.FromDays(1);
 }
 
 /// <summary>

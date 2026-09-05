@@ -15,6 +15,7 @@ namespace Iaet.DukeEnergy.Profiles;
 /// <param name="BaseUri">Base address that relative <see cref="RequestTemplate.UrlTemplate"/> values resolve against.</param>
 /// <param name="DefaultHeaders">Headers applied to every request in the profile.</param>
 /// <param name="LookupAccount">Resolves an account from a phone number.</param>
+/// <param name="LookupAccountByNumber">Resolves an account from its account number.</param>
 /// <param name="ExistingOutage">Reads the outage currently on file for an account.</param>
 /// <param name="SubmitReport">Files a new outage report.</param>
 public sealed record OutageReportProfile(
@@ -22,6 +23,7 @@ public sealed record OutageReportProfile(
     Uri? BaseUri = null,
     IReadOnlyDictionary<string, string>? DefaultHeaders = null,
     RequestTemplate? LookupAccount = null,
+    RequestTemplate? LookupAccountByNumber = null,
     RequestTemplate? ExistingOutage = null,
     RequestTemplate? SubmitReport = null)
 {
