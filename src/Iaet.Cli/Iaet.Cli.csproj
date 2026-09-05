@@ -26,6 +26,8 @@
     <ProjectReference Include="..\Iaet.Cookies\Iaet.Cookies.csproj" />
     <ProjectReference Include="..\Iaet.Diagrams\Iaet.Diagrams.csproj" />
     <ProjectReference Include="..\Iaet.Android\Iaet.Android.csproj" />
+    <ProjectReference Include="..\Iaet.DukeEnergy\Iaet.DukeEnergy.csproj" />
+    <ProjectReference Include="..\Iaet.DukeEnergy.Api\Iaet.DukeEnergy.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

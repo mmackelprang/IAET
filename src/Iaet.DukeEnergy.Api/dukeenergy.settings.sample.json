@@ -1,0 +1,22 @@
+{
+  "DukeEnergy": {
+    "Jurisdiction": "DEC",
+
+    "Home": {
+      "Label": "Home",
+      "Latitude": 35.7796,
+      "Longitude": -78.6382,
+      "RadiusMiles": 1.5,
+      "County": "Wake",
+      "State": "NC"
+    },
+
+    "Report": {
+      "Enabled": false,
+      "AllowSubmit": false,
+      "DryRun": true,
+      "MaxSubmissionsPerDay": 5,
+      "ProfilePath": "profiles/duke-outage-report.json"
+    }
+  }
+}

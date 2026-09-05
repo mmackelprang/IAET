@@ -17,6 +17,8 @@
     <Project Path="src/Iaet.ProtocolAnalysis/Iaet.ProtocolAnalysis.csproj" />
     <Project Path="src/Iaet.Diagrams/Iaet.Diagrams.csproj" />
     <Project Path="src/Iaet.Android/Iaet.Android.csproj" />
+    <Project Path="src/Iaet.DukeEnergy/Iaet.DukeEnergy.csproj" />
+    <Project Path="src/Iaet.DukeEnergy.Api/Iaet.DukeEnergy.Api.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Iaet.Capture.Tests/Iaet.Capture.Tests.csproj" />
@@ -36,5 +38,6 @@
     <Project Path="tests/Iaet.ProtocolAnalysis.Tests/Iaet.ProtocolAnalysis.Tests.csproj" />
     <Project Path="tests/Iaet.Diagrams.Tests/Iaet.Diagrams.Tests.csproj" />
     <Project Path="tests/Iaet.Android.Tests/Iaet.Android.Tests.csproj" />
+    <Project Path="tests/Iaet.DukeEnergy.Tests/Iaet.DukeEnergy.Tests.csproj" />
   </Folder>
 </Solution>

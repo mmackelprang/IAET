@@ -1,0 +1,48 @@
+{
+  "description": "Endpoint profile for the Duke Energy outage-report flow (outagereport.duke-energy.com). Every REPLACE_ME below must be filled in from an IAET capture of that app — see docs/duke-energy-rest-interface.md. Duke Energy does not publish this API, so nothing here is guessed on your behalf.",
+
+  "baseUri": "https://REPLACE_ME.duke-energy.com",
+
+  "defaultHeaders": {
+    "Accept": "application/json, text/plain, */*",
+    "Content-Type": "application/json",
+    "Origin": "https://outagereport.duke-energy.com",
+    "Referer": "https://outagereport.duke-energy.com/",
+    "Authorization": "{{env:DUKE_OUTAGE_REPORT_AUTH}}"
+  },
+
+  "lookupAccount": {
+    "method": "POST",
+    "urlTemplate": "/REPLACE_ME/find-account",
+    "body": "{\"phoneNumber\":\"{{phoneNumber}}\"}",
+    "responseMap": {
+      "found": "REPLACE_ME",
+      "accountNumber": "REPLACE_ME",
+      "serviceAddress": "REPLACE_ME"
+    }
+  },
+
+  "existingOutage": {
+    "method": "GET",
+    "urlTemplate": "/REPLACE_ME/outage-status?accountNumber={{accountNumber}}",
+    "responseMap": {
+      "hasActiveOutage": "REPLACE_ME",
+      "outageId": "REPLACE_ME",
+      "status": "REPLACE_ME",
+      "cause": "REPLACE_ME",
+      "reportedAt": "REPLACE_ME",
+      "estimatedRestorationAt": "REPLACE_ME"
+    }
+  },
+
+  "submitReport": {
+    "method": "POST",
+    "urlTemplate": "/REPLACE_ME/report-outage",
+    "body": "{\"accountNumber\":\"{{accountNumber}}\",\"phoneNumber\":\"{{phoneNumber}}\",\"comments\":\"{{comments}}\",\"email\":\"{{email}}\"}",
+    "responseMap": {
+      "accepted": "REPLACE_ME",
+      "confirmationNumber": "REPLACE_ME",
+      "message": "REPLACE_ME"
+    }
+  }
+}
