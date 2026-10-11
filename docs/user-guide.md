@@ -50,6 +50,9 @@ iaet --version
 | **Android APK resources** | **apktool** | 2.9+ | Decode AndroidManifest.xml, resources | [apktool.org](https://apktool.org) or `brew install apktool` / `choco install apktool` |
 | **Android HCI log** | Android device | — | Bluetooth HCI snoop log capture | Enable in Developer Options → "Enable Bluetooth HCI snoop log" |
 | **Java runtime** (for jadx) | **JDK 11+** | 11+ | Required by jadx | `brew install openjdk@11` / download from [adoptium.net](https://adoptium.net) |
+| **Native code decompilation** | **Ghidra** (optional) | 11+ | Functions, call graphs and pseudocode for `iaet native analyze` | [github.com/NationalSecurityAgency/ghidra/releases](https://github.com/NationalSecurityAgency/ghidra/releases); set `GHIDRA_INSTALL_DIR` (needs JDK 21+). Static ELF/strings analysis works without it |
+
+Run `iaet doctor` at any time to see which of these tools IAET can find and which capabilities each unlocks (`--json` for scripts).
 
 > **Note:** jadx and apktool require Java 11+. If your default `java` is older, set `JAVA_HOME` before running:
 > ```bash
@@ -62,8 +65,8 @@ iaet --version
 | Analysis Type | Tools Needed | Status |
 |---------------|-------------|--------|
 | .NET EXE/DLL | ILSpy CLI, dnSpy | Planned (Phase 6) |
-| Windows native (PE) | API Monitor, Fiddler | Planned |
-| Linux native (ELF) | Ghidra, ltrace, strace | Planned |
+| Windows native (PE) | Ghidra (optional) | Format/architecture detection + strings now; symbol tables via Ghidra (`iaet native analyze --binary`) |
+| Linux / Android native (ELF, `lib/*.so`) | Ghidra (optional) | **Available** — `iaet native analyze` (see Use Case 2, Step 3b) |
 | iOS IPA | class-dump, otool (requires Mac) | Planned |
 | Electron apps | asar extract, Node.js | Planned |
 
@@ -331,6 +334,26 @@ Analysis writes to `.iaet-projects/my-app/knowledge/`:
 - `permissions.json` — manifest metadata and permissions
 - `network-security.json` — TLS policy and certificate pinning
 
+### Step 3b: Analyze Native Libraries (`lib/*.so`)
+
+If `iaet apk analyze` reports native libraries, protocol framing, checksums, crypto or hidden endpoints may live in C/C++ rather than Java:
+
+```bash
+iaet native analyze --project my-app                # best ABI per library, auto-discovered from apk/
+iaet native analyze --project my-app --decompile    # add Ghidra pseudocode (slower; needs Ghidra)
+```
+
+Without Ghidra, the static providers still produce: binary format and architecture, needed libraries, imported/exported symbols, **JNI bindings** (`Java_com_example_Foo_bar` decoded to `com.example.Foo.bar`, so each native entry point is tied to the Java method that calls it), URL literals, BLE UUIDs, and library fingerprints (OpenSSL, BoringSSL, mbedTLS, protobuf, Flutter, React Native, Unity, ...). With Ghidra (`GHIDRA_INSTALL_DIR` or `--ghidra-path`), functions, callers/callees, referenced strings and pseudocode are added and cached by binary hash under `native/work/cache/`.
+
+Results go to `knowledge/native-binaries.json`; open questions (no decompiler, failed import, dynamically registered natives) go to `knowledge/unknowns.json`; a Java ↔ native diagram is written to `output/diagrams/jni-bridge.mmd`.
+
+Then dig in:
+
+```bash
+iaet native search   --project my-app --query frequency          # exports, imports, JNI, URLs, UUIDs, functions, strings
+iaet native function --project my-app --name Java_com_example_NativeBridge_setFrequency   # dossier + pseudocode
+```
+
 ### Step 4: ProtoFieldMapper (for protobuf/protojson APIs)
 
 If the APK uses Protocol Buffers (common in Google apps), the `apk analyze` step also runs the **ProtoFieldMapper**, which:
@@ -466,6 +489,7 @@ IAET includes a team of specialist Claude Code sub-agents coordinated by a **Lea
 | Protocol Analyzer | `agents/protocol-analyzer.md` | WebSocket, SIP, SDP, WebRTC, and HLS stream analysis |
 | Schema Analyzer | `agents/schema-analyzer.md` | Dependency graphs, auth chains, rate limit detection |
 | APK Analyzer | `agents/apk-analyzer.md` | Android decompilation, BLE service discovery, data flow tracing |
+| Native Analyzer | `agents/native-analyzer.md` | Native libraries/executables: JNI bridge, library fingerprints, Ghidra functions and pseudocode |
 | API Expert | `agents/api-expert.md` | Reviews findings as an API designer; predicts missing endpoints from CRUD/pagination/batch patterns |
 | Diagram Generator | `agents/diagram-generator.md` | Mermaid sequence, data flow, state machine, and dependency diagrams |
 | Report Assembler | `agents/report-assembler.md` | Final export — OpenAPI, Postman, narrative, coverage |
@@ -825,6 +849,25 @@ iaet apk ble       --project <name>
 - L2CAP dynamic channel protocol frames (from HCI log)
 - Command/response byte patterns
 
+### `iaet native`
+
+```bash
+iaet native analyze  --project <name> [--binary <path>]... [--ghidra-path <dir>] [--decompile] [--max-functions <n>] [--no-ghidra] [--no-cache]
+                     [--language <ghidra-lang-id>] [--ghidra-timeout <minutes>]
+iaet native search   --project <name> --query <text> [--limit <n>]
+iaet native function --project <name> --name <function|0xaddress> [--binary <file>]
+```
+
+`analyze` auto-discovers `lib/<abi>/*.so` under the project's `apk/` directory (one ABI per library, preferring arm64-v8a) unless `--binary` is given; explicit binaries are copied to `native/binaries/`. Ghidra is located via `--ghidra-path`, `IAET_GHIDRA_PATH`, `GHIDRA_INSTALL_DIR`, `GHIDRA_HOME` or PATH and runs read-only in a scratch project that is deleted afterwards. Writes `knowledge/native-binaries.json`, merges into `knowledge/unknowns.json`, and emits `output/diagrams/jni-bridge.mmd` when JNI exports exist.
+
+### `iaet doctor`
+
+```bash
+iaet doctor [--json]
+```
+
+Probes dotnet, Java, jadx, apktool, Node, Playwright Chromium, Python and Ghidra, and lists which IAET capabilities each unlocks with an install hint for anything missing. Read-only.
+
 ### `iaet cookies`
 
 ```bash
@@ -908,6 +951,8 @@ Without `--project`: interactive menu-driven wizard (capture, analyze, export). 
       permissions.json         <- APK permissions (android projects)
       network-security.json    <- cert pinning config (android projects)
       ble-profile.json         <- BLE services/characteristics (android projects)
+      native-binaries.json     <- native libraries: symbols, JNI bridge, URLs, fingerprints, Ghidra functions
+      unknowns.json            <- residual-unknowns ledger (open questions + suggested actions)
     output/
       narrative.md             <- investigation narrative
       report.md                <- Markdown report
@@ -921,6 +966,9 @@ Without `--project`: interactive menu-driven wizard (capture, analyze, export). 
       mapping.txt
       decompiled/              <- jadx Java output
       resources/               <- apktool resource output
+    native/                    <- projects with native code
+      binaries/                <- copies of explicitly passed --binary files
+      work/cache/              <- content-addressed Ghidra export cache (sha256 + options)
     investigation.log          <- append-only agent activity log
 ```
 

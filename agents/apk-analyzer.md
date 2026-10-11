@@ -47,7 +47,12 @@ When dispatched by the Lead Investigator:
    - Mark APK-only endpoints as "unobserved — needs runtime capture"
    - Cert-pinned domains will block standard MITM capture — flag these for the Lead
 
-5. **Report findings:**
+5. **Hand off native code:**
+   - If `iaet apk analyze` prints a "Native libs" line (the APK ships `lib/<abi>/*.so`), list them in your report under "Go deeper" and recommend the Lead run `iaet native analyze --project <project>` and dispatch the **Native Analyzer** agent
+   - Note any Java classes with `native` method declarations or `System.loadLibrary(...)` calls — they are the entry points the Native Analyzer will start from
+   - Do not guess what native code does; mark it as *unknown* until the Native Analyzer reports
+
+6. **Report findings:**
    ```
    Status: DONE
    Package: com.example.app v2.3.1 (minSdk 24, targetSdk 34)
@@ -76,10 +81,14 @@ When dispatched by the Lead Investigator:
    - Pinned domains: api.example.com [2 pins — MITM will fail for this host]
    - Cleartext exceptions: debug.example.com
 
+   Native libraries (<count>):
+   - lib/arm64-v8a/libbridge.so [loaded by com.example.NativeBridge — 3 native methods] → run iaet native analyze
+
    Go deeper:
    - [cert-pinned hosts that need bypass for live capture]
    - [dynamic URL construction patterns that need runtime analysis]
    - [exported services that could be entry points for fuzzing]
+   - [native libraries whose JNI methods the UI calls — dispatch Native Analyzer]
    ```
 
 ## Critical Rules

@@ -63,6 +63,18 @@ iaet export smart-client-prompt --project my-device
 iaet explore --db catalog.db --projects .iaet-projects
 ```
 
+### Native code (APK `lib/*.so`, desktop binaries)
+
+```bash
+iaet doctor                                          # is Ghidra / jadx / Java / Playwright available?
+iaet native analyze --project my-device              # auto-discovers lib/<abi>/*.so from the decompiled APK
+iaet native analyze --project my-app --binary ./app.exe --decompile   # explicit binaries, with Ghidra pseudocode
+iaet native search  --project my-device --query frequency
+iaet native function --project my-device --name Java_com_vendor_radio_NativeBridge_setFrequency
+```
+
+Static providers (ELF symbol tables, strings, URL/BLE-UUID extraction, JNI name decoding, library fingerprints) always run. When Ghidra is installed (`GHIDRA_INSTALL_DIR` or `--ghidra-path`), functions, call graphs and pseudocode are added through a packaged headless script and cached by binary hash.
+
 ### Agent-driven investigation
 
 ```bash
@@ -81,10 +93,13 @@ See **[docs/user-guide.md](docs/user-guide.md)** for comprehensive step-by-step 
 - **Browser extension** — captures HTTP (fetch/XHR), WebSocket (with binary frame decoding), WebRTC (SDP/ICE), and SSE from any Chrome tab without a proxy
 - **Playwright-based capture** — CDP session recording with stream monitoring (WebSocket, SSE, WebRTC, HLS, DASH, gRPC-Web)
 - **Android APK analysis** — jadx decompilation, endpoint extraction, auth pattern detection, manifest permissions, network security config (cert pinning), network data flow tracing (Cronet support)
+- **Native binary analysis** — ELF/PE/Mach-O identification, ELF import/export tables, JNI bridge decoding (`Java_*` → `class.method`), URL and BLE UUID literals, library fingerprints (OpenSSL, protobuf, Flutter, ...), optional Ghidra headless provider (functions, call graph, pseudocode) with a content-addressed cache
+- **Evidence contract** — findings carry `observation | derivation | inference | unknown`, provider, artifact SHA-256, location, confidence and limitations; open questions are tracked in `knowledge/unknowns.json`
+- **Environment check** — `iaet doctor [--json]` probes jadx, apktool, Java, Node, Playwright and Ghidra and lists which capabilities each unlocks
 - **BLE device analysis** — service/characteristic UUID discovery from decompiled source, L2CAP dynamic channel parsing for non-GATT devices, BLE data flow tracing (characteristic to UI mapping), HCI snoop log import for runtime correlation
 - **Protocol analysis** — SipAnalyzer for SIP-over-WebSocket signaling, WebRTC session reconstruction from SDP/ICE, protojson field name inference (Deep Field Resolver with endpoint context and APK source)
 - **Cross-endpoint correlation** — value tracing across endpoints and streams to resolve protojson field names and discover data dependencies
-- **Agent investigation system** — autonomous multi-round investigation with 11 specialist Claude Code agents including APK Analyzer, API Expert, and Lead Investigator with autonomous coordinator mode
+- **Agent investigation system** — autonomous multi-round investigation with 12 specialist Claude Code agents including APK Analyzer, Native Analyzer, API Expert, and Lead Investigator with autonomous coordinator mode
 - **SQLite endpoint catalog** — persistent storage with automatic deduplication and observation counting
 - **Schema inference** — JSON Schema (draft-07), C# records, and OpenAPI 3.1 fragments; detects protojson with ProtoFieldMapper for name recovery from decompiled APK source
 - **HTTP replay** — field-level JSON diff, pluggable auth provider, rate limiting, Polly retry + circuit breaker, dry-run mode
@@ -167,6 +182,15 @@ iaet
 │   │              [--jadx-path <path>]  [--mapping <mapping.txt>]
 │   ├── analyze    --project <name>  [--trace-dataflow]
 │   └── ble        --project <name>  [--trace-dataflow]  [--hci-log <path>]
+│
+├── native
+│   ├── analyze   --project <name>  [--binary <path>]...  [--ghidra-path <dir>]
+│   │             [--decompile]  [--max-functions <n>]  [--no-ghidra]  [--no-cache]
+│   │             [--language <ghidra-lang-id>]  [--ghidra-timeout <minutes>]
+│   ├── search    --project <name>  --query <text>  [--limit <n>]
+│   └── function  --project <name>  --name <fn|0xaddr>  [--binary <file>]
+│
+├── doctor     [--json]
 │
 ├── cookies
 │   ├── snapshot  --project <name>

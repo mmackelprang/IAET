@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Iaet.Core\Iaet.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+  </ItemGroup>
+
+  <!-- The Ghidra post-script is shipped inside the assembly and materialized on demand. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Ghidra\IaetGhidraExport.java" LogicalName="Iaet.Native.Ghidra.IaetGhidraExport.java" />
+  </ItemGroup>
+</Project>

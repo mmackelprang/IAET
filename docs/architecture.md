@@ -30,6 +30,10 @@ URL/auth/manifest extraction
 BLE service discovery
 L2CAP parser · HCI import
 data flow tracing (Cronet)"]
+    Native["Iaet.Native
+ELF/PE/Mach-O detection · ELF reader
+strings · JNI decoder · library fingerprints
+Ghidra headless provider + cache"]
     JsAnalysis["Iaet.JsAnalysis
 Bundle analysis · URL extraction
 CrossEndpointCorrelator
@@ -60,6 +64,8 @@ DependencyGraph · ConfidenceAnnotator"]
     Core --> Export
     Core --> Crawler
     Core --> Android
+    Core --> Native
+    Native --> Cli
     Core --> JsAnalysis
     Core --> ProtocolAnalysis
     Core --> Diagrams
@@ -114,6 +120,10 @@ catalog.db"]
     Schema["Iaet.Schema → SchemaResult
 protojson detection
 DeepFieldResolver"]
+    Native["Iaet.Native
+ELF/PE/Mach-O detection · ELF reader
+strings · JNI decoder · library fingerprints
+Ghidra headless provider + cache"]
     JsAnalysis["Iaet.JsAnalysis
 CrossEndpointCorrelator
 value tracing across endpoints"]
@@ -127,6 +137,12 @@ narrative / smart-client-prompt"]
 APK decompile → static extract
 BLE discovery · L2CAP · HCI import
 data flow tracing (Cronet)"]
+    NativeAnalysis["Iaet.Native
+lib/*.so → ELF symbols · strings
+JNI bridge · fingerprints
+Ghidra: functions · pseudocode"]
+    Unknowns["knowledge/unknowns.json
+residual-unknowns ledger"]
     Knowledge["knowledge/*.json
 endpoints · protocols · BLE profile
 correlations · dependencies"]
@@ -152,6 +168,10 @@ sequence · data flow · state machine"]
     SQLite --> Replay
     SQLite --> Export
     ApkAnalysis --> Knowledge
+    ApkAnalysis -->|lib/*.so| NativeAnalysis
+    NativeAnalysis --> Knowledge
+    NativeAnalysis --> Unknowns
+    Unknowns --> Dashboard
     JsAnalysis --> Knowledge
     Protocol --> Knowledge
     Knowledge --> Export
@@ -185,6 +205,18 @@ Google APIs return protojson (positional JSON arrays with no field names). The D
 
 ### L2CAP parsing for non-GATT BLE
 Many BLE devices use L2CAP dynamic channels instead of GATT for high-throughput data transfer. The L2CAP protocol extractor parses connection-oriented channel frames from HCI snoop logs, enabling analysis of devices that do not expose standard GATT services.
+
+### Evidence over assertion
+Borrowed from REA ("Reverse Engineer Anything"): a finding is only as good as the statement of how it was established. `Evidence` records carry an `EvidenceKind` (observation, derivation, inference, unknown), the producing provider, the artifact and its SHA-256, a location, a confidence level and explicit limitations. Questions that could not be answered become `ResidualUnknown` entries in `knowledge/unknowns.json` (merged by id, hand-resolvable) rather than disappearing from the narrative. Agents label every claim with one of the four kinds.
+
+### Native analysis delegates to Ghidra, never reimplements it
+`Iaet.Native` runs cheap static providers itself (format detection, ELF `.dynsym`/`.dynamic`, strings, JNI name decoding, library fingerprints) because they need no external tool and already answer most API-investigation questions (which hosts, which UUIDs, which Java methods cross into native code, which crypto library). Disassembly and decompilation are delegated to Ghidra's headless analyzer through a packaged post-script (`IaetGhidraExport.java`) that exports functions, callers/callees, referenced strings and pseudocode as JSON. Ghidra is bring-your-own (located via `IAET_GHIDRA_PATH`, `GHIDRA_INSTALL_DIR`, `GHIDRA_HOME` or PATH), works in a scratch project that is deleted afterwards, and never modifies the input.
+
+### Content-addressed provider cache
+Headless Ghidra runs take minutes. Results are cached under `<project>/native/work/cache/` keyed by SHA-256(binary) + operation + script version + options, so identical inputs are never re-analyzed while a rebuilt binary or a new script version always is.
+
+### Tool providers and `iaet doctor`
+External engines implement `IToolProvider` (name, capabilities, `CheckAsync`). `iaet doctor [--json]` probes them together with jadx, apktool, Java, Node, Playwright and Python and reports which IAET capabilities each unlocks, so an investigation knows up front what it can and cannot do. It is read-only and never installs anything.
 
 ### Dynamic dashboard SPA
 The `iaet explore` command serves a thin SPA that reads project data live from the catalog database and `.iaet-projects/` directory, replacing the previous 430KB+ static HTML dashboard with an interactive experience that supports project selection, live refresh, and embedded Swagger UI.
