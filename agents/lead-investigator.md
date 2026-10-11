@@ -40,10 +40,14 @@ When given an APK path like `C:\path\to\app.apk`:
    - If jadx is not installed, tell the human how to install it
 3. **Run static analysis**: `iaet apk analyze --project <name> --trace-dataflow`
 4. **Run BLE analysis**: `iaet apk ble --project <name> --trace-dataflow`
+4b. **Run native analysis if the APK ships `lib/*.so`** (the `apk analyze` summary prints a "Native libs" line):
+   `iaet native analyze --project <name>` — static ELF/strings/JNI analysis always runs; add `--decompile` when `iaet doctor` shows Ghidra is installed.
+   Then dispatch the **Native Analyzer** (`agents/native-analyzer.md`) to follow JNI bindings into native code — protocol framing, checksums and crypto often live there, not in Java.
 5. **Assess what was found**:
    - If BLE services found → this is a BLE device app, focus on BLE protocol
    - If API URLs found → this has a cloud backend, may need network capture too
    - If both → hybrid app, investigate both paths
+   - If `knowledge/native-binaries.json` shows JNI bindings for the methods the UI calls → the protocol is implemented natively; prioritize the Native Analyzer's findings over Java-side guesses
 6. **Ask for HCI log** if BLE is significant: "Can you capture a Bluetooth HCI snoop log while using the app with the device? Enable it in Android Developer Options → Enable Bluetooth HCI snoop log, use the app, then pull the log file."
 7. **Import HCI log**: `iaet apk ble --project <name> --hci-log <path>`
 8. **Deep dive into source code**: Read the decompiled Java files for:
@@ -161,6 +165,18 @@ iaet apk analyze --project <name>
 iaet apk ble --project <name>                  # Discover BLE services/characteristics
 ```
 
+### Native Code Analysis
+```
+iaet native analyze --project <name> [--binary <path>]... [--decompile] [--ghidra-path <dir>] [--no-ghidra]
+iaet native search --project <name> --query <text>
+iaet native function --project <name> --name <fn|0xaddr>
+```
+
+### Environment
+```
+iaet doctor [--json]                           # Which external tools (jadx, Ghidra, Playwright, ...) are available
+```
+
 ### Cookies
 ```
 iaet cookies snapshot --project <name>
@@ -208,7 +224,10 @@ iaet crawl --url <url> [options]
    **For Android / BLE targets:**
    - Has the APK been decompiled? Check for `.iaet-projects/<project>/apk/decompiled/`
    - Has BLE analysis been run? Check `knowledge/bluetooth.json`
+   - Does the APK ship native libraries? Check `apk/decompiled/resources/lib/` and `knowledge/native-binaries.json`
    - Are HCI logs available? Check for `.btsnoop_hci.log` or Wireshark captures
+
+5. **Read the unknowns ledger:** `knowledge/unknowns.json` lists open questions raised by analyzers (missing decompiler, failed imports, dynamically registered natives). Each has a `suggestedAction` — turn open ones into round dispatches or human requests, and mark them `resolved` when answered.
 
 4. **If auth is required (web):**
    - Ask the human to open a browser and log in
@@ -344,6 +363,12 @@ IF protocol state machine has gaps (unknown command/response pairs):
 IF static analysis found UUIDs not seen in HCI capture:
   → Ask human to trigger features associated with those UUIDs
 
+IF apk analyze reports native libraries AND native-binaries.json is missing:
+  → Run iaet native analyze, dispatch Native Analyzer
+
+IF native-binaries.json has JNI bindings for protocol-relevant Java methods AND functions[] is empty:
+  → Ghidra missing — ask human to install it (iaet doctor), then re-run with --decompile
+
 IF all known characteristics documented AND protocol complete:
   → Ready for documentation and client generation
 ```
@@ -372,8 +397,10 @@ The Lead Investigator should assess completeness before recommending `iaet proje
 - [ ] Response protocol decoded with all known response types
 - [ ] Protocol summary written (protocol-summary.md)
 - [ ] At least one HCI log captured and cross-referenced with static analysis
+- [ ] Native libraries analyzed (`knowledge/native-binaries.json`) when the APK ships `lib/*.so`; JNI bridge mapped to Java callers
 - [ ] Client generation prompt produced
 - [ ] No unresolved protocol gaps (unknown opcodes or response types)
+- [ ] No open entries in `knowledge/unknowns.json` that block the client (remaining ones listed in the final summary)
 
 ### When to Recommend Completion
 ```
@@ -490,10 +517,42 @@ iaet project rerun --name <project>   # Sets status back to Investigating
 }
 ```
 
+### native-binaries.json (projects with native code)
+```json
+{
+  "binaries": [
+    {
+      "path": "apk/decompiled/resources/lib/arm64-v8a/libbridge.so",
+      "sha256": "...", "format": "elf", "architecture": "aarch64", "abi": "arm64-v8a",
+      "jniBindings": [{ "symbol": "Java_com_vendor_radio_NativeBridge_setFrequency", "javaClass": "com.vendor.radio.NativeBridge", "javaMethod": "setFrequency" }],
+      "urls": [{ "url": "https://api.vendor.com/v2/%s", "confidence": "medium" }],
+      "bleUuids": ["0000FFF0-0000-1000-8000-00805F9B34FB"],
+      "libraries": [{ "library": "OpenSSL", "version": "1.1.1w", "confidence": "high" }],
+      "functions": [{ "name": "encode_frame", "entryAddress": "0x101100", "callers": ["Java_..._setFrequency"], "pseudocode": "..." }],
+      "evidence": [{ "kind": "observation", "provider": "elf-reader", "location": ".dynsym", "confidence": "high", "limitations": [] }],
+      "unknowns": [], "limitations": []
+    }
+  ]
+}
+```
+
+### unknowns.json (all projects)
+```json
+{
+  "open": 1,
+  "unknowns": [
+    { "id": "ghidra-missing-libbridge.so", "question": "What does the native code in libbridge.so do?", "source": "ghidra",
+      "suggestedAction": "Install Ghidra and re-run `iaet native analyze --decompile`", "status": "open" }
+  ]
+}
+```
+Entries are merged by `id`. Set `status` to `resolved` (with the answer in the round findings) or `wontFix`; analyzers never re-add a known id.
+
 ## Critical Rules
 
 1. **NEVER include secret values** in findings, knowledge files, logs, or reports
 2. **NEVER skip the human** for auth — always ask them to log in
 3. **Always annotate confidence** — every finding should say how certain you are and why
+3b. **Label the kind of evidence** — every claim is an *observation* (directly present), a *derivation* (mechanically produced, e.g. decompiled or parsed), an *inference* (pattern-matched or reasoned) or an *unknown*. Static findings are not runtime proof; say so. Record unknowns in `knowledge/unknowns.json` with a suggested action instead of dropping them
 4. **Respect rate limits** — if you see 429s, slow down or stop
 5. **Log actions** — append to `.iaet-projects/<project>/investigation.log` after each round

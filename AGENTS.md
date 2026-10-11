@@ -28,6 +28,14 @@ iaet explore --db catalog.db --projects .iaet-projects
 # Cross-endpoint correlation (resolves protojson field names via value tracing)
 iaet analyze correlate --project my-target --session-id <guid>
 
+# Native code (APK lib/*.so, desktop binaries): static ELF/strings analysis, Ghidra headless when installed
+iaet native analyze --project my-target [--decompile]
+iaet native search  --project my-target --query <text>
+iaet native function --project my-target --name <fn>
+
+# Check which external tools (jadx, apktool, Ghidra, Java, Node, Playwright) are available
+iaet doctor [--json]
+
 # Research state management
 iaet project complete --name my-target
 iaet project rerun    --name my-target
@@ -45,6 +53,7 @@ iaet project rerun    --name my-target
 | Protocol Analyzer | `agents/protocol-analyzer.md` | WebSocket, SIP, SDP, WebRTC, and HLS stream analysis |
 | Schema Analyzer | `agents/schema-analyzer.md` | Dependency graphs, auth chains, rate limits |
 | **APK Analyzer** | `agents/apk-analyzer.md` | Android decompilation, BLE service discovery, data flow tracing |
+| **Native Analyzer** | `agents/native-analyzer.md` | Native libraries and executables: JNI bridge decoding, library fingerprints, Ghidra functions/pseudocode |
 | **API Expert** | `agents/api-expert.md` | Reviews findings as an API designer; predicts missing endpoints from patterns |
 | Diagram Generator | `agents/diagram-generator.md` | Mermaid sequence, data flow, state machine, and dependency diagrams |
 | Report Assembler | `agents/report-assembler.md` | Final export: OpenAPI, Postman, narrative, coverage |
@@ -54,7 +63,7 @@ iaet project rerun    --name my-target
 1. The **Lead Investigator** (you talking to Claude Code) reads the project state
 2. In **autonomous coordinator mode**, the Lead drives the entire discovery process:
    - For web targets: guides capture, imports, runs analysis, dispatches specialists
-   - For APK targets: decompiles, runs BLE analysis, traces data flows, asks for HCI logs
+   - For APK targets: decompiles, runs BLE analysis, traces data flows, dispatches the Native Analyzer for `lib/*.so`, asks for HCI logs
    - For hybrid targets: coordinates both web and BLE investigation paths
 3. For each round, the Lead dispatches specialist sub-agents via Claude Code's `Agent` tool
 4. Specialists execute their tasks using IAET CLI commands and report findings
@@ -68,10 +77,16 @@ Each investigation lives in `.iaet-projects/{name}/` with:
 - `project.json` — configuration (status auto-detected from captures and knowledge)
 - `.env.iaet` — secrets (gitignored, never committed)
 - `rounds/` — per-round plans and findings
-- `knowledge/` — accumulated structured findings (endpoints, cookies, protocols, dependencies, BLE profiles, correlations)
+- `knowledge/` — accumulated structured findings (endpoints, cookies, protocols, dependencies, BLE profiles, correlations, native binaries)
+- `knowledge/unknowns.json` — residual-unknowns ledger: open questions with suggested actions, merged by id, never silently dropped
+- `native/` — copied binaries, Ghidra scratch work and the content-addressed analysis cache
 - `output/` — final exports and diagrams (canonical filenames when using `--project` flag)
 - `apk/` — decompiled source (android projects)
 - `captures/` — compressed `.iaet.json.gz` archives
+
+## Evidence Discipline
+
+Every finding states how it was established — one of `observation` (directly present), `derivation` (mechanically produced, e.g. decompiled), `inference` (pattern-matched or reasoned) or `unknown` (not established). Findings carry provider, artifact hash, location, confidence and limitations (`Evidence` in `Iaet.Core`). Static results are not runtime proof; say so when it matters. Open questions go into `knowledge/unknowns.json`, not into prose.
 
 ## Security
 

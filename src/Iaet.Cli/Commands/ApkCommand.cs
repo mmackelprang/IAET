@@ -277,6 +277,9 @@ internal static class ApkCommand
                     flowDiagram).ConfigureAwait(false);
             }
 
+            // Native libraries: point the investigator at the next step instead of silently ignoring them.
+            var nativeLibs = Iaet.Native.NativeBinaryAnalyzer.DiscoverApkLibraries(Path.Combine(projectDir, "apk"));
+
             Console.WriteLine();
             Console.WriteLine("Analysis complete. Knowledge base updated.");
             Console.WriteLine($"  Endpoints:   {urls.Count}");
@@ -287,6 +290,11 @@ internal static class ApkCommand
                 Console.WriteLine($"  Net flows:   {networkFlows.Count}");
             if (urls.Count > 0 || (traceDataflow && networkFlows.Count > 0))
                 Console.WriteLine($"  Diagrams:    {diagramsDir}");
+            if (nativeLibs.Count > 0)
+            {
+                Console.WriteLine($"  Native libs: {nativeLibs.Count} ({string.Join(", ", nativeLibs.Take(5).Select(l => Path.GetFileName(l.Path)))}{(nativeLibs.Count > 5 ? ", ..." : string.Empty)})");
+                Console.WriteLine($"               Protocol or crypto logic may live in native code — run: iaet native analyze --project {project}");
+            }
 
             await projectStore.RefreshStatusAsync(project).ConfigureAwait(false);
         });
