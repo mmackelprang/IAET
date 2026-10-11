@@ -186,6 +186,7 @@ iaet
 ├── native
 │   ├── analyze   --project <name>  [--binary <path>]...  [--ghidra-path <dir>]
 │   │             [--decompile]  [--max-functions <n>]  [--no-ghidra]  [--no-cache]
+│   │             [--language <ghidra-lang-id>]  [--ghidra-timeout <minutes>]
 │   ├── search    --project <name>  --query <text>  [--limit <n>]
 │   └── function  --project <name>  --name <fn|0xaddr>  [--binary <file>]
 │

@@ -61,7 +61,7 @@ jadx shows `native` method declarations in Java; the `.so` exports `Java_<pkg>_<
 | CLI | `iaet native analyze|search|function`, `iaet doctor [--json]`; `iaet apk analyze` now points at native libs | Done |
 | Agents | `agents/native-analyzer.md`; Lead Investigator APK path, evidence rule, unknowns ledger; APK Analyzer hand-off | Done |
 | Docs | README, AGENTS.md, architecture.md, user-guide.md, this plan | Done |
-| Tests | `tests/Iaet.Native.Tests` (synthetic ELF image builder, 47 tests), CLI tests for `native`/`doctor` | Done |
+| Tests | `tests/Iaet.Native.Tests` (synthetic ELF image builder, 55 tests), CLI tests for `native`/`doctor` | Done |
 | Hygiene | `SQLitePCLRaw.bundle_e_sqlite3` pinned to 2.1.12 so `dotnet restore` passes NuGet audit (GHSA-2m69-gcr7-jv3q) | Done |
 
 ---
@@ -110,7 +110,7 @@ Entries are merged by `id`; a human or the Lead can flip `status` to `resolved`/
 ## 4. Verification performed
 
 - `dotnet build Iaet.slnx -c Release` — clean with `TreatWarningsAsErrors` + `AnalysisMode=All`
-- `dotnet test Iaet.slnx` — all projects green (Native: 47 tests; CLI: +6)
+- `dotnet test Iaet.slnx` — all projects green (Native: 55 tests; CLI: +10)
 - End-to-end smoke: compiled a JNI-style shared library with gcc containing two `Java_*` exports, URL literals, BLE UUIDs and an OpenSSL banner; `iaet native analyze --binary` produced the expected `native-binaries.json` (2 JNI bindings decoded incl. `__3B` overload signature, URL confidences High/Medium, base UUID detected, OpenSSL 1.1.1w fingerprinted), `unknowns.json` (Ghidra-missing entry) and `jni-bridge.mmd`; `iaet native search --query frequency` returned export + jni hits; `iaet doctor` reported dotnet/java/node/playwright present and jadx/apktool/ghidra missing with install hints
 - **Not verified here:** a live `analyzeHeadless` run (Ghidra is not installed in the build container). The Java script follows the public GhidraScript API (`DecompInterface`, `FunctionManager`, `ReferenceManager`, `StringDataInstance`) and is unit-tested only for argument construction, materialization and export parsing. First real run should be against Ghidra 11.x with a small `.so`.
 

@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Iaet.Core.Abstractions;
 using Iaet.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,13 +16,7 @@ namespace Iaet.Cli.Commands;
 /// </summary>
 internal static class DoctorCommand
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
+    private static readonly JsonSerializerOptions JsonOptions = Iaet.Native.NativeBinaryAnalyzer.JsonOptions;
 
     internal static Command Create(IServiceProvider services)
     {

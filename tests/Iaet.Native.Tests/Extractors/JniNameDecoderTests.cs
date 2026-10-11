@@ -38,6 +38,18 @@ public sealed class JniNameDecoderTests
         b.Signature.Should().Be("[BI");
     }
 
+    [Fact]
+    public void Decode_method_starting_with_underscore_is_not_a_signature()
+    {
+        // Java method `_init` on com.foo.Bar mangles to Bar__1init: separator + escaped underscore, no overload signature.
+        var b = JniNameDecoder.Decode("Java_com_foo_Bar__1init");
+
+        b.Should().NotBeNull();
+        b!.JavaClass.Should().Be("com.foo.Bar");
+        b.JavaMethod.Should().Be("_init");
+        b.Signature.Should().BeNull();
+    }
+
     [Theory]
     [InlineData("JNI_OnLoad")]
     [InlineData("Java_")]

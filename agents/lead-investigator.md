@@ -167,7 +167,7 @@ iaet apk ble --project <name>                  # Discover BLE services/character
 
 ### Native Code Analysis
 ```
-iaet native analyze --project <name> [--binary <path>]... [--decompile] [--ghidra-path <dir>] [--no-ghidra]
+iaet native analyze --project <name> [--binary <path>]... [--decompile] [--ghidra-path <dir>] [--no-ghidra] [--language <id>] [--ghidra-timeout <min>]
 iaet native search --project <name> --query <text>
 iaet native function --project <name> --name <fn|0xaddr>
 ```

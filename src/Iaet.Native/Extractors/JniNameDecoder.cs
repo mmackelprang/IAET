@@ -21,7 +21,7 @@ public static class JniNameDecoder
 
         var body = symbol[5..];
         string? signature = null;
-        var sigIdx = body.IndexOf("__", StringComparison.Ordinal);
+        var sigIdx = FindSignatureSeparator(body);
         if (sigIdx > 0)
         {
             signature = Demangle(body[(sigIdx + 2)..]);
@@ -36,6 +36,23 @@ public static class JniNameDecoder
         var method = parts[^1];
         var javaClass = string.Join('.', parts.Take(parts.Count - 1));
         return new JniBinding { Symbol = symbol, JavaClass = javaClass, JavaMethod = method, Signature = signature };
+    }
+
+    /// <summary>
+    /// Locates the <c>__</c> overload separator. A method name beginning with '_' mangles to <c>_1name</c>, so
+    /// <c>Class__1name</c> is separator + escape, not a signature: the second underscore must not start an escape.
+    /// </summary>
+    private static int FindSignatureSeparator(string s)
+    {
+        for (var i = 0; i + 1 < s.Length; i++)
+        {
+            if (s[i] != '_' || s[i + 1] != '_')
+                continue;
+            var next = i + 2 < s.Length ? s[i + 2] : '\0';
+            if (next is not ('0' or '1' or '2' or '3'))
+                return i;
+        }
+        return -1;
     }
 
     private static List<string> SplitUnescaped(string s)

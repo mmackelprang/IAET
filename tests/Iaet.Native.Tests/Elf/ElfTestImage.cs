@@ -125,5 +125,18 @@ internal static class ElfTestImage
         return img;
     }
 
+    /// <summary>
+    /// Makes .dynsym a malformed table: sh_entsize 4 (smaller than a 24-byte symbol) and sh_offset placed so the
+    /// section ends exactly at EOF. The size check passes, but the last symbol reads overrun the file.
+    /// </summary>
+    public static void CorruptDynsymEntrySize(byte[] img)
+    {
+        var shOff = (int)BinaryPrimitives.ReadUInt64LittleEndian(img.AsSpan(40));
+        var dynsymHdr = shOff + 1 * 64;
+        var size = BinaryPrimitives.ReadUInt64LittleEndian(img.AsSpan(dynsymHdr + 32));
+        BinaryPrimitives.WriteUInt64LittleEndian(img.AsSpan(dynsymHdr + 24), (ulong)img.Length - size);
+        BinaryPrimitives.WriteUInt64LittleEndian(img.AsSpan(dynsymHdr + 56), 4);
+    }
+
     private static int Align(int value, int alignment) => (value + alignment - 1) / alignment * alignment;
 }

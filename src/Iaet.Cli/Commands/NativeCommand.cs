@@ -42,6 +42,8 @@ internal static class NativeCommand
         var decompileOption = new Option<bool>("--decompile") { Description = "Export decompiled pseudocode per function (slower; requires Ghidra)" };
         var maxFunctionsOption = new Option<int>("--max-functions") { Description = "Maximum functions to export from Ghidra", DefaultValueFactory = _ => 2000 };
         var noCacheOption = new Option<bool>("--no-cache") { Description = "Ignore cached Ghidra exports for identical bytes/options" };
+        var languageOption = new Option<string?>("--language") { Description = "Ghidra language id override when auto-detection picks the wrong processor (e.g. ARM:LE:32:v8)" };
+        var timeoutOption = new Option<int>("--ghidra-timeout") { Description = "Wall-clock budget per binary for the Ghidra run, in minutes", DefaultValueFactory = _ => 30 };
 
         analyzeCmd.Add(projectOption);
         analyzeCmd.Add(binaryOption);
@@ -50,6 +52,8 @@ internal static class NativeCommand
         analyzeCmd.Add(decompileOption);
         analyzeCmd.Add(maxFunctionsOption);
         analyzeCmd.Add(noCacheOption);
+        analyzeCmd.Add(languageOption);
+        analyzeCmd.Add(timeoutOption);
 
         analyzeCmd.SetAction(async (parseResult, ct) =>
         {
@@ -62,6 +66,8 @@ internal static class NativeCommand
                 Decompile = parseResult.GetValue(decompileOption),
                 MaxFunctions = parseResult.GetValue(maxFunctionsOption),
                 UseCache = !parseResult.GetValue(noCacheOption),
+                GhidraLanguageId = parseResult.GetValue(languageOption),
+                GhidraTimeout = TimeSpan.FromMinutes(Math.Max(1, parseResult.GetValue(timeoutOption))),
             };
 
             using var scope = services.CreateScope();
@@ -89,7 +95,7 @@ internal static class NativeCommand
                         continue;
                     }
                     // Copy into the project so the analysis stays reproducible after the source moves.
-                    var dest = Path.Combine(nativeDir, "binaries", b.Name);
+                    var dest = Path.Combine(nativeDir, "binaries", UniqueDestinationName(b, targets.Select(t => Path.GetFileName(t.Path))));
                     Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
                     File.Copy(b.FullName, dest, overwrite: true);
                     targets.Add((dest, null));
@@ -131,12 +137,18 @@ internal static class NativeCommand
 
             var knowledgeDir = Path.Combine(projectDir, "knowledge");
             Directory.CreateDirectory(knowledgeDir);
+            var knowledgePath = Path.Combine(knowledgeDir, KnowledgeFile);
+            var merged = MergeBinaries(await ReadBinariesAsync(knowledgePath, ct).ConfigureAwait(false), results);
             await File.WriteAllTextAsync(
-                Path.Combine(knowledgeDir, KnowledgeFile),
-                JsonSerializer.Serialize(new { analyzedAt = DateTimeOffset.UtcNow, binaries = results }, JsonOptions),
+                knowledgePath,
+                JsonSerializer.Serialize(new { analyzedAt = DateTimeOffset.UtcNow, binaries = merged }, JsonOptions),
                 ct).ConfigureAwait(false);
 
-            var unknownsAdded = await MergeUnknownsAsync(Path.Combine(knowledgeDir, UnknownsFile), results.SelectMany(r => r.Unknowns), ct).ConfigureAwait(false);
+            var unknownsAdded = await MergeUnknownsAsync(
+                Path.Combine(knowledgeDir, UnknownsFile),
+                results.SelectMany(r => r.Unknowns),
+                results.Select(r => Path.GetFileName(r.Path)),
+                ct).ConfigureAwait(false);
 
             // Diagram: Java ↔ native bridge, when JNI bindings exist.
             var jniBindings = results.SelectMany(r => r.JniBindings.Select(j => (Library: Path.GetFileName(r.Path), Binding: j))).ToList();
@@ -150,7 +162,7 @@ internal static class NativeCommand
 
             Console.WriteLine();
             Console.WriteLine("Native analysis complete. Knowledge base updated.");
-            Console.WriteLine($"  Binaries:    {results.Count}");
+            Console.WriteLine($"  Binaries:    {results.Count} analyzed, {merged.Count} in knowledge");
             Console.WriteLine($"  JNI exports: {results.Sum(r => r.JniBindings.Count)}");
             Console.WriteLine($"  URLs:        {results.Sum(r => r.Urls.Count)}");
             Console.WriteLine($"  Functions:   {results.Sum(r => r.Functions.Count)}");
@@ -298,21 +310,58 @@ internal static class NativeCommand
             return null;
         }
 
+        return await ReadBinariesAsync(path, ct).ConfigureAwait(false);
+    }
+
+    internal static async Task<List<NativeBinaryInfo>> ReadBinariesAsync(string path, CancellationToken ct)
+    {
+        if (!File.Exists(path))
+            return [];
+
         var stream = File.OpenRead(path);
         await using (stream.ConfigureAwait(false))
         {
-            var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
-            using (doc)
-            {
-                if (!doc.RootElement.TryGetProperty("binaries", out var arr))
-                    return [];
-                return arr.Deserialize<List<NativeBinaryInfo>>(JsonOptions) ?? [];
-            }
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
+            if (!doc.RootElement.TryGetProperty("binaries", out var arr))
+                return [];
+            return arr.Deserialize<List<NativeBinaryInfo>>(JsonOptions) ?? [];
         }
     }
 
-    /// <summary>Appends new unknowns to knowledge/unknowns.json without disturbing entries already resolved by hand.</summary>
-    internal static async Task<int> MergeUnknownsAsync(string path, IEnumerable<ResidualUnknown> fresh, CancellationToken ct)
+    /// <summary>Replaces entries for re-analyzed paths and keeps everything else, so partial re-runs never drop knowledge.</summary>
+    internal static List<NativeBinaryInfo> MergeBinaries(IEnumerable<NativeBinaryInfo> existing, IEnumerable<NativeBinaryInfo> fresh)
+    {
+        var freshList = fresh.ToList();
+        var replaced = freshList.Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var merged = existing.Where(e => !replaced.Contains(e.Path)).ToList();
+        merged.AddRange(freshList);
+        return merged.OrderBy(b => b.Path, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    /// <summary>Keeps two inputs that share a file name (e.g. arm64 and x86 builds of libcore.so) from overwriting each other.</summary>
+    internal static string UniqueDestinationName(FileInfo file, IEnumerable<string> takenNames)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+        var taken = takenNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (!taken.Contains(file.Name))
+            return file.Name;
+
+        var parent = file.Directory?.Name;
+        var candidate = string.IsNullOrEmpty(parent) ? file.Name : $"{parent}_{file.Name}";
+        var n = 2;
+        while (taken.Contains(candidate))
+            candidate = $"{Path.GetFileNameWithoutExtension(file.Name)}_{n++}{file.Extension}";
+        return candidate;
+    }
+
+    private static readonly string[] AnalyzerSources = ["ghidra", "elf-reader", "format-detector", "strings"];
+
+    /// <summary>
+    /// Appends new unknowns to knowledge/unknowns.json without disturbing entries resolved by hand. Analyzer-raised
+    /// unknowns for a binary that was just re-analyzed and did not raise them again (e.g. Ghidra is now installed)
+    /// are marked resolved automatically.
+    /// </summary>
+    internal static async Task<int> MergeUnknownsAsync(string path, IEnumerable<ResidualUnknown> fresh, IEnumerable<string> reanalyzedFileNames, CancellationToken ct)
     {
         var existing = new List<ResidualUnknown>();
         if (File.Exists(path))
@@ -326,9 +375,21 @@ internal static class NativeCommand
             }
         }
 
+        var freshList = fresh.ToList();
+        var freshIds = freshList.Select(u => u.Id).ToHashSet(StringComparer.Ordinal);
+        var reanalyzed = reanalyzedFileNames.ToList();
+        for (var i = 0; i < existing.Count; i++)
+        {
+            var u = existing[i];
+            if (u.Status != UnknownStatus.Open || freshIds.Contains(u.Id) || !AnalyzerSources.Contains(u.Source, StringComparer.Ordinal))
+                continue;
+            if (reanalyzed.Any(f => u.Id.EndsWith("-" + f, StringComparison.Ordinal)))
+                existing[i] = u with { Status = UnknownStatus.Resolved };
+        }
+
         var known = existing.Select(u => u.Id).ToHashSet(StringComparer.Ordinal);
         var added = 0;
-        foreach (var u in fresh)
+        foreach (var u in freshList)
         {
             if (known.Add(u.Id))
             {

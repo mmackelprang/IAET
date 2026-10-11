@@ -16,6 +16,7 @@ iaet native analyze --project <project> --binary path/to/libfoo.so [--binary ...
 iaet native analyze --project <project> --decompile            # include pseudocode (needs Ghidra, slower)
 iaet native analyze --project <project> --ghidra-path <dir>    # when GHIDRA_INSTALL_DIR is not set
 iaet native analyze --project <project> --no-ghidra            # static providers only
+iaet native analyze --project <project> --language ARM:LE:32:v8 --ghidra-timeout 60   # wrong processor guess / big binary
 
 # Bounded search across exports, imports, JNI bindings, URLs, BLE UUIDs, function names and function-referenced strings
 iaet native search --project <project> --query <text> [--limit 50]

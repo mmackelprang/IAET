@@ -76,6 +76,32 @@ public sealed class NativeBinaryAnalyzerTests : IDisposable
         info.Evidence.First(e => e.Provider == "format-detector").Confidence.Should().Be(ConfidenceLevel.Low);
     }
 
+    [Theory]
+    [InlineData("libglib.so", "glib")]
+    [InlineData("libfoolib.so", "foolib")]
+    [InlineData("libcore.so", "core")]
+    [InlineData("engine.so", "engine")]
+    [InlineData("lib.so", "lib")]
+    public void LoadLibraryName_strips_only_the_lib_prefix(string file, string expected)
+    {
+        NativeBinaryAnalyzer.LoadLibraryName(file).Should().Be(expected);
+    }
+
+    [Fact]
+    public async Task Analyze_does_not_throw_on_malformed_elf_and_records_unknown()
+    {
+        var img = ElfTestImage.Build([new("helper", Defined: true, IsFunction: true)], []);
+        ElfTestImage.CorruptDynsymEntrySize(img);
+        var path = Path.Combine(_dir, "libbroken.so");
+        await File.WriteAllBytesAsync(path, img);
+
+        var info = await NativeBinaryAnalyzer.AnalyzeAsync(path, "native/libbroken.so", null, new NativeAnalysisOptions { UseGhidra = false });
+
+        info.Format.Should().Be(BinaryFormat.Elf);
+        info.Limitations.Should().Contain(l => l.StartsWith("ELF parse failed", StringComparison.Ordinal));
+        info.Unknowns.Should().Contain(u => u.Id == "elf-parse-libbroken.so");
+    }
+
     [Fact]
     public void DiscoverApkLibraries_prefers_best_abi_per_library()
     {

@@ -44,6 +44,20 @@ public static class ElfReader
         if (!IsElf(bytes) || bytes.Length < 52)
             throw new InvalidDataException("Not an ELF image.");
 
+        try
+        {
+            return ParseCore(bytes);
+        }
+        catch (Exception ex) when (ex is ArgumentOutOfRangeException or IndexOutOfRangeException or OverflowException)
+        {
+            // Packed, truncated or hand-crafted images can carry header fields that point past the file.
+            throw new InvalidDataException($"Malformed ELF image: {ex.Message}", ex);
+        }
+    }
+
+    private static ElfInfo ParseCore(ReadOnlySpan<byte> bytes)
+    {
+
         var is64 = bytes[4] == 2;
         var le = bytes[5] != 2;
         var r = new Reader(le);

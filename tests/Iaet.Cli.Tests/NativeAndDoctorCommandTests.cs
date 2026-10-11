@@ -18,7 +18,7 @@ public class NativeAndDoctorCommandTests
         cmd.Name.Should().Be("native");
         cmd.Subcommands.Select(c => c.Name).Should().BeEquivalentTo("analyze", "search", "function");
         cmd.Subcommands.Single(c => c.Name == "analyze").Options.Select(o => o.Name)
-            .Should().Contain(["--project", "--binary", "--ghidra-path", "--no-ghidra", "--decompile", "--max-functions", "--no-cache"]);
+            .Should().Contain(["--project", "--binary", "--ghidra-path", "--no-ghidra", "--decompile", "--max-functions", "--no-cache", "--language", "--ghidra-timeout"]);
     }
 
     [Fact]
@@ -77,12 +77,12 @@ public class NativeAndDoctorCommandTests
             [
                 new ResidualUnknown { Id = "a", Question = "A?", Source = "test" },
                 new ResidualUnknown { Id = "b", Question = "B?", Source = "test" },
-            ], CancellationToken.None);
+            ], [], CancellationToken.None);
             var second = await NativeCommand.MergeUnknownsAsync(path,
             [
                 new ResidualUnknown { Id = "b", Question = "B again?", Source = "test" },
                 new ResidualUnknown { Id = "c", Question = "C?", Source = "test" },
-            ], CancellationToken.None);
+            ], [], CancellationToken.None);
 
             first.Should().Be(2);
             second.Should().Be(1);
@@ -94,6 +94,63 @@ public class NativeAndDoctorCommandTests
         {
             Directory.Delete(dir, recursive: true);
         }
+    }
+
+    [Fact]
+    public async Task MergeUnknowns_resolves_analyzer_unknowns_for_reanalyzed_binaries_only()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "iaet-unknowns-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(dir, "unknowns.json");
+        try
+        {
+            await NativeCommand.MergeUnknownsAsync(path,
+            [
+                new ResidualUnknown { Id = "ghidra-missing-libcore.so", Question = "?", Source = "ghidra" },
+                new ResidualUnknown { Id = "ghidra-missing-libother.so", Question = "?", Source = "ghidra" },
+                new ResidualUnknown { Id = "human-question-libcore.so", Question = "?", Source = "lead-investigator" },
+            ], ["libcore.so", "libother.so"], CancellationToken.None);
+
+            // Second run: libcore.so analyzed with Ghidra present (no unknown re-raised); libother.so not re-analyzed.
+            await NativeCommand.MergeUnknownsAsync(path, [], ["libcore.so"], CancellationToken.None);
+
+            var json = await File.ReadAllTextAsync(path);
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var byId = doc.RootElement.GetProperty("unknowns").EnumerateArray()
+                .ToDictionary(u => u.GetProperty("id").GetString()!, u => u.GetProperty("status").GetString());
+
+            byId["ghidra-missing-libcore.so"].Should().Be("resolved");
+            byId["ghidra-missing-libother.so"].Should().Be("open");
+            byId["human-question-libcore.so"].Should().Be("open", "only analyzer-raised unknowns auto-resolve");
+            doc.RootElement.GetProperty("open").GetInt32().Should().Be(2);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void MergeBinaries_replaces_reanalyzed_paths_and_keeps_the_rest()
+    {
+        NativeBinaryInfo Make(string path, int strings) => new() { Path = path, Sha256 = "x", Format = BinaryFormat.Elf, StringCount = strings };
+
+        var merged = NativeCommand.MergeBinaries(
+            [Make("apk/lib/arm64-v8a/libcore.so", 10), Make("apk/lib/arm64-v8a/libui.so", 5)],
+            [Make("apk/lib/arm64-v8a/libcore.so", 99), Make("native/binaries/firmware.bin", 1)]);
+
+        merged.Select(b => b.Path).Should().Equal("apk/lib/arm64-v8a/libcore.so", "apk/lib/arm64-v8a/libui.so", "native/binaries/firmware.bin");
+        merged.Single(b => b.Path.EndsWith("libcore.so", StringComparison.Ordinal)).StringCount.Should().Be(99);
+    }
+
+    [Fact]
+    public void UniqueDestinationName_disambiguates_same_file_names()
+    {
+        var a = new FileInfo(Path.Combine(Path.GetTempPath(), "arm64", "libcore.so"));
+        var b = new FileInfo(Path.Combine(Path.GetTempPath(), "x86", "libcore.so"));
+
+        NativeCommand.UniqueDestinationName(a, []).Should().Be("libcore.so");
+        NativeCommand.UniqueDestinationName(b, ["libcore.so"]).Should().Be("x86_libcore.so");
+        NativeCommand.UniqueDestinationName(b, ["libcore.so", "x86_libcore.so"]).Should().Be("libcore_2.so");
     }
 
     [Fact]

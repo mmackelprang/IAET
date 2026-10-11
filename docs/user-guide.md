@@ -853,6 +853,7 @@ iaet apk ble       --project <name>
 
 ```bash
 iaet native analyze  --project <name> [--binary <path>]... [--ghidra-path <dir>] [--decompile] [--max-functions <n>] [--no-ghidra] [--no-cache]
+                     [--language <ghidra-lang-id>] [--ghidra-timeout <minutes>]
 iaet native search   --project <name> --query <text> [--limit <n>]
 iaet native function --project <name> --name <function|0xaddress> [--binary <file>]
 ```

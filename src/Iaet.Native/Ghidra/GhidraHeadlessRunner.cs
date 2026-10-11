@@ -97,6 +97,10 @@ public sealed class GhidraHeadlessRunner(string analyzeHeadlessPath)
         var projectDir = Path.Combine(workDir, "ghidra-project");
         var scriptDir = Path.Combine(workDir, "ghidra-scripts");
         var outputJson = Path.Combine(workDir, Path.GetFileName(binaryPath) + ".ghidra.json");
+        // A killed or crashed earlier run leaves a locked project behind; start clean so -import never
+        // collides with an existing program.
+        if (Directory.Exists(projectDir))
+            Directory.Delete(projectDir, recursive: true);
         Directory.CreateDirectory(projectDir);
         await MaterializeScriptAsync(scriptDir, ct).ConfigureAwait(false);
         if (File.Exists(outputJson))
@@ -129,11 +133,15 @@ public sealed class GhidraHeadlessRunner(string analyzeHeadlessPath)
             stdout = await stdoutTask.ConfigureAwait(false);
             stderr = await stderrTask.ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        catch (OperationCanceledException)
         {
-            timedOut = true;
+            // Timeout or caller cancellation: never leave a headless JVM running against the scratch project.
             try { proc.Kill(entireProcessTree: true); }
             catch (InvalidOperationException) { /* already exited */ }
+
+            if (ct.IsCancellationRequested)
+                throw;
+            timedOut = true;
         }
 
         sw.Stop();

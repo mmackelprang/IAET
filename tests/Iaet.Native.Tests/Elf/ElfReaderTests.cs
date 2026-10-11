@@ -82,6 +82,18 @@ public sealed class ElfReaderTests
     }
 
     [Fact]
+    public void Parse_turns_out_of_range_header_fields_into_InvalidDataException()
+    {
+        var img = ElfTestImage.Build(Symbols, []);
+        // sh_entsize = 4 on .dynsym: the table stays inside the file, but each 24-byte symbol read overruns it.
+        ElfTestImage.CorruptDynsymEntrySize(img);
+
+        var act = () => ElfReader.Parse(img);
+
+        act.Should().Throw<InvalidDataException>().WithMessage("Malformed ELF image*");
+    }
+
+    [Fact]
     public void Parse_maps_x86_64_machine()
     {
         var img = ElfTestImage.Build(Symbols, [], machine: 0x3E);

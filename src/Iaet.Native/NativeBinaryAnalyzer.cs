@@ -23,6 +23,12 @@ public sealed record NativeAnalysisOptions
 
     /// <summary>Scratch directory for Ghidra projects and exports (defaults to <c>&lt;project&gt;/native/work</c>).</summary>
     public string? WorkDirectory { get; init; }
+
+    /// <summary>Ghidra language id override (e.g. <c>ARM:LE:32:v8</c>) when auto-detection picks the wrong processor.</summary>
+    public string? GhidraLanguageId { get; init; }
+
+    /// <summary>Wall-clock budget for one headless Ghidra run.</summary>
+    public TimeSpan GhidraTimeout { get; init; } = TimeSpan.FromMinutes(30);
 }
 
 /// <summary>
@@ -184,7 +190,7 @@ public static class NativeBinaryAnalyzer
                 Question = $"{fileName} exports no Java_* symbols — does it register natives dynamically (RegisterNatives) or is it only used by other native libs?",
                 Source = "elf-reader",
                 Context = projectRelativePath,
-                SuggestedAction = "Search decompiled Java for System.loadLibrary(\"" + fileName.Replace("lib", string.Empty, StringComparison.Ordinal).Replace(".so", string.Empty, StringComparison.Ordinal) + "\") and `native` method declarations; run `iaet native search --query RegisterNatives`.",
+                SuggestedAction = "Search decompiled Java for System.loadLibrary(\"" + LoadLibraryName(fileName) + "\") and `native` method declarations; run `iaet native search --query RegisterNatives`.",
             });
         }
 
@@ -235,7 +241,7 @@ public static class NativeBinaryAnalyzer
                         Question = $"Ghidra could not analyze {fileName}: {ghidra.Error}",
                         Source = "ghidra",
                         Context = projectRelativePath,
-                        SuggestedAction = "Check the log excerpt in native/work, try `--language <ghidra language id>`, or raise the timeout.",
+                        SuggestedAction = "Check the log excerpt in native/work, try `--language <ghidra language id>` (e.g. ARM:LE:32:v8), or raise `--ghidra-timeout <minutes>`.",
                     });
                 }
             }
@@ -277,13 +283,27 @@ public static class NativeBinaryAnalyzer
         return list;
     }
 
+    /// <summary>Maps <c>libfoo.so</c> to the name Java passes to <c>System.loadLibrary</c> (<c>foo</c>).</summary>
+    public static string LoadLibraryName(string fileName)
+    {
+        ArgumentNullException.ThrowIfNull(fileName);
+        var name = Path.GetFileNameWithoutExtension(fileName);
+        return name.StartsWith("lib", StringComparison.Ordinal) && name.Length > 3 ? name[3..] : name;
+    }
+
     private sealed record GhidraOutcome(GhidraExport? Export, bool FromCache, string? Error);
 
     private static async Task<GhidraOutcome> RunGhidraAsync(string launcher, string binaryPath, string sha, NativeAnalysisOptions options, CancellationToken ct)
     {
         var workDir = options.WorkDirectory ?? Path.Combine(Path.GetTempPath(), "iaet-native");
         var cache = new NativeAnalysisCache(Path.Combine(workDir, "cache"));
-        var runOptions = new GhidraRunOptions { Decompile = options.Decompile, MaxFunctions = options.MaxFunctions };
+        var runOptions = new GhidraRunOptions
+        {
+            Decompile = options.Decompile,
+            MaxFunctions = options.MaxFunctions,
+            LanguageId = options.GhidraLanguageId,
+            ProcessTimeout = options.GhidraTimeout,
+        };
         var key = NativeAnalysisCache.ComputeKey(sha, "ghidra-export", GhidraHeadlessRunner.ScriptVersion, runOptions.ParameterKey());
 
         if (options.UseCache && cache.TryGet(key, out var cached))
